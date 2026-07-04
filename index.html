@@ -598,17 +598,28 @@ function ativarEdicao(row, nomeAntigo, t){
   nomeSpan.outerHTML = `<input type="text" class="editar-input" value="${nomeAntigo}">`;
   const input = row.querySelector('.editar-input');
   input.focus(); input.select();
-  function salvar(){
+  let salvando = false;
+  async function salvar(){
     const novoNome = input.value.trim();
-    if(novoNome && novoNome !== nomeAntigo){
-      const idx = t.alunos.indexOf(nomeAntigo);
-      if(idx > -1) t.alunos[idx] = novoNome;
-      const marcados = chaveSessao();
-      if(marcados[nomeAntigo] !== undefined){
-        marcados[novoNome] = marcados[nomeAntigo];
-        delete marcados[nomeAntigo];
+    if(!novoNome || novoNome === nomeAntigo || salvando){ renderLista(); return; }
+    salvando = true;
+    mostrarToast('Salvando...');
+    try{
+      const r = await chamarAPI({ acao:'editarAluno', linha: t.linha, nomeAntigo, nomeNovo: novoNome });
+      if(r.sucesso){
+        const idx = t.alunos.indexOf(nomeAntigo);
+        if(idx > -1) t.alunos[idx] = novoNome;
+        const marcados = chaveSessao();
+        if(marcados[nomeAntigo] !== undefined){
+          marcados[novoNome] = marcados[nomeAntigo];
+          delete marcados[nomeAntigo];
+        }
+        mostrarToast('Nome atualizado');
+      } else {
+        mostrarToast('Erro: ' + (r.erro || 'não deu pra editar'));
       }
-      mostrarToast('Nome atualizado');
+    } catch(err){
+      mostrarToast('Erro de conexão ao editar');
     }
     renderLista();
   }
@@ -630,12 +641,22 @@ function confirmarExclusao(nome, t){
     </div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('.modal-cancelar').addEventListener('click', ()=> overlay.remove());
-  overlay.querySelector('.modal-confirmar').addEventListener('click', ()=>{
-    t.alunos = t.alunos.filter(n=> n!==nome);
-    delete chaveSessao()[nome];
+  overlay.querySelector('.modal-confirmar').addEventListener('click', async ()=>{
     overlay.remove();
+    mostrarToast('Removendo...');
+    try{
+      const r = await chamarAPI({ acao:'removerAluno', linha: t.linha, nome });
+      if(r.sucesso){
+        t.alunos = t.alunos.filter(n=> n!==nome);
+        delete chaveSessao()[nome];
+        mostrarToast('Aluno removido da turma');
+      } else {
+        mostrarToast('Erro: ' + (r.erro || 'não deu pra remover'));
+      }
+    } catch(err){
+      mostrarToast('Erro de conexão ao remover');
+    }
     renderLista();
-    mostrarToast('Aluno removido da turma');
   });
 }
 
