@@ -15,7 +15,7 @@ Não precisa instalar nada da loja de aplicativos. É só abrir o link, entrar c
 - Remover um aluno da turma
 - Salvar tudo direto na planilha da escola
 - Lançar notas de alunos
-- Gerar PDF do assessment (últimas duas notas)
+- Gerar PDF do assessment (últimas duas notas dos Checkpoints)
 
 ---
 
