@@ -64,6 +64,18 @@
   .prof-tag{ margin:12px 20px 0; font-size:12.5px; color:var(--verde-escuro); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .prof-tag b{ color:var(--carvao); }
   .badge{ font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:var(--azul-claro); color:var(--verde-escuro); }
+  .badge-vip{ background:var(--salmao); color:var(--branco); }
+  .badge-grupo{ background:var(--verde-claro); color:var(--branco); }
+
+  /* Alerta de aluno sozinho */
+  .alerta-sozinho{ margin:10px 20px 0; background:#FDF3D4; border:1.5px solid #E5C860; border-radius:10px; padding:10px 12px; font-size:12.5px; color:#8a6d1a; display:flex; align-items:center; gap:8px; }
+
+  /* Campos de comentário e homework */
+  .campos-aula{ padding:4px 20px 0; display:flex; flex-direction:column; gap:10px; }
+  .campo-aula{ display:flex; flex-direction:column; gap:5px; }
+  .campo-aula label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--verde-escuro); font-weight:600; }
+  .campo-aula textarea{ font-family:'Poppins',sans-serif; font-size:13.5px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--linha); background:var(--perola); color:var(--carvao); resize:vertical; min-height:44px; }
+  .campo-aula textarea:focus{ outline:2px solid var(--salmao); outline-offset:1px; }
 
   /* LISTA com scroll */
   .lista{ flex:1; padding:14px 10px 10px 16px; margin-right:6px; display:flex; flex-direction:column; gap:10px; max-height:340px; overflow-y:auto; }
@@ -83,8 +95,8 @@
   .botoes{ display:flex; gap:8px; flex-shrink:0; margin-left:10px; }
   .stamp{ width:38px;height:38px; border-radius:50%; border:2px solid var(--linha); background:var(--branco); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:var(--linha); cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
   .stamp:active{ transform:scale(0.9); }
-  .stamp.p-on{ background:var(--salmao); border-color:var(--salmao); color:var(--branco); transform:rotate(-6deg); box-shadow:0 3px 8px rgba(219,119,107,0.4); }
-  .stamp.f-on{ background:var(--verde-escuro); border-color:var(--verde-escuro); color:var(--branco); transform:rotate(6deg); box-shadow:0 3px 8px rgba(90,117,104,0.35); }
+  .stamp.p-on{ background:var(--verde-escuro); border-color:var(--verde-escuro); color:var(--branco); transform:rotate(-6deg); box-shadow:0 3px 8px rgba(90,117,104,0.4); }
+  .stamp.f-on{ background:var(--excluir); border-color:var(--excluir); color:var(--branco); transform:rotate(6deg); box-shadow:0 3px 8px rgba(193,80,61,0.35); }
 
   .slot-vazio{ display:flex; align-items:center; gap:10px; border:1.5px dashed var(--azul-claro); border-radius:14px; padding:12px 14px; color:var(--verde-escuro); font-size:13px; cursor:pointer; background:transparent; flex-shrink:0; }
   .slot-vazio .mais{ width:26px;height:26px; border-radius:50%; border:1.5px dashed var(--azul-claro); display:flex;align-items:center;justify-content:center; font-size:16px; flex-shrink:0; }
@@ -225,10 +237,23 @@
         <input type="date" id="data">
       </div>
     </div>
-    <p class="prof-tag">Professor(a): <b id="profNome"></b> <span class="badge" id="badgeModalidade"></span></p>
+    <p class="prof-tag">Professor(a): <b id="profNome"></b> <span class="badge" id="badgeModalidade"></span> <span class="badge" id="badgeTipo"></span></p>
+    <p class="prof-tag" style="margin-top:4px;">Livro: <b id="livroNome">—</b></p>
+    <div id="alertaSozinho" class="alerta-sozinho hidden">⚠ <span>Turma de grupo com apenas 1 aluno</span></div>
     <p class="dica-swipe"><span>&larr; arraste p/ excluir</span><span>arraste p/ editar &rarr;</span></p>
 
     <div class="lista" id="lista"></div>
+
+    <div class="campos-aula">
+      <div class="campo-aula">
+        <label for="campoComentario">Comentário da aula (lições e páginas)</label>
+        <textarea id="campoComentario" placeholder="Ex: Unit 4, páginas 32 a 35. Revisão de past simple."></textarea>
+      </div>
+      <div class="campo-aula">
+        <label for="campoHomework">Homework (para a próxima aula)</label>
+        <textarea id="campoHomework" placeholder="Ex: Workbook páginas 20 e 21, exercícios 1 a 4."></textarea>
+      </div>
+    </div>
 
     <div class="resumo">
       <span>Presentes: <b id="qtdPresente">0</b></span>
@@ -269,7 +294,7 @@
         <div class="menu-card-icone">★</div>
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Lançar Notas</span>
-          <span class="menu-card-sub">Avaliar as 8 habilidades por bimestre</span>
+          <span class="menu-card-sub">Avaliar as 8 habilidades por checkpoint</span>
         </div>
         <span class="menu-card-seta">→</span>
       </button>
@@ -277,7 +302,7 @@
         <div class="menu-card-icone">▤</div>
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Assessment</span>
-          <span class="menu-card-sub">Relatório de progresso (2 bimestres)</span>
+          <span class="menu-card-sub">Relatório de progresso (2 checkpoints)</span>
         </div>
         <span class="menu-card-seta">→</span>
       </button>
@@ -293,7 +318,7 @@
           <h1>Lançar Notas</h1>
           <button class="sair" id="btnVoltarNotas">Menu</button>
         </div>
-        <p class="sub" id="notasSub">Escolha a turma e o bimestre</p>
+        <p class="sub" id="notasSub">Escolha a turma e o checkpoint</p>
       </div>
     </header>
 
@@ -303,19 +328,19 @@
         <select id="turmaNotas"></select>
       </div>
       <div class="field">
-        <label for="bimestre">Bimestre</label>
+        <label for="bimestre">Checkpoint</label>
         <select id="bimestre">
-          <option value="1">1º Bimestre</option>
-          <option value="2">2º Bimestre</option>
-          <option value="3">3º Bimestre</option>
-          <option value="4">4º Bimestre</option>
+          <option value="1">1º Checkpoint</option>
+          <option value="2">2º Checkpoint</option>
+          <option value="3">3º Checkpoint</option>
+          <option value="4">4º Checkpoint</option>
         </select>
       </div>
     </div>
 
     <div class="lista" id="listaNotas"></div>
 
-    <p class="nota">Toque no aluno para lançar as 8 notas do bimestre.</p>
+    <p class="nota">Toque no aluno para lançar as 8 notas do checkpoint.</p>
   </div>
 
   <!-- MODAL DE LANÇAMENTO DE NOTAS DE UM ALUNO -->
@@ -361,17 +386,17 @@
     </div>
     <div class="controls" style="padding-top:0;">
       <div class="field">
-        <label for="bimA">1º Bimestre</label>
+        <label for="bimA">1º Checkpoint</label>
         <select id="bimA">
-          <option value="1">1º Bim</option><option value="2">2º Bim</option>
-          <option value="3">3º Bim</option><option value="4">4º Bim</option>
+          <option value="1">1º Check</option><option value="2">2º Check</option>
+          <option value="3">3º Check</option><option value="4">4º Check</option>
         </select>
       </div>
       <div class="field">
-        <label for="bimB">2º Bimestre</label>
+        <label for="bimB">2º Checkpoint</label>
         <select id="bimB">
-          <option value="1">1º Bim</option><option value="2" selected>2º Bim</option>
-          <option value="3">3º Bim</option><option value="4">4º Bim</option>
+          <option value="1">1º Check</option><option value="2" selected>2º Check</option>
+          <option value="3">3º Check</option><option value="4">4º Check</option>
         </select>
       </div>
     </div>
@@ -445,6 +470,11 @@ const $data = document.getElementById('data');
 const $lista = document.getElementById('lista');
 const $profNome = document.getElementById('profNome');
 const $badgeModalidade = document.getElementById('badgeModalidade');
+const $badgeTipo = document.getElementById('badgeTipo');
+const $livroNome = document.getElementById('livroNome');
+const $alertaSozinho = document.getElementById('alertaSozinho');
+const $campoComentario = document.getElementById('campoComentario');
+const $campoHomework = document.getElementById('campoHomework');
 const $dataResumo = document.getElementById('dataResumo');
 const $qtdP = document.getElementById('qtdPresente');
 const $qtdF = document.getElementById('qtdFalta');
@@ -518,11 +548,27 @@ function renderLista(){
   const t = turmaAtual();
   $profNome.textContent = t.professor;
   $badgeModalidade.textContent = t.modalidade;
-  $lista.innerHTML = '';
+  $livroNome.textContent = t.livro || '—';
 
+  // VIP vs Grupo (capacidade < 6 = VIP)
+  const capacidade = t.capacidade || MAX_SLOTS;
+  const ehVIP = capacidade < MAX_SLOTS;
+  $badgeTipo.textContent = ehVIP ? 'VIP' : 'Grupo';
+  $badgeTipo.className = 'badge ' + (ehVIP ? 'badge-vip' : 'badge-grupo');
+
+  // Alerta de aluno sozinho (só pra turma de Grupo)
+  if(!ehVIP && t.alunos.length === 1){
+    $alertaSozinho.classList.remove('hidden');
+  } else {
+    $alertaSozinho.classList.add('hidden');
+  }
+
+  $lista.innerHTML = '';
   t.alunos.forEach(nome=> $lista.appendChild(criarLinhaAluno(nome, t)));
 
-  const vagas = Math.max(0, MAX_SLOTS - t.alunos.length);
+  // Slots de adicionar: só até a capacidade. VIP não mostra além do limite.
+  const limite = ehVIP ? capacidade : MAX_SLOTS;
+  const vagas = Math.max(0, limite - t.alunos.length);
   for(let i=0; i<vagas; i++){
     const slot = document.createElement('div');
     slot.className = 'slot-vazio';
@@ -531,6 +577,19 @@ function renderLista(){
     $lista.appendChild(slot);
   }
   atualizarResumo();
+  carregarAulaDoDia();
+}
+
+async function carregarAulaDoDia(){
+  const t = turmaAtual();
+  try{
+    const r = await chamarAPI({ acao:'aulaDoDia', turmaId: t.turmaId, data: $data.value });
+    $campoComentario.value = r.comentario || '';
+    $campoHomework.value = r.homework || '';
+  } catch(err){
+    $campoComentario.value = '';
+    $campoHomework.value = '';
+  }
 }
 
 function criarLinhaAluno(nome, t){
@@ -716,7 +775,7 @@ document.getElementById('btnSalvar').addEventListener('click', async ()=>{
   }));
   mostrarToast('Salvando...');
   try{
-    const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: t.duracao || 1 });
+    const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: t.duracao || 1, livro: t.livro || '', comentario: $campoComentario.value.trim(), homework: $campoHomework.value.trim() });
     if(resultado.sucesso) mostrarToast('Presença salva para turma ' + t.turmaId);
     else mostrarToast('Erro ao salvar: ' + (resultado.erro || 'tenta de novo'));
   } catch(err){
@@ -1004,7 +1063,7 @@ document.getElementById('btnGerarAssess').addEventListener('click', async ()=>{
   const t = TURMAS.find(x=>x.id===$turmaAssess.value);
   const aluno = $alunoAssess.value;
   if(!aluno){ mostrarToast('Selecione um aluno'); return; }
-  if($bimA.value === $bimB.value){ mostrarToast('Escolha dois bimestres diferentes'); return; }
+  if($bimA.value === $bimB.value){ mostrarToast('Escolha dois checkpoints diferentes'); return; }
   $assessResultado.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Gerando...</p>';
   try{
     const r = await chamarAPI({
@@ -1033,7 +1092,7 @@ function setaEvo(evo){
 }
 
 function renderAssessment(r){
-  const nomeBim = {'1':'1º Bim','2':'2º Bim','3':'3º Bim','4':'4º Bim'};
+  const nomeBim = {'1':'1º Check','2':'2º Check','3':'3º Check','4':'4º Check'};
   let skillsHtml = '';
   r.skills.forEach(s=>{
     const e = setaEvo(s.evolucao);
