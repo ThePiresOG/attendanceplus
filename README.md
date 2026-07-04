@@ -14,6 +14,7 @@ Não precisa instalar nada da loja de aplicativos. É só abrir o link, entrar c
 - Editar o nome de um aluno
 - Remover um aluno da turma
 - Salvar tudo direto na planilha da escola
+- Lançar notas de alunos
 
 ---
 
