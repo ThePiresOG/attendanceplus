@@ -72,14 +72,17 @@
   .alerta-sozinho{ margin:10px 20px 0; background:#FDF3D4; border:1.5px solid #E5C860; border-radius:10px; padding:10px 12px; font-size:12.5px; color:#8a6d1a; display:flex; align-items:center; gap:8px; }
 
   /* Campos de comentário e homework */
-  .campos-aula{ padding:4px 20px 0; display:flex; flex-direction:column; gap:10px; }
+  .campos-aula{ padding:4px 20px 0; display:flex; flex-direction:column; gap:10px; max-height:130px; overflow-y:auto; }
+  .campos-aula::-webkit-scrollbar{ width:6px; }
+  .campos-aula::-webkit-scrollbar-track{ background:var(--perola); border-radius:10px; }
+  .campos-aula::-webkit-scrollbar-thumb{ background:var(--azul-claro); border-radius:10px; }
   .campo-aula{ display:flex; flex-direction:column; gap:5px; }
   .campo-aula label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--verde-escuro); font-weight:600; }
   .campo-aula textarea{ font-family:'Poppins',sans-serif; font-size:13.5px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--linha); background:var(--perola); color:var(--carvao); resize:vertical; min-height:44px; }
   .campo-aula textarea:focus{ outline:2px solid var(--salmao); outline-offset:1px; }
 
   /* LISTA com scroll */
-  .lista{ flex:1; padding:14px 10px 10px 16px; margin-right:6px; display:flex; flex-direction:column; gap:10px; max-height:340px; overflow-y:auto; }
+  .lista{ flex:1; min-height:180px; padding:14px 10px 10px 16px; margin-right:6px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
   .lista::-webkit-scrollbar{ width:6px; }
   .lista::-webkit-scrollbar-track{ background:var(--perola); border-radius:10px; }
   .lista::-webkit-scrollbar-thumb{ background:var(--azul-claro); border-radius:10px; }
@@ -435,9 +438,12 @@ async function buscarTurmas(professor){
     id: 't' + t.linha,
     linha: t.linha,
     nivel: t.nivel,
+    livro: t.livro || '',
     turmaId: t.turmaId,
     professor: t.professor,
     modalidade: t.modalidade,
+    capacidade: t.capacidade || 6,
+    tipo: t.tipo || 'Grupo',
     dias: String(t.dias).split('/'),
     horario: formatarHorario(t.horario),
     alunos: t.alunos || []
