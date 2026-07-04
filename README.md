@@ -93,6 +93,8 @@ Não. Cada um vê só as próprias turmas de propósito, para não misturar o fe
 **Troquei de celular. Perco alguma coisa?**
 Não. Todos os dados ficam na planilha da escola, não no seu aparelho. É só abrir o link no celular novo e entrar de novo.
 
+Quaisquer dúvidas, não hesite em perguntar.
+
 ---
 
 ## Por que isso ajuda no seu pagamento
