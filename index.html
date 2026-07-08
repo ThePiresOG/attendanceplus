@@ -1447,7 +1447,7 @@ async function cobrarProfessor(turmaId, professor){
   try{
     const r = await chamarAPI({ acao:'cobrarTurma', turmaId, professor, data, registrada: false });
     if(r.sucesso){
-      const numero = WHATSAPP_PROF[professor];
+      const numero = WHATSAPP_PROF[String(professor).trim().toUpperCase()];
       const msg = encodeURIComponent(`Olá ${professor}! Passando para lembrar de registrar a presença da turma ${turmaId} referente à aula do dia ${dataFmt}. Obrigado! 😊`);
       if(numero){
         window.open(`https://wa.me/55${numero}?text=${msg}`, '_blank');
