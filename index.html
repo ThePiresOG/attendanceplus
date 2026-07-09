@@ -492,10 +492,29 @@
           <h1>Materiais</h1>
           <button class="sair" id="btnVoltarMat">Menu</button>
         </div>
-        <p class="sub">Áudios e material de suporte por turma</p>
+        <p class="sub">Materiais de apoio</p>
       </div>
     </header>
-    <div class="assess-resultado" id="matResultado"></div>
+    <div class="menu-opcoes" id="matSubcards">
+      <button class="menu-card" id="subcardTurma">
+        <div class="menu-card-icone">L</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Materiais da Turma</span>
+          <span class="menu-card-sub">Audios e suporte do livro de cada turma</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="subcardExtras">
+        <div class="menu-card-icone">+</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Materiais Extras</span>
+          <span class="menu-card-sub">Conteudo extra por nivel (A1 a C1)</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+    </div>
+    <div class="assess-resultado hidden" id="matResultado"></div>
+    <div class="assess-resultado hidden" id="matExtrasResultado"></div>
   </div>
 
   <!-- TELA FINANCEIRO (só Felipe) -->
@@ -567,9 +586,15 @@
           <label for="buscarProf">Professor</label>
           <select id="buscarProf"><option value="">Todos</option></select>
         </div>
+      </div>
+      <div class="controls" style="padding-top:0;">
         <div class="field">
-          <label for="buscarData">Data</label>
-          <input type="date" id="buscarData">
+          <label for="buscarDataIni">De</label>
+          <input type="date" id="buscarDataIni">
+        </div>
+        <div class="field">
+          <label for="buscarDataFim">Até</label>
+          <input type="date" id="buscarDataFim">
         </div>
       </div>
       <div class="assess-resultado" id="buscarResultado"></div>
@@ -1044,7 +1069,7 @@ $btnEntrar.addEventListener('click', async ()=>{
     popularTurmas();
     popularTurmasNotas();
     $data.value = hojeISO();
-    $data.disabled = true; // presença só na data de hoje
+    $data.disabled = false; // seletor de data liberado
     renderLista();
   } catch(err){
     console.error('Erro no login:', err);
@@ -1435,7 +1460,9 @@ function abrirRecepcao(){
       const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
     });
   }
-  document.getElementById('buscarData').value = hojeISO();
+  const seteDias = new Date(); seteDias.setDate(seteDias.getDate() - 7);
+  document.getElementById('buscarDataIni').value = seteDias.toISOString().slice(0,10);
+  document.getElementById('buscarDataFim').value = hojeISO();
   const hoje = new Date();
   document.getElementById('relMes').value = String(hoje.getMonth()+1);
   document.getElementById('relAno').value = String(hoje.getFullYear());
@@ -1454,31 +1481,48 @@ document.querySelectorAll('.recep-aba').forEach(aba=>{
   });
 });
 
-// ABA BUSCAR
+// ABA BUSCAR (por período)
 async function carregarBusca(){
   const $res = document.getElementById('buscarResultado');
   const prof = document.getElementById('buscarProf').value;
-  const data = document.getElementById('buscarData').value;
+  const ini = document.getElementById('buscarDataIni').value;
+  const fim = document.getElementById('buscarDataFim').value;
+  if(!ini || !fim){ $res.innerHTML = '<div class="assess-aviso">Escolha as datas de início e fim.</div>'; return; }
+  if(ini > fim){ $res.innerHTML = '<div class="assess-aviso">A data inicial não pode ser depois da final.</div>'; return; }
   $res.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
   try{
-    const r = await chamarAPI({ acao:'buscarStatus', data, professor: prof });
+    const r = await chamarAPI({ acao:'buscarPeriodo', dataInicio: ini, dataFim: fim, professor: prof });
     if(!r.aulas || r.aulas.length === 0){
       $res.innerHTML = '<div class="assess-aviso">Nenhuma turma nesse filtro.</div>';
       return;
     }
+    // agrupa por data
+    const porData = {};
+    r.aulas.forEach(a=>{ (porData[a.data] = porData[a.data] || []).push(a); });
     let html = '';
-    r.aulas.forEach(a=>{
-      const st = a.registrada ? '<span class="pill-ok">✓ Registrada</span>' : '<span class="pill-pendente">Pendente</span>';
-      html += `<div class="skill-linha" style="align-items:flex-start;">
-        <div style="flex:1;"><span class="skill-nome">Turma ${a.turmaId} · ${a.nivel} · ${formatarHorario(a.horario)}</span>
-        <div class="recep-extra">${a.professor} · ${a.modalidade}</div>
-        ${a.cobrada?'<div class="recep-extra" style="color:#C1503D;font-weight:600;">⚠ Cobrada</div>':''}</div>${st}</div>`;
+    let totReg = 0, totPend = 0;
+    Object.keys(porData).sort().forEach(data=>{
+      const dFmt = new Date(data+'T12:00:00').toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'});
+      html += `<div class="assess-secao-titulo">${dFmt}</div>`;
+      porData[data].forEach(a=>{
+        if(a.registrada) totReg++; else totPend++;
+        const st = a.registrada ? '<span class="pill-ok">✓</span>' : '<span class="pill-pendente">Pendente</span>';
+        html += `<div class="skill-linha" style="align-items:flex-start;">
+          <div style="flex:1;"><span class="skill-nome">Turma ${a.turmaId} · ${a.nivel} · ${formatarHorario(a.horario)}</span>
+          <div class="recep-extra">${a.professor}</div>
+          ${a.cobrada?'<div class="recep-extra" style="color:#C1503D;font-weight:600;">⚠ Cobrada</div>':''}</div>${st}</div>`;
+      });
     });
-    $res.innerHTML = html;
+    const resumo = `<div class="assess-destaques" style="margin-bottom:12px;">
+      <div class="assess-card-num"><span class="valor">${totReg}</span><span class="rotulo">Registradas</span></div>
+      <div class="assess-card-num freq"><span class="valor">${totPend}</span><span class="rotulo">Pendentes</span></div>
+    </div>`;
+    $res.innerHTML = resumo + html;
   } catch(e){ $res.innerHTML = '<div class="assess-aviso">Erro ao buscar.</div>'; }
 }
 document.getElementById('buscarProf').addEventListener('change', carregarBusca);
-document.getElementById('buscarData').addEventListener('change', carregarBusca);
+document.getElementById('buscarDataIni').addEventListener('change', carregarBusca);
+document.getElementById('buscarDataFim').addEventListener('change', carregarBusca);
 
 // ABA RELATÓRIO
 let ultimoRelatorio = null;
@@ -1690,13 +1734,73 @@ const $matResultado = document.getElementById('matResultado');
 document.getElementById('cardMateriais').addEventListener('click', ()=>{
   $telaMenu.classList.add('hidden');
   $telaMateriais.classList.remove('hidden');
+  mostrarSubcardsMateriais();
+});
+
+function mostrarSubcardsMateriais(){
+  document.getElementById('matSubcards').classList.remove('hidden');
+  $matResultado.classList.add('hidden');
+  document.getElementById('matExtrasResultado').classList.add('hidden');
+}
+
+document.getElementById('subcardTurma').addEventListener('click', ()=>{
+  document.getElementById('matSubcards').classList.add('hidden');
+  $matResultado.classList.remove('hidden');
   carregarMateriais();
 });
 
-document.getElementById('btnVoltarMat').addEventListener('click', ()=>{
-  $telaMateriais.classList.add('hidden');
-  $telaMenu.classList.remove('hidden');
+document.getElementById('subcardExtras').addEventListener('click', ()=>{
+  document.getElementById('matSubcards').classList.add('hidden');
+  document.getElementById('matExtrasResultado').classList.remove('hidden');
+  carregarMateriaisExtras();
 });
+
+document.getElementById('btnVoltarMat').addEventListener('click', ()=>{
+  // se está num subpainel, volta pros subcards; se já nos subcards, volta ao menu
+  const nosSubcards = !document.getElementById('matSubcards').classList.contains('hidden');
+  if(nosSubcards){
+    $telaMateriais.classList.add('hidden');
+    $telaMenu.classList.remove('hidden');
+  } else {
+    mostrarSubcardsMateriais();
+  }
+});
+
+async function carregarMateriaisExtras(){
+  const $res = document.getElementById('matExtrasResultado');
+  $res.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    const mapa = await chamarAPI({ acao:'materiaisExtras' });
+    const niveis = ['A1','A2','B1','B2','C1'];
+    let html = '';
+    niveis.forEach(nivel=>{
+      const link = mapa[nivel];
+      const temLink = link && link.length > 5;
+      html += `
+        <div class="skill-linha" style="align-items:flex-start;">
+          <div style="flex:1;"><span class="skill-nome">Nível ${nivel}</span></div>
+          ${temLink
+            ? `<div style="display:flex;flex-direction:column;gap:6px;">
+                 <button class="btn-material" data-link="${link}">Abrir pasta</button>
+                 <button class="btn-share" data-link="${link}" data-nivel="${nivel}" data-livro="Materiais Extras">Compartilhar</button>
+               </div>`
+            : `<span class="pill-pendente">Sem material</span>`}
+        </div>`;
+    });
+    $res.innerHTML = html;
+    $res.querySelectorAll('.btn-material').forEach(btn=>{
+      btn.addEventListener('click', ()=> window.open(btn.dataset.link, '_blank'));
+    });
+    $res.querySelectorAll('.btn-share').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const link = btn.dataset.link;
+        const texto = `Materiais Extras de ${btn.dataset.nivel} — Espresso English:\n${link}`;
+        if(navigator.share){ try{ await navigator.share({ title:'Materiais Extras', text: texto }); }catch(e){} }
+        else { try{ await navigator.clipboard.writeText(texto); mostrarToast('Link copiado!'); }catch(e){ window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`,'_blank'); } }
+      });
+    });
+  } catch(err){ $res.innerHTML = '<div class="assess-aviso">Erro ao carregar materiais extras.</div>'; }
+}
 
 async function carregarMateriais(){
   $matResultado.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
