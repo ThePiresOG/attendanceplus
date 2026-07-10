@@ -663,7 +663,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const PROFESSORES = ["Guilherme","Amanda","Felipe","Lídia","Mariana","Recepção"];
+let PROFESSORES = ["Guilherme","Amanda","Felipe","Lídia","Mariana","Recepção"];
 const API_URL = "https://script.google.com/macros/s/AKfycbzfE-xbQXShs1ClnjyazisNQFICU_w0ThLktIIurSN1_Fa_RGM2DzClxU9Kft884zHc/exec";
 
 let TURMAS = [];
@@ -765,7 +765,16 @@ let notasLancadas = [];    // nomes já avaliados na turma+bimestre
 
 function hojeISO(){ return new Date().toISOString().slice(0,10); }
 
-function popularLoginProfessores(){
+async function popularLoginProfessores(){
+  // tenta buscar a lista atualizada da planilha; se falhar, usa a lista local
+  try{
+    const r = await chamarAPI({ acao:'listaProfessores' });
+    if(r.sucesso && r.professores && r.professores.length){
+      PROFESSORES = r.professores;
+    }
+  } catch(e){ /* mantém a lista local */ }
+
+  $loginProfessor.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = 'Selecione o teacher';
