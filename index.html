@@ -351,6 +351,7 @@
         <p class="sub">O que você quer fazer hoje?</p>
       </div>
     </header>
+    <div id="resumoSemana" class="hidden" style="margin:0 20px 4px; padding:12px 16px; background:var(--perola); border-radius:12px; font-size:13px; color:var(--verde-escuro);"></div>
     <div class="menu-opcoes">
       <button class="menu-card" id="cardPresenca">
         <div class="menu-card-icone">✓</div>
@@ -1102,6 +1103,7 @@ $btnEntrar.addEventListener('click', async ()=>{
     const ehFelipe = String(nome).trim().toUpperCase() === 'FELIPE';
     document.getElementById('cardFinanceiro').classList.toggle('hidden', !ehFelipe);
     document.getElementById('cardDashboard').classList.toggle('hidden', !ehFelipe);
+    carregarResumoSemana(nome);
     popularTurmas();
     popularTurmasNotas();
     $data.value = hojeISO();
@@ -1722,16 +1724,26 @@ async function carregarStatusDoDia(){
       return;
     }
     const pendentes = r.aulas.filter(a=>!a.registrada).length;
+    const cobradas = r.aulas.filter(a=>a.cobrada).length;
     $recepcaoSub.textContent = `${r.aulas.length} aula(s) programada(s) · ${pendentes} pendente(s)`;
     let htmlLista = '';
+    // banner de pendências
+    if(pendentes > 0){
+      htmlLista += `<div style="margin:0 0 12px; padding:12px 16px; background:#F9E4DF; border-radius:12px; color:#C1503D; font-weight:600; font-size:14px;">⚠ ${pendentes} turma(s) ainda sem registro hoje</div>`;
+    } else {
+      htmlLista += `<div style="margin:0 0 12px; padding:12px 16px; background:#E3EFE7; border-radius:12px; color:#3E8E5A; font-weight:600; font-size:14px;">✓ Todas as turmas registradas!</div>`;
+    }
     r.aulas.sort((a,b)=> String(a.horario).localeCompare(String(b.horario)));
     r.aulas.forEach(a=>{
       const extras = a.registrada
         ? `<div class="recep-extra">Comentário: ${a.comentario ? '✓' : '—'} · Homework: ${a.homework ? '✓' : '—'}</div>`
         : '';
-      const seloCobrada = a.cobrada
-        ? `<div class="recep-extra" style="color:#C1503D;font-weight:600;">⚠ Cobrada pela recepção</div>`
-        : '';
+      let seloCobrada = '';
+      if(a.cobrancaResolvida){
+        seloCobrada = `<div class="recep-extra" style="color:#3E8E5A;font-weight:600;">✓ Cobrança resolvida (registrou depois)</div>`;
+      } else if(a.cobrada){
+        seloCobrada = `<div class="recep-extra" style="color:#C1503D;font-weight:600;">⚠ Cobrada pela recepção</div>`;
+      }
       const botaoCobrar = (!a.registrada && !a.cobrada)
         ? `<button class="btn-cobrar" data-turma="${a.turmaId}" data-prof="${a.professor}">Cobrar professor</button>`
         : '';
@@ -2103,6 +2115,22 @@ function gerarPDF(r){
   });
 }
 
+
+async function carregarResumoSemana(nome){
+  const $rs = document.getElementById('resumoSemana');
+  $rs.classList.add('hidden');
+  try{
+    const r = await chamarAPI({ acao:'resumoSemana', professor: nome });
+    if(r.sucesso){
+      const faltam = Math.max(0, r.previstas - r.dadas);
+      let msg = `Esta semana: <strong>${r.dadas}</strong> de <strong>${r.previstas}</strong> aula(s) registrada(s).`;
+      if(faltam > 0) msg += ` Faltam <strong>${faltam}</strong>.`;
+      else if(r.previstas > 0) msg += ` Tudo em dia! ` + String.fromCodePoint(0x1F44F);
+      $rs.innerHTML = msg;
+      $rs.classList.remove('hidden');
+    }
+  } catch(e){ /* silencioso */ }
+}
 
 popularLoginProfessores();
 </script>
