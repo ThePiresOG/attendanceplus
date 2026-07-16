@@ -2283,18 +2283,20 @@ async function carregarResumoSemana(nome){
 // ===== CONTRATOS =====
 const CAMPOS_18 = [
   ['NOME_ALUNO','Nome completo','text'],
-  ['RG','RG','text'],
-  ['CPF','CPF','text'],
+  ['RG','RG','rg'],
+  ['CPF','CPF','cpf'],
   ['PROFISSAO','Profissão','text'],
   ['ESTADO_CIVIL','Estado civil','text'],
   ['ENDERECO','Endereço completo','text'],
   ['TELEFONE','Telefone','text'],
-  ['CEP','CEP','text'],
+  ['CEP','CEP','cep'],
   ['CIDADE','Cidade','text'],
+  ['UF','Estado (UF)','uf'],
   ['NASCIMENTO','Data de nascimento','text'],
   ['EMAIL','E-mail','text'],
   ['DIAS_AULA','Dia(s) de aula','text'],
-  ['HORARIO_AULA','Horário(s) das aulas','text'],
+  ['HORA_INICIO','Hora de início (ex: 17)','text'],
+  ['HORA_FIM','Hora de término (ex: 18)','text'],
   ['MODALIDADE','Modo da aula (online/presencial)','text'],
   ['TIPO_TURMA','Tipo de turma','select'],
   ['VALOR_TABELA','Valor da mensalidade (tabela, sem desconto)','money'],
@@ -2309,21 +2311,23 @@ const CAMPOS_18 = [
 
 const CAMPOS_MENOR = [
   ['NOME_ALUNO','Nome do aluno','text'],
-  ['RG_ALUNO','RG do aluno','text'],
-  ['CPF_ALUNO','CPF do aluno','text'],
+  ['RG_ALUNO','RG do aluno','rg'],
+  ['CPF_ALUNO','CPF do aluno','cpf'],
   ['NOME_CONTRATANTE','Nome do responsável financeiro','text'],
-  ['RG','RG do responsável','text'],
-  ['CPF','CPF do responsável','text'],
+  ['RG','RG do responsável','rg'],
+  ['CPF','CPF do responsável','cpf'],
   ['PROFISSAO','Profissão do responsável','text'],
   ['ESTADO_CIVIL','Estado civil do responsável','text'],
   ['ENDERECO','Endereço completo','text'],
   ['TELEFONE','Telefone','text'],
-  ['CEP','CEP','text'],
+  ['CEP','CEP','cep'],
   ['CIDADE','Cidade','text'],
+  ['UF','Estado (UF)','uf'],
   ['NASCIMENTO','Data de nascimento do aluno','text'],
   ['EMAIL','E-mail','text'],
   ['DIAS_AULA','Dia(s) de aula','text'],
-  ['HORARIO_AULA','Horário(s) das aulas','text'],
+  ['HORA_INICIO','Hora de início (ex: 17)','text'],
+  ['HORA_FIM','Hora de término (ex: 18)','text'],
   ['MODALIDADE','Modo da aula (online/presencial)','text'],
   ['TIPO_TURMA','Tipo de turma','select'],
   ['VALOR_TABELA','Valor da mensalidade (tabela, sem desconto)','money'],
@@ -2377,10 +2381,33 @@ async function abrirFormContrato(tipo){
           <option value="Individual">Individual</option>
         </select>
       </div>`;
+    } else if(c[2] === 'uf'){
+      const ufs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+      let opts = '<option value="">Selecione</option>';
+      ufs.forEach(u=>{ opts += `<option value="${u}"${u==='SP'?' selected':''}>${u}</option>`; });
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <select id="ctt_${c[0]}">${opts}</select>
+      </div>`;
     } else if(c[2] === 'money'){
       html += `<div class="field" style="margin-bottom:10px;">
         <label for="ctt_${c[0]}">${c[1]}</label>
         <input type="text" inputmode="decimal" id="ctt_${c[0]}" placeholder="Ex: 427,00">
+      </div>`;
+    } else if(c[2] === 'cpf'){
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="cpf" maxlength="14" placeholder="000.000.000-00">
+      </div>`;
+    } else if(c[2] === 'rg'){
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="text" id="ctt_${c[0]}" data-mask="rg" maxlength="12" placeholder="00.000.000-0">
+      </div>`;
+    } else if(c[2] === 'cep'){
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="cep" maxlength="9" placeholder="00000-000">
       </div>`;
     } else {
       html += `<div class="field" style="margin-bottom:10px;">
@@ -2392,24 +2419,49 @@ async function abrirFormContrato(tipo){
   html += `<div id="painelValorFinal" style="background:var(--verde-escuro);color:#fff;border-radius:10px;padding:12px 14px;margin:6px 0 14px;font-size:13px;">
     <div style="display:flex;justify-content:space-between;"><span>Mensalidade cheia:</span><strong id="vfTabela">R$ 0,00</strong></div>
     <div style="display:flex;justify-content:space-between;"><span>Desconto pontualidade:</span><strong id="vfDesconto">- R$ 0,00</strong></div>
-    <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.3);margin-top:6px;padding-top:6px;"><span>Valor com desconto (em dia):</span><strong id="vfFinal">R$ 0,00</strong></div>
+    <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.3);margin-top:6px;padding-top:6px;"><span>Mensalidade com desconto:</span><strong id="vfFinal">R$ 0,00</strong></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:2px solid var(--salmao);"><span>Valor total do contrato:</span><strong id="vfTotal" style="color:#FFD9D2;">R$ 0,00</strong></div>
+    <div style="font-size:10px;opacity:.75;margin-top:2px;" id="vfTotalMemo">mensalidade x meses + matrícula</div>
   </div>`;
   $c.innerHTML = html;
 
+  // máscaras de digitação
+  const mascaras = {
+    cpf: v => v.replace(/\D/g,'').slice(0,11)
+      .replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'),
+    rg: v => v.replace(/[^\dxX]/g,'').slice(0,9)
+      .replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})([\dxX]{1})$/,'$1-$2'),
+    cep: v => v.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2')
+  };
+  $c.querySelectorAll('[data-mask]').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const fn = mascaras[inp.dataset.mask];
+      if(fn) inp.value = fn(inp.value);
+    });
+  });
+
   const $vTabela = document.getElementById('ctt_VALOR_TABELA');
   const $vDesconto = document.getElementById('ctt_DESCONTO');
+  const $vMatricula = document.getElementById('ctt_VALOR_MATRICULA');
+  const $vPrazo = document.getElementById('ctt_PRAZO_MESES');
   const atualizarPainelValor = ()=>{
     const parse = v => Number(String(v).replace(/\./g,'').replace(',','.')) || 0;
     const tabela = parse($vTabela.value);
     const desconto = parse($vDesconto.value);
+    const matricula = parse($vMatricula.value);
+    const meses = Number(String($vPrazo.value).replace(/\D/g,'')) || 0;
     const final = Math.max(0, tabela - desconto);
-    const fmt = n => 'R$ ' + n.toFixed(2).replace('.', ',');
+    const total = (final * meses) + matricula;
+    const fmt = n => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     document.getElementById('vfTabela').textContent = fmt(tabela);
     document.getElementById('vfDesconto').textContent = '- ' + fmt(desconto);
     document.getElementById('vfFinal').textContent = fmt(final);
+    document.getElementById('vfTotal').textContent = fmt(total);
+    document.getElementById('vfTotalMemo').textContent = `${fmt(final)} x ${meses} mês(es) + ${fmt(matricula)} de matrícula`;
   };
-  $vTabela.addEventListener('input', atualizarPainelValor);
-  $vDesconto.addEventListener('input', atualizarPainelValor);
+  [$vTabela, $vDesconto, $vMatricula, $vPrazo].forEach(el=>{
+    if(el) el.addEventListener('input', atualizarPainelValor);
+  });
 }
 
 document.getElementById('subcard18').addEventListener('click', ()=> abrirFormContrato('18'));
@@ -2428,7 +2480,7 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
     NUM_MATRICULA: document.getElementById('ctt_NUM_MATRICULA').value
   };
   const parseMoney = v => Number(String(v).replace(/\./g,'').replace(',','.')) || 0;
-  const fmtMoney = n => n.toFixed(2).replace('.', ',');
+  const fmtMoney = n => n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
   let faltando = [];
   campos.forEach(c=>{
@@ -2437,14 +2489,18 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
     if(!v) faltando.push(c[1]);
   });
 
-  // calcula o valor final da mensalidade (tabela - desconto) e formata os campos monetários
+  // calcula o valor final da mensalidade (tabela - desconto) e o total do contrato
   const tabela = parseMoney(dados.VALOR_TABELA);
   const desconto = parseMoney(dados.DESCONTO);
+  const matricula = parseMoney(dados.VALOR_MATRICULA);
+  const meses = Number(String(dados.PRAZO_MESES).replace(/\D/g,'')) || 0;
   const valorFinal = Math.max(0, tabela - desconto);
+  const valorTotal = (valorFinal * meses) + matricula;
   dados.VALOR_TABELA = fmtMoney(tabela);
   dados.DESCONTO = fmtMoney(desconto);
-  dados.VALOR_MATRICULA = fmtMoney(parseMoney(dados.VALOR_MATRICULA));
+  dados.VALOR_MATRICULA = fmtMoney(matricula);
   dados.VALOR_FINAL = fmtMoney(valorFinal);
+  dados.VALOR_TOTAL = fmtMoney(valorTotal);
 
   if(faltando.length > 3){
     if(!confirm(`${faltando.length} campos vazios. Gerar mesmo assim?`)) return;
