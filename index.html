@@ -2288,7 +2288,7 @@ const CAMPOS_18 = [
   ['PROFISSAO','Profissão','text'],
   ['ESTADO_CIVIL','Estado civil','text'],
   ['ENDERECO','Endereço completo','text'],
-  ['TELEFONE','Telefone','text'],
+  ['TELEFONE','Telefone','tel'],
   ['CEP','CEP','cep'],
   ['CIDADE','Cidade','text'],
   ['UF','Estado (UF)','uf'],
@@ -2319,7 +2319,7 @@ const CAMPOS_MENOR = [
   ['PROFISSAO','Profissão do responsável','text'],
   ['ESTADO_CIVIL','Estado civil do responsável','text'],
   ['ENDERECO','Endereço completo','text'],
-  ['TELEFONE','Telefone','text'],
+  ['TELEFONE','Telefone','tel'],
   ['CEP','CEP','cep'],
   ['CIDADE','Cidade','text'],
   ['UF','Estado (UF)','uf'],
@@ -2404,6 +2404,11 @@ async function abrirFormContrato(tipo){
         <label for="ctt_${c[0]}">${c[1]}</label>
         <input type="text" id="ctt_${c[0]}" data-mask="rg" maxlength="12" placeholder="00.000.000-0">
       </div>`;
+    } else if(c[2] === 'tel'){
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="tel" maxlength="15" placeholder="(15) 99662-0815">
+      </div>`;
     } else if(c[2] === 'cep'){
       html += `<div class="field" style="margin-bottom:10px;">
         <label for="ctt_${c[0]}">${c[1]}</label>
@@ -2431,7 +2436,14 @@ async function abrirFormContrato(tipo){
       .replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'),
     rg: v => v.replace(/[^\dxX]/g,'').slice(0,9)
       .replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})([\dxX]{1})$/,'$1-$2'),
-    cep: v => v.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2')
+    cep: v => v.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2'),
+    tel: v => {
+      const d = v.replace(/\D/g,'').slice(0,11);
+      if(d.length <= 2) return d.replace(/(\d{0,2})/, '($1');
+      if(d.length <= 6) return d.replace(/(\d{2})(\d{0,4})/, '($1) $2');
+      if(d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+    }
   };
   $c.querySelectorAll('[data-mask]').forEach(inp=>{
     inp.addEventListener('input', ()=>{
