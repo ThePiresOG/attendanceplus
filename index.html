@@ -2206,7 +2206,10 @@ const CAMPOS_18 = [
   ['DIAS_AULA','Dia(s) de aula','text'],
   ['HORARIO_AULA','Horário(s) das aulas','text'],
   ['MODALIDADE','Modo da aula (online/presencial)','text'],
-  ['VALOR_TOTAL','Valor total do contrato','text'],
+  ['TIPO_TURMA','Tipo de turma','select'],
+  ['VALOR_TABELA','Valor da mensalidade (tabela, sem desconto)','money'],
+  ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
+  ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
   ['DIA_VENCIMENTO','Melhor dia de vencimento','text']
@@ -2230,7 +2233,10 @@ const CAMPOS_MENOR = [
   ['DIAS_AULA','Dia(s) de aula','text'],
   ['HORARIO_AULA','Horário(s) das aulas','text'],
   ['MODALIDADE','Modo da aula (online/presencial)','text'],
-  ['VALOR_TOTAL','Valor total do contrato','text'],
+  ['TIPO_TURMA','Tipo de turma','select'],
+  ['VALOR_TABELA','Valor da mensalidade (tabela, sem desconto)','money'],
+  ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
+  ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
   ['DIA_VENCIMENTO','Melhor dia de vencimento','text']
@@ -2268,12 +2274,48 @@ async function abrirFormContrato(tipo){
   html += `<input type="hidden" id="ctt_NUM_CONTRATO" value="${numContrato}">`;
   html += `<input type="hidden" id="ctt_NUM_MATRICULA" value="${numMatricula}">`;
   campos.forEach(c=>{
-    html += `<div class="field" style="margin-bottom:10px;">
-      <label for="ctt_${c[0]}">${c[1]}</label>
-      <input type="${c[2]}" id="ctt_${c[0]}" placeholder="${c[1]}">
-    </div>`;
+    if(c[2] === 'select'){
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <select id="ctt_${c[0]}">
+          <option value="">Selecione</option>
+          <option value="Grupo">Grupo</option>
+          <option value="Individual">Individual</option>
+        </select>
+      </div>`;
+    } else if(c[2] === 'money'){
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="text" inputmode="decimal" id="ctt_${c[0]}" placeholder="Ex: 427,00">
+      </div>`;
+    } else {
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="${c[2]}" id="ctt_${c[0]}" placeholder="${c[1]}">
+      </div>`;
+    }
   });
+  html += `<div id="painelValorFinal" style="background:var(--verde-escuro);color:#fff;border-radius:10px;padding:12px 14px;margin:6px 0 14px;font-size:13px;">
+    <div style="display:flex;justify-content:space-between;"><span>Mensalidade cheia:</span><strong id="vfTabela">R$ 0,00</strong></div>
+    <div style="display:flex;justify-content:space-between;"><span>Desconto pontualidade:</span><strong id="vfDesconto">- R$ 0,00</strong></div>
+    <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.3);margin-top:6px;padding-top:6px;"><span>Valor com desconto (em dia):</span><strong id="vfFinal">R$ 0,00</strong></div>
+  </div>`;
   $c.innerHTML = html;
+
+  const $vTabela = document.getElementById('ctt_VALOR_TABELA');
+  const $vDesconto = document.getElementById('ctt_DESCONTO');
+  const atualizarPainelValor = ()=>{
+    const parse = v => Number(String(v).replace(/\./g,'').replace(',','.')) || 0;
+    const tabela = parse($vTabela.value);
+    const desconto = parse($vDesconto.value);
+    const final = Math.max(0, tabela - desconto);
+    const fmt = n => 'R$ ' + n.toFixed(2).replace('.', ',');
+    document.getElementById('vfTabela').textContent = fmt(tabela);
+    document.getElementById('vfDesconto').textContent = '- ' + fmt(desconto);
+    document.getElementById('vfFinal').textContent = fmt(final);
+  };
+  $vTabela.addEventListener('input', atualizarPainelValor);
+  $vDesconto.addEventListener('input', atualizarPainelValor);
 }
 
 document.getElementById('subcard18').addEventListener('click', ()=> abrirFormContrato('18'));
@@ -2291,12 +2333,25 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
     NUM_CONTRATO: document.getElementById('ctt_NUM_CONTRATO').value,
     NUM_MATRICULA: document.getElementById('ctt_NUM_MATRICULA').value
   };
+  const parseMoney = v => Number(String(v).replace(/\./g,'').replace(',','.')) || 0;
+  const fmtMoney = n => n.toFixed(2).replace('.', ',');
+
   let faltando = [];
   campos.forEach(c=>{
     const v = document.getElementById('ctt_' + c[0]).value.trim();
     dados[c[0]] = v;
     if(!v) faltando.push(c[1]);
   });
+
+  // calcula o valor final da mensalidade (tabela - desconto) e formata os campos monetários
+  const tabela = parseMoney(dados.VALOR_TABELA);
+  const desconto = parseMoney(dados.DESCONTO);
+  const valorFinal = Math.max(0, tabela - desconto);
+  dados.VALOR_TABELA = fmtMoney(tabela);
+  dados.DESCONTO = fmtMoney(desconto);
+  dados.VALOR_MATRICULA = fmtMoney(parseMoney(dados.VALOR_MATRICULA));
+  dados.VALOR_FINAL = fmtMoney(valorFinal);
+
   if(faltando.length > 3){
     if(!confirm(`${faltando.length} campos vazios. Gerar mesmo assim?`)) return;
   }
