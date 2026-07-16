@@ -599,11 +599,28 @@
         <p class="sub" id="recepcaoSub">Status dos registros de presença</p>
       </div>
     </header>
-    <div class="recep-abas">
+    <div class="menu-opcoes" id="recepCards">
+      <button class="menu-card" id="recepCardContratos">
+        <div class="menu-card-icone">C</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Contratos</span>
+          <span class="menu-card-sub">Gerar contrato novo e buscar contratos</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardPresenca">
+        <div class="menu-card-icone">P</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Presenca</span>
+          <span class="menu-card-sub">Registros do dia, busca e relatorio</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+    </div>
+    <div class="recep-abas hidden" id="recepAbasPresenca">
       <button class="recep-aba ativa" data-aba="hoje">Hoje</button>
       <button class="recep-aba" data-aba="buscar">Buscar</button>
-      <button class="recep-aba" data-aba="relatorio">Relatório</button>
-      <button class="recep-aba" data-aba="contratos">Contratos</button>
+      <button class="recep-aba" data-aba="relatorio">Relat&oacute;rio</button>
     </div>
 
     <div class="recep-painel" id="painelHoje">
@@ -697,9 +714,46 @@
       <div class="hidden" id="buscaContrato">
         <div class="controls">
           <div class="field">
-            <label for="contratoBusca">Buscar por nome ou nº</label>
-            <input type="text" id="contratoBusca" placeholder="Ex: Maria ou 42">
+            <label for="contratoBusca">Nome do aluno ou responsavel</label>
+            <input type="text" id="contratoBusca" placeholder="Ex: Maria">
           </div>
+        </div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="field">
+            <label for="contratoBuscaNum">N&ordm; do contrato</label>
+            <input type="text" inputmode="numeric" id="contratoBuscaNum" placeholder="Ex: 42">
+          </div>
+          <div class="field">
+            <label for="contratoBuscaMat">N&ordm; da matricula</label>
+            <input type="text" inputmode="numeric" id="contratoBuscaMat" placeholder="Ex: 42">
+          </div>
+        </div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="field">
+            <label for="contratoBuscaMes">Mes de inicio</label>
+            <select id="contratoBuscaMes">
+              <option value="">Todos</option>
+              <option value="1">Janeiro</option>
+              <option value="2">Fevereiro</option>
+              <option value="3">Marco</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contratoBuscaAno">Ano de inicio</label>
+            <input type="text" inputmode="numeric" id="contratoBuscaAno" placeholder="Ex: 2026">
+          </div>
+        </div>
+        <div style="padding:0 20px 8px;">
+          <button class="sair" id="btnLimparBuscaContrato" style="width:100%;">Limpar filtros</button>
         </div>
         <div class="assess-resultado" id="contratoBuscaResultado"></div>
       </div>
@@ -1614,7 +1668,8 @@ let WHATSAPP_PROF = {};
 function abrirRecepcao(){
   $telaRecepcao.classList.remove('hidden');
   $dataRecepcao.value = hojeISO();
-  carregarStatusDoDia();
+  mostrarCardsRecepcao();
+  document.getElementById('btnSairRecepcao').textContent = 'Sair';
   // popula filtro de professores (exceto Recepção)
   const sel = document.getElementById('buscarProf');
   if(sel && sel.options.length <= 1){
@@ -1640,8 +1695,36 @@ document.querySelectorAll('.recep-aba').forEach(aba=>{
     if(alvo === 'hoje') document.getElementById('painelHoje').classList.remove('hidden');
     if(alvo === 'buscar') document.getElementById('painelBuscar').classList.remove('hidden');
     if(alvo === 'relatorio'){ document.getElementById('painelRelatorio').classList.remove('hidden'); carregarRelatorio(); }
-    if(alvo === 'contratos'){ document.getElementById('painelContratos').classList.remove('hidden'); mostrarSubcardsContrato(); }
   });
+});
+
+// ===== NAVEGAÇÃO EM 2 CARDS DA RECEPÇÃO =====
+function mostrarCardsRecepcao(){
+  document.getElementById('recepCards').classList.remove('hidden');
+  document.getElementById('recepAbasPresenca').classList.add('hidden');
+  document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
+  $recepcaoSub.textContent = 'O que voce quer fazer?';
+}
+
+document.getElementById('recepCardContratos').addEventListener('click', ()=>{
+  document.getElementById('recepCards').classList.add('hidden');
+  document.getElementById('recepAbasPresenca').classList.add('hidden');
+  document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
+  document.getElementById('painelContratos').classList.remove('hidden');
+  mostrarSubcardsContrato();
+  $recepcaoSub.textContent = 'Contratos';
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
+});
+
+document.getElementById('recepCardPresenca').addEventListener('click', ()=>{
+  document.getElementById('recepCards').classList.add('hidden');
+  document.getElementById('recepAbasPresenca').classList.remove('hidden');
+  document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
+  document.querySelectorAll('.recep-aba').forEach(a=> a.classList.remove('ativa'));
+  document.querySelector('.recep-aba[data-aba="hoje"]').classList.add('ativa');
+  document.getElementById('painelHoje').classList.remove('hidden');
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
+  carregarStatusDoDia();
 });
 
 // ABA BUSCAR (por período)
@@ -1764,6 +1847,13 @@ function gerarPDFCobranca(rel){
 }
 
 document.getElementById('btnSairRecepcao').addEventListener('click', ()=>{
+  const nosCards = !document.getElementById('recepCards').classList.contains('hidden');
+  if(!nosCards){
+    // está dentro de Contratos ou Presença: volta pros 2 cards
+    mostrarCardsRecepcao();
+    document.getElementById('btnSairRecepcao').textContent = 'Sair';
+    return;
+  }
   professorLogado = null;
   $loginSenha.value = '';
   $telaRecepcao.classList.add('hidden');
@@ -2211,6 +2301,8 @@ const CAMPOS_18 = [
   ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
   ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
+  ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
+  ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
   ['DIA_VENCIMENTO','Melhor dia de vencimento','text']
 ];
@@ -2238,6 +2330,8 @@ const CAMPOS_MENOR = [
   ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
   ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
+  ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
+  ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
   ['DIA_VENCIMENTO','Melhor dia de vencimento','text']
 ];
@@ -2371,27 +2465,42 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
       $res.innerHTML = `<div class="assess-aviso">${r.erro || 'Erro ao gerar contrato'}</div>`;
     }
   } catch(e){
-    $res.innerHTML = '<div class="assess-aviso">Erro de conexão ao gerar contrato.</div>';
+    $res.innerHTML = `<div class="assess-aviso" style="text-align:left;">
+      <strong>Erro ao gerar contrato</strong><br>
+      <span style="font-size:12px;">${e.message || e}</span>
+    </div>`;
+    console.error('Erro ao gerar contrato:', e);
   }
   document.getElementById('btnGerarContrato').disabled = false;
 });
 
 async function carregarBuscaContratos(){
   const $res = document.getElementById('contratoBuscaResultado');
-  const termo = document.getElementById('contratoBusca').value.trim();
+  const filtros = {
+    acao: 'buscarContratos',
+    termo: document.getElementById('contratoBusca').value.trim(),
+    numContrato: document.getElementById('contratoBuscaNum').value.trim(),
+    numMatricula: document.getElementById('contratoBuscaMat').value.trim(),
+    mes: document.getElementById('contratoBuscaMes').value,
+    ano: document.getElementById('contratoBuscaAno').value.trim()
+  };
   $res.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
   try{
-    const r = await chamarAPI({ acao:'buscarContratos', termo });
+    const r = await chamarAPI(filtros);
     if(!r.contratos || r.contratos.length === 0){
       $res.innerHTML = '<div class="assess-aviso">Nenhum contrato encontrado.</div>';
       return;
     }
-    let html = '';
+    let html = `<div style="padding:0 20px 8px;font-size:12px;color:#8A8A82;">${r.contratos.length} contrato(s) encontrado(s)</div>`;
     r.contratos.forEach(c=>{
+      const linhaResp = c.responsavel ? `<div class="recep-extra">Responsavel: ${c.responsavel}</div>` : '';
+      const linhaInicio = c.inicio ? `<div class="recep-extra">Inicio: ${c.inicio}</div>` : '';
       html += `<div class="skill-linha" style="align-items:flex-start;">
         <div style="flex:1;">
-          <span class="skill-nome">Nº ${c.numeroContrato} · ${c.aluno}</span>
-          <div class="recep-extra">Matrícula ${c.numeroMatricula} · ${c.tipo} · ${c.data}</div>
+          <span class="skill-nome">N&ordm; ${c.numeroContrato} &middot; ${c.aluno}</span>
+          <div class="recep-extra">Matricula ${c.numeroMatricula} &middot; ${c.tipo} &middot; emitido ${c.data}</div>
+          ${linhaResp}
+          ${linhaInicio}
         </div>
         <a href="${c.pdfUrl}" target="_blank" class="btn-material">PDF</a>
       </div>`;
@@ -2399,9 +2508,21 @@ async function carregarBuscaContratos(){
     $res.innerHTML = html;
   } catch(e){ $res.innerHTML = '<div class="assess-aviso">Erro ao buscar.</div>'; }
 }
-document.getElementById('contratoBusca').addEventListener('input', ()=>{
+
+function agendarBuscaContratos(){
   clearTimeout(window._buscaContratoTimer);
   window._buscaContratoTimer = setTimeout(carregarBuscaContratos, 400);
+}
+['contratoBusca','contratoBuscaNum','contratoBuscaMat','contratoBuscaAno'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', agendarBuscaContratos);
+});
+document.getElementById('contratoBuscaMes').addEventListener('change', carregarBuscaContratos);
+document.getElementById('btnLimparBuscaContrato').addEventListener('click', ()=>{
+  ['contratoBusca','contratoBuscaNum','contratoBuscaMat','contratoBuscaAno'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('contratoBuscaMes').value = '';
+  carregarBuscaContratos();
 });
 
 popularLoginProfessores();
