@@ -297,7 +297,7 @@
       <p class="login-erro" id="loginErro"></p>
     </div>
     <p class="login-nota">Conectado à planilha AttendancePlus</p>
-    <p class="login-credito">Criado por Felipe Sanches · v1.8</p>
+    <p class="login-credito" id="loginCredito">Criado por Felipe Sanches</p>
   </div>
 
   <div id="telaApp" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow-y:auto;">
@@ -898,6 +898,48 @@ const $loginErro = document.getElementById('loginErro');
       document.querySelectorAll('header').forEach(h=> h.classList.remove('expandido'));
       try{ sessionStorage.removeItem(CHAVE); }catch(e){}
     });
+  });
+})();
+
+const APP_VERSAO = '2.0.0';
+document.addEventListener('DOMContentLoaded', ()=>{
+  const cr = document.getElementById('loginCredito');
+  if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
+});
+
+// ===== AVISO DE NOVA VERSÃO =====
+async function checarVersao(){
+  try{
+    const r = await chamarAPI({ acao: 'versaoApp' });
+    if(r.sucesso && r.versao && r.versao !== APP_VERSAO){
+      if(document.getElementById('bannerVersao')) return;
+      const b = document.createElement('div');
+      b.id = 'bannerVersao';
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--salmao);color:#fff;padding:12px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+      b.innerHTML = 'Nova vers\u00e3o dispon\u00edvel &middot; toque aqui para atualizar';
+      b.addEventListener('click', ()=>{
+        location.href = location.pathname + '?v=' + encodeURIComponent(r.versao);
+      });
+      document.body.appendChild(b);
+    }
+  }catch(e){}
+}
+setTimeout(checarVersao, 3000);
+setInterval(checarVersao, 30*60*1000); // rechecagem a cada 30 min
+
+// ===== ANOS DINÂMICOS =====
+(function(){
+  const anoAtual = new Date().getFullYear();
+  ['anoFin','relAno'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = '';
+    for(let a = anoAtual - 1; a <= anoAtual + 1; a++){
+      const o = document.createElement('option');
+      o.value = a; o.textContent = a;
+      if(a === anoAtual) o.selected = true;
+      sel.appendChild(o);
+    }
   });
 })();
 
@@ -1662,6 +1704,42 @@ async function carregarDashboard(){
           <span class="menu-card-seta">&rarr;</span>
         </button>
         <div id="dashAulasFora"></div>
+
+        <div style="background:linear-gradient(135deg, var(--verde-escuro), #3A5446);border-radius:12px;padding:14px 16px;margin-top:12px;color:#fff;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Oportunidades de receita</div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;">
+            <span style="opacity:.85;">Receita potencial (vagas ociosas)</span>
+            <strong style="color:#F0B9AE;">+ R$ ${(r.receitaPotencial||0).toLocaleString('pt-BR')}/m\u00eas</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;">
+            <span style="opacity:.85;">Ticket m\u00e9dio por aluno</span>
+            <strong>R$ ${(r.ticketMedio||0).toLocaleString('pt-BR')}</strong>
+          </div>
+          ${(r.turmasUmAluno && r.turmasUmAluno.length) ? `
+          <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);opacity:.9;">
+            <strong>${r.turmasUmAluno.length} turma(s) com 1 aluno s\u00f3</strong> (custo de professor igual, receita m\u00ednima):
+            ${r.turmasUmAluno.map(t=>`Turma ${t.turmaId} (${t.nivel} \u00b7 ${t.horario})`).join(', ')}
+          </div>` : ''}
+          ${(r.contratosVencendo && r.contratosVencendo.length) ? `
+          <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);">
+            <strong style="color:#F0B9AE;">${r.contratosVencendo.length} contrato(s) vencendo em 60 dias</strong> &middot; hora de renovar (e reajustar):
+            ${r.contratosVencendo.map(cv=>`
+            <div style="display:flex;justify-content:space-between;padding:3px 0;opacity:.95;">
+              <span>${cv.aluno}${cv.responsavel ? ' (resp: ' + cv.responsavel + ')' : ''} &middot; N\u00ba ${cv.numeroContrato}</span>
+              <span style="white-space:nowrap;">${cv.diasRestantes}d &middot; ${cv.fim}</span>
+            </div>`).join('')}
+          </div>` : ''}
+        </div>
+
+        <button class="menu-card" id="btnReajustes" style="margin-top:8px;width:100%;">
+          <div class="menu-card-icone">$</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Reajuste de mensalidades</span>
+            <span class="menu-card-sub">Aplicar novo valor e ver hist\u00f3rico</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <div id="dashReajustes"></div>
       </div>`;
 
     // alunos por nível
@@ -1697,6 +1775,86 @@ async function carregarDashboard(){
     }
 
     $dashResultado.innerHTML = html;
+
+    const $btnRea = document.getElementById('btnReajustes');
+    if($btnRea){
+      $btnRea.addEventListener('click', async ()=>{
+        const $box = document.getElementById('dashReajustes');
+        if($box.dataset.aberto === '1'){ $box.innerHTML=''; $box.dataset.aberto='0'; return; }
+        $box.dataset.aberto = '1';
+        let selHtml = '<option value="">Selecione a turma</option>';
+        (r.todasTurmas || []).forEach(t=>{ selHtml += `<option value="${t.turmaId}">Turma ${t.turmaId} \u00b7 ${t.nivel} \u00b7 ${t.professor}</option>`; });
+        $box.innerHTML = `
+          <div style="padding:10px 0;">
+            <div class="field" style="margin-bottom:10px;">
+              <label>Turma</label>
+              <select id="reaTurma">${selHtml}</select>
+            </div>
+            <div id="reaAlunos"></div>
+            <div id="reaHist"></div>
+          </div>`;
+
+        document.getElementById('reaTurma').addEventListener('change', async (ev)=>{
+          const tid = ev.target.value;
+          const $al = document.getElementById('reaAlunos');
+          if(!tid){ $al.innerHTML=''; return; }
+          $al.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+          try{
+            const v = await chamarAPI({ acao:'valoresTurma', turmaId: tid });
+            if(!v.sucesso || !v.alunos.length){ $al.innerHTML = '<div class="assess-aviso">Nenhum aluno nesta turma.</div>'; return; }
+            let ha = '';
+            v.alunos.forEach(a=>{
+              ha += `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--perola);border-radius:10px;margin-bottom:6px;">
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${a.nome}</div>
+                  <div style="font-size:11.5px;color:#8A8A82;">Atual: R$ ${a.valor.toFixed(2).replace('.',',')}</div>
+                </div>
+                <input type="text" inputmode="decimal" id="reaNovo_${a.pos}" placeholder="Novo valor" style="width:90px;padding:8px;border:1.5px solid #DDD8CF;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;">
+                <button class="btn-material" data-pos="${a.pos}" data-nome="${a.nome}">Aplicar</button>
+              </div>`;
+            });
+            $al.innerHTML = ha;
+            $al.querySelectorAll('button[data-pos]').forEach(btn=>{
+              btn.addEventListener('click', async ()=>{
+                const pos = btn.dataset.pos;
+                const campo = document.getElementById('reaNovo_'+pos);
+                const novo = Number(String(campo.value).replace(/\./g,'').replace(',','.'));
+                if(!novo || novo <= 0){ mostrarToast('Digite o novo valor'); return; }
+                const motivo = prompt('Motivo do reajuste (opcional):', 'Reajuste anual') || '';
+                btn.disabled = true;
+                try{
+                  const res = await chamarAPI({ acao:'reajustarMensalidade', turmaId: tid, pos: pos, valorNovo: novo, motivo: motivo });
+                  if(res.sucesso){
+                    mostrarToast(`${btn.dataset.nome}: R$ ${res.valorAntigo} \u2192 R$ ${res.valorNovo}`);
+                    ev.target.dispatchEvent(new Event('change'));
+                    carregarHistReajustes();
+                  } else mostrarToast(res.erro || 'Erro ao reajustar');
+                }catch(e){ mostrarToast('Erro de conex\u00e3o'); }
+                btn.disabled = false;
+              });
+            });
+          }catch(e){ $al.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>'; }
+        });
+
+        async function carregarHistReajustes(){
+          const $hi = document.getElementById('reaHist');
+          try{
+            const hr = await chamarAPI({ acao:'listaReajustes' });
+            if(!hr.reajustes || !hr.reajustes.length){ $hi.innerHTML=''; return; }
+            let hh = '<div style="font-size:12px;color:#8A8A82;padding:10px 0 4px;">\u00daltimos reajustes</div>';
+            hr.reajustes.slice(0,10).forEach(x=>{
+              const sinal = Number(x.variacao) >= 0 ? '+' : '';
+              hh += `<div style="padding:6px 10px;border-bottom:1px solid #EFEFEA;font-size:12px;">
+                <div><strong>${x.aluno}</strong> \u00b7 Turma ${x.turmaId} \u00b7 ${x.data}</div>
+                <div style="color:var(--salmao);">R$ ${x.valorAntigo} \u2192 R$ ${x.valorNovo} (${sinal}${x.variacao}%)${x.motivo ? ' \u00b7 ' + x.motivo : ''}</div>
+              </div>`;
+            });
+            $hi.innerHTML = hh;
+          }catch(e){}
+        }
+        carregarHistReajustes();
+      });
+    }
 
     const $btnFora = document.getElementById('btnAulasFora');
     if($btnFora){
@@ -2508,8 +2666,8 @@ const CAMPOS_18 = [
   ['NASCIMENTO','Data de nascimento','data'],
   ['EMAIL','E-mail','text'],
   ['DIAS_AULA','Dia(s) de aula','text'],
-  ['HORA_INICIO','Hora de início (ex: 17)','text'],
-  ['HORA_FIM','Hora de término (ex: 18)','text'],
+  ['HORA_INICIO','Hora de início','hora'],
+  ['HORA_FIM','Hora de término','hora'],
   ['MODALIDADE','Modo da aula','modal'],
   ['TIPO_TURMA','Tipo de turma','select'],
   ['VALOR_TABELA','Valor da mensalidade (tabela, sem desconto)','money'],
@@ -2519,6 +2677,7 @@ const CAMPOS_18 = [
   ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
   ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
+  ['DATA_PRIMEIRO_VENC','Data do primeiro vencimento','data'],
   ['DIA_VENCIMENTO','Melhor dia de vencimento','text']
 ];
 
@@ -2539,8 +2698,8 @@ const CAMPOS_MENOR = [
   ['NASCIMENTO','Data de nascimento do aluno','data'],
   ['EMAIL','E-mail','text'],
   ['DIAS_AULA','Dia(s) de aula','text'],
-  ['HORA_INICIO','Hora de início (ex: 17)','text'],
-  ['HORA_FIM','Hora de término (ex: 18)','text'],
+  ['HORA_INICIO','Hora de início','hora'],
+  ['HORA_FIM','Hora de término','hora'],
   ['MODALIDADE','Modo da aula','modal'],
   ['TIPO_TURMA','Tipo de turma','select'],
   ['VALOR_TABELA','Valor da mensalidade (tabela, sem desconto)','money'],
@@ -2550,6 +2709,7 @@ const CAMPOS_MENOR = [
   ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
   ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
+  ['DATA_PRIMEIRO_VENC','Data do primeiro vencimento','data'],
   ['DIA_VENCIMENTO','Melhor dia de vencimento','text']
 ];
 
@@ -2603,9 +2763,17 @@ async function abrirFormContrato(tipo){
         <select id="ctt_${c[0]}">${opts}</select>
       </div>`;
     } else if(c[2] === 'money'){
+      const exemplos = { VALOR_TABELA:'427,00', DESCONTO:'67,00', VALOR_MATRICULA:'267,00' };
+      const ex = exemplos[c[0]] || '0,00';
       html += `<div class="field" style="margin-bottom:10px;">
         <label for="ctt_${c[0]}">${c[1]}</label>
-        <input type="text" inputmode="decimal" id="ctt_${c[0]}" placeholder="Ex: 427,00">
+        <input type="text" inputmode="decimal" id="ctt_${c[0]}" placeholder="Ex: ${ex}">
+      </div>`;
+    } else if(c[2] === 'hora'){
+      const exH = c[0] === 'HORA_FIM' ? '18:00' : '17:00';
+      html += `<div class="field" style="margin-bottom:10px;">
+        <label for="ctt_${c[0]}">${c[1]}</label>
+        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="hora" maxlength="5" placeholder="${exH}">
       </div>`;
     } else if(c[2] === 'cpf'){
       html += `<div class="field" style="margin-bottom:10px;">
@@ -2630,12 +2798,12 @@ async function abrirFormContrato(tipo){
     } else if(c[2] === 'data'){
       html += `<div class="field" style="margin-bottom:10px;">
         <label for="ctt_${c[0]}">${c[1]}</label>
-        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="data" maxlength="10" placeholder="10/08/1993">
+        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="data" maxlength="10" placeholder="01/01/1990">
       </div>`;
     } else if(c[2] === 'tel'){
       html += `<div class="field" style="margin-bottom:10px;">
         <label for="ctt_${c[0]}">${c[1]}</label>
-        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="tel" maxlength="15" placeholder="(15) 99662-0815">
+        <input type="text" inputmode="numeric" id="ctt_${c[0]}" data-mask="tel" maxlength="15" placeholder="(15) 9 1234-5678">
       </div>`;
     } else if(c[2] === 'cep'){
       html += `<div class="field" style="margin-bottom:10px;">
@@ -2665,6 +2833,11 @@ async function abrirFormContrato(tipo){
     rg: v => v.replace(/[^\dxX]/g,'').slice(0,9)
       .replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})([\dxX]{1})$/,'$1-$2'),
     cep: v => v.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2'),
+    hora: v => {
+      const d = v.replace(/\D/g,'').slice(0,4);
+      if(d.length <= 2) return d;
+      return d.replace(/(\d{2})(\d{0,2})/, '$1:$2');
+    },
     data: v => {
       const d = v.replace(/\D/g,'').slice(0,8);
       if(d.length <= 2) return d;
