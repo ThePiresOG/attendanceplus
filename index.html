@@ -368,6 +368,7 @@
           <button class="sair" id="btnSairMenu">Sair</button>
         </div>
         <p class="sub">O que você quer fazer hoje?</p>
+        <p class="sub" id="menuFrase" style="font-style:italic;margin-top:4px;opacity:0.85;"></p>
       </div>
           <div class="header-alca" title="Arraste para ajustar a altura"></div>
     </header>
@@ -637,8 +638,8 @@
       <button class="menu-card" id="recepCardPresenca">
         <div class="menu-card-icone">P</div>
         <div class="menu-card-txt">
-          <span class="menu-card-titulo">Presenca</span>
-          <span class="menu-card-sub">Registros do dia, busca e relatorio</span>
+          <span class="menu-card-titulo">Presença</span>
+          <span class="menu-card-sub">Registros do dia, busca e relatório</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -740,7 +741,7 @@
       <div class="hidden" id="buscaContrato">
         <div class="controls">
           <div class="field">
-            <label for="contratoBusca">Nome do aluno ou responsavel</label>
+            <label for="contratoBusca">Nome do aluno ou responsável</label>
             <input type="text" id="contratoBusca" placeholder="Ex: Maria">
           </div>
         </div>
@@ -750,18 +751,18 @@
             <input type="text" inputmode="numeric" id="contratoBuscaNum" placeholder="Ex: 42">
           </div>
           <div class="field">
-            <label for="contratoBuscaMat">N&ordm; da matricula</label>
+            <label for="contratoBuscaMat">N&ordm; da matrícula</label>
             <input type="text" inputmode="numeric" id="contratoBuscaMat" placeholder="Ex: 42">
           </div>
         </div>
         <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div class="field">
-            <label for="contratoBuscaMes">Mes de inicio</label>
+            <label for="contratoBuscaMes">Mês de início</label>
             <select id="contratoBuscaMes">
               <option value="">Todos</option>
               <option value="1">Janeiro</option>
               <option value="2">Fevereiro</option>
-              <option value="3">Marco</option>
+              <option value="3">Março</option>
               <option value="4">Abril</option>
               <option value="5">Maio</option>
               <option value="6">Junho</option>
@@ -774,7 +775,7 @@
             </select>
           </div>
           <div class="field">
-            <label for="contratoBuscaAno">Ano de inicio</label>
+            <label for="contratoBuscaAno">Ano de início</label>
             <input type="text" inputmode="numeric" id="contratoBuscaAno" placeholder="Ex: 2026">
           </div>
         </div>
@@ -837,6 +838,33 @@ function formatarHorario(h){
 const MAX_SLOTS = 6;
 const sessao = {};
 let professorLogado = null;
+
+// frase motivacional semanal, diferente por professor
+const FRASES_SEMANA = [
+  'Teaching is the greatest act of optimism.',
+  'A good teacher plants seeds that grow forever.',
+  'Every student you inspire changes the world a little.',
+  'Great teachers make hard things feel possible.',
+  'Your energy in class today becomes someone\u2019s confidence tomorrow.',
+  'Small progress every class is still progress.',
+  'The best teachers teach from the heart, not from the book.',
+  'One language, one lesson, one life changed at a time.',
+  'Patience today builds fluency tomorrow.',
+  'You don\u2019t just teach English. You open doors.',
+  'Consistency beats intensity. Keep showing up.',
+  'Your students remember how you made them feel.',
+  'Mistakes in class are proof that learning is happening.',
+  'Teach with passion and the lesson teaches itself.'
+];
+function fraseDaSemana(nome){
+  const agora = new Date();
+  const iniAno = new Date(agora.getFullYear(), 0, 1);
+  const semanaAno = Math.floor((agora - iniAno) / (7 * 24 * 60 * 60 * 1000));
+  let hashProf = 0;
+  const n = String(nome || '');
+  for(let ci = 0; ci < n.length; ci++) hashProf += n.charCodeAt(ci);
+  return FRASES_SEMANA[(semanaAno + hashProf) % FRASES_SEMANA.length];
+}
 
 const $loginProfessor = document.getElementById('loginProfessor');
 const $loginSenha = document.getElementById('loginSenha');
@@ -1335,6 +1363,8 @@ $btnEntrar.addEventListener('click', async ()=>{
     }
     $telaLogin.classList.add('hidden');
     $menuProfNome.textContent = nome;
+    const $mf = document.getElementById('menuFrase');
+    if($mf) $mf.textContent = '\u201c' + fraseDaSemana(nome) + '\u201d';
     $telaMenu.classList.remove('hidden');
     // Card Financeiro: só o Felipe vê
     const ehFelipe = String(nome).trim().toUpperCase() === 'FELIPE';
@@ -1685,7 +1715,7 @@ async function carregarDashboard(){
         <div class="dash-card"><span class="dash-num">${r.totalAlunos}</span><span class="dash-rot">Alunos</span></div>
         <div class="dash-card"><span class="dash-num">${r.turmasAtivas}</span><span class="dash-rot">Turmas ativas</span></div>
         <div class="dash-card"><span class="dash-num">${r.ocupacaoMedia}%</span><span class="dash-rot">Ocupação média</span></div>
-        <div class="dash-card destaque"><span class="dash-num">R$ ${r.receita.toFixed(2).replace('.', ',')}</span><span class="dash-rot">Receita mensal</span></div>
+        <div class="dash-card destaque"><span class="dash-num">R$ ${r.receita.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span><span class="dash-rot">Receita mensal</span></div>
       </div>
       <div style="padding:0 20px 8px;">
         <div style="background:#E8EEF5;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
@@ -1698,8 +1728,8 @@ async function carregarDashboard(){
         <button class="menu-card" id="btnAulasFora" style="margin-top:8px;width:100%;">
           <div class="menu-card-icone">R</div>
           <div class="menu-card-txt">
-            <span class="menu-card-titulo">Aulas fora do calendario</span>
-            <span class="menu-card-sub">Reposicoes, feriados e emendas trabalhadas</span>
+            <span class="menu-card-titulo">Aulas fora do calendário</span>
+            <span class="menu-card-sub">Reposições, feriados e emendas trabalhadas</span>
           </div>
           <span class="menu-card-seta">&rarr;</span>
         </button>
@@ -1717,8 +1747,25 @@ async function carregarDashboard(){
           </div>
           ${(r.turmasUmAluno && r.turmasUmAluno.length) ? `
           <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);opacity:.9;">
-            <strong>${r.turmasUmAluno.length} turma(s) com 1 aluno s\u00f3</strong> (custo de professor igual, receita m\u00ednima):
+            <strong>${r.turmasUmAluno.length} turma(s) de grupo com 1 aluno s\u00f3</strong> (VIPs n\u00e3o entram aqui):
             ${r.turmasUmAluno.map(t=>`Turma ${t.turmaId} (${t.nivel} \u00b7 ${t.horario})`).join(', ')}
+          </div>` : ''}
+          ${(r.sugestoesFusao && r.sugestoesFusao.length) ? `
+          <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);">
+            <strong style="color:#F0B9AE;">Otimiza\u00e7\u00e3o de turmas (mesmo n\u00edvel)</strong> &middot; cabem juntas:
+            ${r.sugestoesFusao.map(f=>`
+            <div style="padding:3px 0;opacity:.95;">${f.nivel}: Turma ${f.turmaA} (${f.alunosA} aluno${f.alunosA>1?'s':''} \u00b7 ${f.horarioA}) + Turma ${f.turmaB} (${f.alunosB} aluno${f.alunosB>1?'s':''} \u00b7 ${f.horarioB})</div>`).join('')}
+            <div style="opacity:.7;font-size:10.5px;margin-top:2px;">Confira os hor\u00e1rios com os alunos antes de unir.</div>
+          </div>` : ''}
+          ${(r.alunosSemValor && r.alunosSemValor.length) ? `
+          <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);">
+            <strong style="color:#F0B9AE;">${r.alunosSemValor.length} aluno(s) sem valor de mensalidade</strong> (n\u00e3o entram na receita):
+            ${r.alunosSemValor.slice(0,8).map(a=>`${a.aluno} (T${a.turmaId})`).join(', ')}${r.alunosSemValor.length>8?' e mais '+(r.alunosSemValor.length-8):''}
+          </div>` : ''}
+          ${(r.alunosSemContrato && r.alunosSemContrato.length) ? `
+          <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);">
+            <strong style="color:#F0B9AE;">${r.alunosSemContrato.length} aluno(s) sem contrato no sistema</strong> &middot; gere pela Recep\u00e7\u00e3o:
+            ${r.alunosSemContrato.slice(0,8).map(a=>`${a.aluno} (T${a.turmaId})`).join(', ')}${r.alunosSemContrato.length>8?' e mais '+(r.alunosSemContrato.length-8):''}
           </div>` : ''}
           ${(r.contratosVencendo && r.contratosVencendo.length) ? `
           <div style="font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2);">
@@ -1740,6 +1787,26 @@ async function carregarDashboard(){
           <span class="menu-card-seta">&rarr;</span>
         </button>
         <div id="dashReajustes"></div>
+
+        <button class="menu-card" id="btnImpacto" style="margin-top:8px;width:100%;">
+          <div class="menu-card-icone">$</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Impacto das oportunidades</span>
+            <span class="menu-card-sub">Quanto a receita cresceria (antes vs depois)</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <div id="dashImpacto"></div>
+
+        <button class="menu-card" id="btnCustoProf" style="margin-top:8px;width:100%;">
+          <div class="menu-card-icone">P</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Custo mensal com professores</span>
+            <span class="menu-card-sub">Previsão se 100% das aulas forem dadas</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <div id="dashCustoProf"></div>
       </div>`;
 
     // alunos por nível
@@ -1775,6 +1842,82 @@ async function carregarDashboard(){
     }
 
     $dashResultado.innerHTML = html;
+
+    const $btnImp = document.getElementById('btnImpacto');
+    if($btnImp){
+      $btnImp.addEventListener('click', async ()=>{
+        const $box = document.getElementById('dashImpacto');
+        if($box.dataset.aberto === '1'){ $box.innerHTML=''; $box.dataset.aberto='0'; return; }
+        $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Calculando...</p>';
+        $box.dataset.aberto = '1';
+        try{
+          const im = await chamarAPI({ acao:'impactoOportunidades' });
+          if(!im.sucesso){ $box.innerHTML = '<div class="assess-aviso">Erro ao calcular.</div>'; return; }
+          const fmt = n => 'R$ ' + (n||0).toLocaleString('pt-BR');
+          const pct = im.receitaAtual > 0 ? Math.round((im.ganhoTotal / im.receitaAtual) * 100) : 0;
+          $box.innerHTML = `
+            <div style="padding:10px 0;">
+              <div style="display:flex;gap:10px;">
+                <div style="flex:1;background:var(--perola);border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:11px;color:#8A8A82;">HOJE</div>
+                  <div style="font-size:17px;font-weight:700;color:var(--verde-escuro);">${fmt(im.receitaAtual)}</div>
+                </div>
+                <div style="display:flex;align-items:center;color:var(--salmao);font-size:20px;">&rarr;</div>
+                <div style="flex:1;background:#E3EFE7;border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:11px;color:#3E8E5A;">POTENCIAL</div>
+                  <div style="font-size:17px;font-weight:700;color:#3E8E5A;">${fmt(im.receitaPotencialTotal)}</div>
+                </div>
+              </div>
+              <div style="text-align:center;margin:12px 0;padding:10px;background:var(--salmao);border-radius:10px;color:#fff;">
+                <div style="font-size:12px;opacity:.9;">Ganho mensal poss\u00edvel</div>
+                <div style="font-size:22px;font-weight:700;">+ ${fmt(im.ganhoTotal)}/m\u00eas ${pct>0?'('+pct+'%)':''}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">= ${fmt(im.ganhoTotal*12)} por ano</div>
+              </div>
+              <div style="font-size:12.5px;color:#5A5A52;">
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #EFEFEA;">
+                  <span>Preencher vagas ociosas (grupo)</span><strong>+ ${fmt(im.ganhoVagas)}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                  <span>Corrigir alunos sem valor</span><strong>+ ${fmt(im.ganhoSemValor)}</strong>
+                </div>
+              </div>
+              <div style="font-size:10.5px;color:#9a9a94;margin-top:8px;">Estimativa baseada no ticket m\u00e9dio de cada n\u00edvel. Valores reais dependem de negocia\u00e7\u00e3o.</div>
+            </div>`;
+        }catch(e){ $box.innerHTML = '<div class="assess-aviso">Erro de conex\u00e3o.</div>'; }
+      });
+    }
+
+    const $btnCP = document.getElementById('btnCustoProf');
+    if($btnCP){
+      $btnCP.addEventListener('click', async ()=>{
+        const $box = document.getElementById('dashCustoProf');
+        if($box.dataset.aberto === '1'){ $box.innerHTML=''; $box.dataset.aberto='0'; return; }
+        $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Calculando...</p>';
+        $box.dataset.aberto = '1';
+        try{
+          const cp = await chamarAPI({ acao:'custoProfessores' });
+          if(!cp.sucesso || !cp.professores.length){ $box.innerHTML = '<div class="assess-aviso">Sem dados de turmas.</div>'; return; }
+          const fmt = n => 'R$ ' + (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+          let hc = `<div style="padding:10px 0;">
+            <div style="text-align:center;margin-bottom:10px;padding:12px;background:var(--verde-escuro);border-radius:10px;color:#fff;">
+              <div style="font-size:12px;opacity:.85;">Custo previsto ${cp.mesRef} (100% das aulas)</div>
+              <div style="font-size:22px;font-weight:700;">${fmt(cp.totalMes)}</div>
+              <div style="font-size:11px;opacity:.8;">a R$ ${cp.valorHora.toFixed(2).replace('.',',')}/hora</div>
+            </div>`;
+          cp.professores.forEach(p=>{
+            hc += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--perola);border-radius:8px;margin-bottom:5px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${p.professor}</div>
+                <div style="font-size:11px;color:#8A8A82;">${p.turmas} turma(s) \u00b7 ~${p.aulasMes} aulas/m\u00eas</div>
+              </div>
+              <strong style="font-size:14px;">${fmt(p.custoMes)}</strong>
+            </div>`;
+          });
+          hc += '<div style="font-size:10.5px;color:#9a9a94;margin-top:6px;">Estimativa pelo n\u00famero de aulas previstas no m\u00eas. O pagamento real usa as aulas efetivamente registradas.</div></div>';
+          $box.innerHTML = hc;
+        }catch(e){ $box.innerHTML = '<div class="assess-aviso">Erro de conex\u00e3o.</div>'; }
+      });
+    }
 
     const $btnRea = document.getElementById('btnReajustes');
     if($btnRea){
@@ -1868,7 +2011,7 @@ async function carregarDashboard(){
         try{
           const f = await chamarAPI({ acao:'aulasForaDoNormal' });
           if(!f.aulas || !f.aulas.length){
-            $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Nenhuma aula dada fora do calendario normal em ' + (f.ano||'') + '.</p>';
+            $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Nenhuma aula dada fora do calendário normal em ' + (f.ano||'') + '.</p>';
             return;
           }
           let hf = `<div style="font-size:12px;color:#8A8A82;padding:8px 0 4px;">${f.total} aula(s) em ${f.ano}</div>`;
@@ -1998,7 +2141,7 @@ function mostrarCardsRecepcao(){
   document.getElementById('recepCards').classList.remove('hidden');
   document.getElementById('recepAbasPresenca').classList.add('hidden');
   document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
-  $recepcaoSub.textContent = 'O que voce quer fazer?';
+  $recepcaoSub.textContent = 'O que você quer fazer?';
 }
 
 document.getElementById('recepCardContratos').addEventListener('click', ()=>{
@@ -2200,7 +2343,7 @@ async function carregarStatusDoDia(){
       $recepcaoSub.textContent = r.semAula;
       htmlLista += `<div style="margin:0 0 12px; padding:14px 16px; background:#E8EEF5; border-radius:12px; color:#4A6B8A; font-weight:600; font-size:14px; text-align:center;">
         Sem aula hoje &middot; ${r.semAula}
-        <div style="font-weight:400;font-size:12px;margin-top:4px;">Nenhuma pendencia sera contabilizada</div>
+        <div style="font-weight:400;font-size:12px;margin-top:4px;">Nenhuma pendência será contabilizada</div>
       </div>`;
       if(r.aulas.length === 0){
         $recepcaoResultado.innerHTML = htmlLista;
@@ -2210,7 +2353,7 @@ async function carregarStatusDoDia(){
       const semAulaHoje = r.aulas.filter(a=>!a.reposicao);
 
       if(reposicoes.length){
-        htmlLista += `<div class="assess-secao-titulo" style="color:var(--salmao);">Reposicoes hoje (${reposicoes.length})</div>`;
+        htmlLista += `<div class="assess-secao-titulo" style="color:var(--salmao);">Reposições hoje (${reposicoes.length})</div>`;
         reposicoes.forEach(a=>{
           const extras = a.registrada
             ? `<div class="recep-extra">Comentario: ${a.comentario ? '&#10003;' : '&mdash;'} &middot; Homework: ${a.homework ? '&#10003;' : '&mdash;'}</div>`
@@ -2968,12 +3111,12 @@ async function carregarBuscaContratos(){
     }
     let html = `<div style="padding:0 20px 8px;font-size:12px;color:#8A8A82;">${r.contratos.length} contrato(s) encontrado(s)</div>`;
     r.contratos.forEach(c=>{
-      const linhaResp = c.responsavel ? `<div class="recep-extra">Responsavel: ${c.responsavel}</div>` : '';
-      const linhaInicio = c.inicio ? `<div class="recep-extra">Inicio: ${c.inicio}</div>` : '';
+      const linhaResp = c.responsavel ? `<div class="recep-extra">Responsável: ${c.responsavel}</div>` : '';
+      const linhaInicio = c.inicio ? `<div class="recep-extra">Início: ${c.inicio}</div>` : '';
       html += `<div class="skill-linha" style="align-items:flex-start;">
         <div style="flex:1;">
           <span class="skill-nome">N&ordm; ${c.numeroContrato} &middot; ${c.aluno}</span>
-          <div class="recep-extra">Matricula ${c.numeroMatricula} &middot; ${c.tipo} &middot; emitido ${c.data}</div>
+          <div class="recep-extra">Matrícula ${c.numeroMatricula} &middot; ${c.tipo} &middot; emitido ${c.data}</div>
           ${linhaResp}
           ${linhaInicio}
         </div>
