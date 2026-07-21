@@ -6,6 +6,7 @@
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4D6B5A">
+<meta name="color-scheme" content="light only">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,6 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root{
+    color-scheme: light only;
     --verde-escuro:#5A7568;
     --verde-medio:#A3A9AC;
     --azul-claro:#BECCCF;
@@ -119,10 +121,15 @@
   .editar-input{ font-family:'Poppins',sans-serif; font-size:14.5px; font-weight:500; border:none; background:transparent; color:var(--carvao); width:100%; padding:0; }
   .editar-input:focus{ outline:none; }
   .botoes{ display:flex; gap:8px; flex-shrink:0; margin-left:10px; }
-  .stamp{ width:38px;height:38px; border-radius:50%; border:2px solid var(--linha); background:var(--branco); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:var(--linha); cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
+  .stamp{ width:38px;height:38px; border-radius:50%; border:2px solid #B8B4AA; background:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:#6B6B63; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; -webkit-text-fill-color:#6B6B63; }
+  @media (max-width:360px){
+    .stamp{ width:32px;height:32px; font-size:13px; }
+    .botoes{ gap:6px; }
+  }
   .stamp:active{ transform:scale(0.9); }
-  .stamp.p-on{ background:var(--verde-escuro); border-color:var(--verde-escuro); color:var(--branco); transform:rotate(-6deg); box-shadow:0 3px 8px rgba(90,117,104,0.4); }
-  .stamp.f-on{ background:var(--excluir); border-color:var(--excluir); color:var(--branco); transform:rotate(6deg); box-shadow:0 3px 8px rgba(193,80,61,0.35); }
+  .stamp.p-on{ background:var(--verde-escuro); border-color:var(--verde-escuro); color:#FFFFFF; -webkit-text-fill-color:#FFFFFF; transform:rotate(-6deg); box-shadow:0 3px 8px rgba(90,117,104,0.4); }
+  .stamp.f-on{ background:var(--excluir); border-color:var(--excluir); color:#FFFFFF; -webkit-text-fill-color:#FFFFFF; transform:rotate(6deg); box-shadow:0 3px 8px rgba(193,80,61,0.35); }
+  .stamp.r-on{ background:#4A6B8A; border-color:#4A6B8A; color:#FFFFFF; -webkit-text-fill-color:#FFFFFF; transform:rotate(-2deg); box-shadow:0 3px 8px rgba(74,107,138,0.35); }
 
   .slot-vazio{ display:flex; align-items:center; gap:10px; border:1.5px dashed var(--azul-claro); border-radius:14px; padding:12px 14px; color:var(--verde-escuro); font-size:13px; cursor:pointer; background:transparent; flex-shrink:0; }
   .slot-vazio .mais{ width:26px;height:26px; border-radius:50%; border:1.5px dashed var(--azul-claro); display:flex;align-items:center;justify-content:center; font-size:16px; flex-shrink:0; }
@@ -347,6 +354,7 @@
     <div class="resumo">
       <span>Presentes: <b id="qtdPresente">0</b></span>
       <span>Faltas: <b id="qtdFalta">0</b></span>
+      <span>Remarcadas: <b id="qtdRemarcada">0</b></span>
       <span>Vagas livres: <b id="qtdPendente">0</b></span>
     </div>
 
@@ -1082,10 +1090,15 @@ function renderLista(){
     $alertaSozinho.classList.add('hidden');
   }
 
+  desenharAlunos(t, ehVIP, capacidade);
+  atualizarResumo();
+  carregarAulaDoDia();
+}
+
+// redesenha so a lista de alunos (sem disparar carregarAulaDoDia, evitando loop)
+function desenharAlunos(t, ehVIP, capacidade){
   $lista.innerHTML = '';
   t.alunos.forEach(nome=> $lista.appendChild(criarLinhaAluno(nome, t)));
-
-  // Slots de adicionar: só até a capacidade. VIP não mostra além do limite.
   const limite = ehVIP ? capacidade : MAX_SLOTS;
   const vagas = Math.max(0, limite - t.alunos.length);
   for(let i=0; i<vagas; i++){
@@ -1095,9 +1108,10 @@ function renderLista(){
     slot.addEventListener('click', ()=> ativarSlot(slot, t));
     $lista.appendChild(slot);
   }
-  atualizarResumo();
-  carregarAulaDoDia();
 }
+
+let remarcacoesSemestre = {}; // { nomeAluno: quantidade } no semestre atual
+const LIMITE_REMARCACOES = 4;
 
 async function carregarAulaDoDia(){
   const t = turmaAtual();
@@ -1112,26 +1126,43 @@ async function carregarAulaDoDia(){
     $campoHomework.value = '';
     $selo.classList.add('hidden');
   }
+  // busca remarcacoes do semestre para avisar sobre o limite
+  try{
+    const rr = await chamarAPI({ acao:'remarcacoesTurma', turmaId: t.turmaId, data: $data.value });
+    remarcacoesSemestre = (rr && rr.contagem) ? rr.contagem : {};
+    const tt = turmaAtual();
+    const cap = tt.capacidade || MAX_SLOTS;
+    desenharAlunos(tt, cap < MAX_SLOTS, cap);
+    atualizarResumo();
+  } catch(e){ remarcacoesSemestre = {}; }
 }
 
 function criarLinhaAluno(nome, t){
   const status = chaveSessao()[nome];
+  const remFeitas = remarcacoesSemestre[nome] || 0;
+  let badgeRem = '';
+  if(remFeitas > 0){
+    const cor = remFeitas >= LIMITE_REMARCACOES ? '#C1503D' : (remFeitas === LIMITE_REMARCACOES-1 ? '#D9863F' : '#4A6B8A');
+    badgeRem = `<span title="Remarcacoes no semestre" style="font-size:10px;background:${cor};color:#fff;border-radius:10px;padding:2px 7px;margin-left:8px;white-space:nowrap;">${remFeitas}/${LIMITE_REMARCACOES} rem.</span>`;
+  }
   const wrap = document.createElement('div');
   wrap.className = 'aluno-wrap';
   wrap.innerHTML = `
     <div class="aluno-bg editar">Editar</div>
     <div class="aluno-bg excluir">Excluir</div>
     <div class="aluno ${status ? 'marcado' : ''}">
-      <span class="nome">${nome}</span>
+      <span class="nome">${nome}${badgeRem}</span>
       <div class="botoes">
         <div class="stamp p ${status==='P' ? 'p-on' : ''}" title="Presente">P</div>
         <div class="stamp f ${status==='F' ? 'f-on' : ''}" title="Falta">F</div>
+        <div class="stamp r ${status==='R' ? 'r-on' : ''}" title="Remarcada \u2014 aluno vai repor em outro dia">R</div>
       </div>
     </div>`;
   const row = wrap.querySelector('.aluno');
-  const [pBtn, fBtn] = row.querySelectorAll('.stamp');
+  const [pBtn, fBtn, rBtn] = row.querySelectorAll('.stamp');
   pBtn.addEventListener('click', ()=>{ if(!row.dataset.dragged) marcar(nome,'P'); });
   fBtn.addEventListener('click', ()=>{ if(!row.dataset.dragged) marcar(nome,'F'); });
+  rBtn.addEventListener('click', ()=>{ if(!row.dataset.dragged) marcar(nome,'R'); });
   attachSwipe(row, wrap, nome, t);
   return wrap;
 }
@@ -1266,17 +1297,34 @@ function ativarSlot(slot, t){
 
 function marcar(nome, status){
   const marcados = chaveSessao();
+  const jaEra = marcados[nome];
   marcados[nome] = (marcados[nome] === status) ? undefined : status;
   if(marcados[nome] === undefined) delete marcados[nome];
-  renderLista();
+
+  // aviso de limite de remarcacoes (so ao ATIVAR o R, nao ao desmarcar)
+  if(status === 'R' && marcados[nome] === 'R'){
+    const jaFeitas = remarcacoesSemestre[nome] || 0;
+    const comEsta = jaFeitas + 1; // contando a que esta sendo marcada agora
+    if(comEsta >= LIMITE_REMARCACOES){
+      alert(nome + ': esta e a 4a e ULTIMA remarcacao permitida no semestre. Nao havera mais reposicoes para este aluno ate o proximo semestre.');
+    } else if(comEsta === LIMITE_REMARCACOES - 1){
+      alert(nome + ': 3a remarcacao do semestre. O aluno podera remarcar apenas mais 1 vez.');
+    }
+  }
+  const t = turmaAtual();
+  const cap = t.capacidade || MAX_SLOTS;
+  desenharAlunos(t, cap < MAX_SLOTS, cap);
+  atualizarResumo();
 }
 
 function atualizarResumo(){
   const t = turmaAtual();
   const marcados = chaveSessao();
-  let p=0, f=0;
-  Object.values(marcados).forEach(s=> s==='P' ? p++ : f++);
+  let p=0, f=0, rr=0;
+  Object.values(marcados).forEach(s=>{ if(s==='P') p++; else if(s==='F') f++; else if(s==='R') rr++; });
   $qtdP.textContent = p; $qtdF.textContent = f;
+  const $qtdR = document.getElementById('qtdRemarcada');
+  if($qtdR) $qtdR.textContent = rr;
   const limiteTurma = (t.capacidade && t.capacidade < MAX_SLOTS) ? t.capacidade : MAX_SLOTS;
   $qtdPend.textContent = Math.max(0, limiteTurma - t.alunos.length);
   const dataFmt = new Date($data.value + 'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});
@@ -1318,7 +1366,8 @@ document.getElementById('btnExportar').addEventListener('click', ()=>{
     const t = TURMAS.find(x=>x.id===turmaId);
     Object.entries(datas).forEach(([data, alunos])=>{
       Object.entries(alunos).forEach(([nome, status])=>{
-        linhas.push([t.turmaId, t.nivel, t.professor, data, nome, status==='P' ? 'Presente' : 'Falta']);
+        const txtStatus = status==='P' ? 'Presente' : status==='F' ? 'Falta' : 'Remarcada';
+        linhas.push([t.turmaId, t.nivel, t.professor, data, nome, txtStatus]);
       });
     });
   });
@@ -1807,6 +1856,26 @@ async function carregarDashboard(){
           <span class="menu-card-seta">&rarr;</span>
         </button>
         <div id="dashCustoProf"></div>
+
+        <button class="menu-card" id="btnRemarcando" style="margin-top:8px;width:100%;">
+          <div class="menu-card-icone">R</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Alunos remarcando</span>
+            <span class="menu-card-sub">Quem está repondo e quantas faltas tem</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <div id="dashRemarcando"></div>
+
+        <button class="menu-card" id="btnFaltantes" style="margin-top:8px;width:100%;">
+          <div class="menu-card-icone">!</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Alunos que mais faltam</span>
+            <span class="menu-card-sub">Plano de retenção: contatar antes de perder</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <div id="dashFaltantes"></div>
       </div>`;
 
     // alunos por nível
@@ -1842,6 +1911,62 @@ async function carregarDashboard(){
     }
 
     $dashResultado.innerHTML = html;
+
+    const $btnRemar = document.getElementById('btnRemarcando');
+    if($btnRemar){
+      $btnRemar.addEventListener('click', async ()=>{
+        const $box = document.getElementById('dashRemarcando');
+        if($box.dataset.aberto === '1'){ $box.innerHTML=''; $box.dataset.aberto='0'; return; }
+        $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Carregando...</p>';
+        $box.dataset.aberto = '1';
+        try{
+          const rg = await chamarAPI({ acao:'remarcacoesGeral' });
+          if(!rg.sucesso || !rg.lista.length){ $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Nenhuma remarcação registrada neste semestre.</p>'; return; }
+          let hc = `<div style="padding:8px 0;"><div style="font-size:11px;color:#8A8A82;margin-bottom:6px;">${rg.semestre} · limite ${rg.limite} por aluno</div>`;
+          rg.lista.forEach(x=>{
+            const noLimite = x.remarcacoes >= rg.limite;
+            const cor = noLimite ? '#C1503D' : (x.remarcacoes === rg.limite-1 ? '#D9863F' : '#4A6B8A');
+            hc += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--perola);border-radius:8px;margin-bottom:5px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${x.aluno}</div>
+                <div style="font-size:11px;color:#8A8A82;">Turma ${x.turmaId} · ${x.faltas} falta(s)</div>
+              </div>
+              <span style="font-size:12px;background:${cor};color:#fff;border-radius:10px;padding:3px 10px;white-space:nowrap;">${x.remarcacoes}/${rg.limite}${noLimite?' · no limite':''}</span>
+            </div>`;
+          });
+          hc += '</div>';
+          $box.innerHTML = hc;
+        }catch(e){ $box.innerHTML = '<div class="assess-aviso">Erro de conexão.</div>'; }
+      });
+    }
+
+    const $btnFalt = document.getElementById('btnFaltantes');
+    if($btnFalt){
+      $btnFalt.addEventListener('click', async ()=>{
+        const $box = document.getElementById('dashFaltantes');
+        if($box.dataset.aberto === '1'){ $box.innerHTML=''; $box.dataset.aberto='0'; return; }
+        $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Carregando...</p>';
+        $box.dataset.aberto = '1';
+        try{
+          const mf = await chamarAPI({ acao:'maioresFaltantes' });
+          if(!mf.sucesso || !mf.lista.length){ $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Nenhuma falta registrada neste semestre.</p>'; return; }
+          let hc = `<div style="padding:8px 0;"><div style="font-size:11px;color:#8A8A82;margin-bottom:6px;">${mf.semestre} · ordenado por mais faltas</div>`;
+          mf.lista.forEach((x,idx)=>{
+            const alerta = x.freqPct < 75;
+            const cor = alerta ? '#C1503D' : (x.freqPct < 85 ? '#D9863F' : '#3E8E5A');
+            hc += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:${alerta?'#FBEDEA':'var(--perola)'};border-radius:8px;margin-bottom:5px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${idx+1}. ${x.aluno}</div>
+                <div style="font-size:11px;color:#8A8A82;">Turma ${x.turmaId} · ${x.faltas} falta(s) · ${x.presencas} presença(s)</div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:${cor};white-space:nowrap;">${x.freqPct}%</span>
+            </div>`;
+          });
+          hc += '<div style="font-size:10.5px;color:#9a9a94;margin-top:6px;">Frequência abaixo de 75% (vermelho) merece contato. Remarcações não contam como falta.</div></div>';
+          $box.innerHTML = hc;
+        }catch(e){ $box.innerHTML = '<div class="assess-aviso">Erro de conexão.</div>'; }
+      });
+    }
 
     const $btnImp = document.getElementById('btnImpacto');
     if($btnImp){
@@ -2465,8 +2590,8 @@ async function abrirDetalheTurma(turmaId){
     let alunosHtml = '';
     if(r.alunos && r.alunos.length){
       r.alunos.forEach(a=>{
-        const cor = a.status === 'P' ? '#3E8E5A' : '#C1503D';
-        const txt = a.status === 'P' ? 'Presente' : 'Falta';
+        const cor = a.status === 'P' ? '#3E8E5A' : a.status === 'R' ? '#4A6B8A' : '#C1503D';
+        const txt = a.status === 'P' ? 'Presente' : a.status === 'R' ? 'Remarcada' : 'Falta';
         alunosHtml += `<div class="skill-linha"><span class="skill-nome">${a.nome}</span><span style="color:${cor};font-weight:600;font-size:13px;">${txt}</span></div>`;
       });
     } else {
