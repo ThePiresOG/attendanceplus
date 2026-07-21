@@ -341,6 +341,15 @@
 
     <div class="campos-aula">
       <div class="campo-aula">
+        <label for="campoDuracao">Duração da aula</label>
+        <select id="campoDuracao" style="font-family:'Poppins',sans-serif;font-size:14px;padding:11px 12px;border-radius:10px;border:1.5px solid #DDD8CF;background:#fff;width:100%;color:var(--carvao);">
+          <option value="1">1 hora (padrão)</option>
+          <option value="1.5">1h30</option>
+          <option value="2">2 horas (aula dupla)</option>
+          <option value="3">3 horas</option>
+        </select>
+      </div>
+      <div class="campo-aula">
         <label for="campoComentario">Comentário da aula (lições e páginas)</label>
         <textarea id="campoComentario" placeholder="Ex: Unit 4, páginas 32 a 35. Revisão de past simple."></textarea>
       </div>
@@ -651,6 +660,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardPanorama">
+        <div class="menu-card-icone">V</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Panorama da escola</span>
+          <span class="menu-card-sub">Vagas, turmas, remarcações e faltas</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
     </div>
     <div class="recep-abas hidden" id="recepAbasPresenca">
       <button class="recep-aba ativa" data-aba="hoje">Hoje</button>
@@ -708,6 +725,10 @@
       </div>
       <div style="padding:0 20px;"><button class="acao salvar" id="btnPdfCobranca" style="width:100%;">Exportar relatório em PDF</button></div>
       <div class="assess-resultado" id="relatorioResultado"></div>
+    </div>
+
+    <div class="recep-painel hidden" id="painelPanorama">
+      <div class="assess-resultado" id="panoramaResultado" style="padding-top:12px;"></div>
     </div>
 
     <div class="recep-painel hidden" id="painelContratos">
@@ -1116,15 +1137,24 @@ const LIMITE_REMARCACOES = 4;
 async function carregarAulaDoDia(){
   const t = turmaAtual();
   const $selo = document.getElementById('seloRegistrado');
+  const $dur = document.getElementById('campoDuracao');
   try{
     const r = await chamarAPI({ acao:'aulaDoDia', turmaId: t.turmaId, data: $data.value });
     $campoComentario.value = r.comentario || '';
     $campoHomework.value = r.homework || '';
     $selo.classList.toggle('hidden', !r.existe);
+    // se a aula já foi registrada, usa a duração salva; senão, o padrão da turma
+    if($dur){
+      const dur = (r.existe && r.duracao) ? r.duracao : (t.duracaoPadrao || 1);
+      $dur.value = String(dur);
+      // se o valor não existe nas opções, cai no padrão 1
+      if($dur.selectedIndex < 0) $dur.value = '1';
+    }
   } catch(err){
     $campoComentario.value = '';
     $campoHomework.value = '';
     $selo.classList.add('hidden');
+    if($dur) $dur.value = String(t.duracaoPadrao || 1);
   }
   // busca remarcacoes do semestre para avisar sobre o limite
   try{
@@ -1352,7 +1382,9 @@ document.getElementById('btnSalvar').addEventListener('click', async ()=>{
   }));
   mostrarToast('Salvando...');
   try{
-    const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: t.duracao || 1, livro: t.livro || '', comentario: $campoComentario.value.trim(), homework: $campoHomework.value.trim() });
+    const $dur = document.getElementById('campoDuracao');
+    const duracaoAula = $dur ? (Number($dur.value) || 1) : (t.duracaoPadrao || 1);
+    const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: duracaoAula, livro: t.livro || '', comentario: $campoComentario.value.trim(), homework: $campoHomework.value.trim() });
     if(resultado.sucesso) mostrarToast('Presença salva para turma ' + t.turmaId);
     else mostrarToast('Erro ao salvar: ' + (resultado.erro || 'tenta de novo'));
   } catch(err){
@@ -1857,6 +1889,16 @@ async function carregarDashboard(){
         </button>
         <div id="dashCustoProf"></div>
 
+        <button class="menu-card" id="btnAulasDuplas" style="margin-top:8px;width:100%;">
+          <div class="menu-card-icone">2h</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Aulas duplas / estendidas</span>
+            <span class="menu-card-sub">Aulas acima de 1h no ano</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <div id="dashAulasDuplas"></div>
+
         <button class="menu-card" id="btnRemarcando" style="margin-top:8px;width:100%;">
           <div class="menu-card-icone">R</div>
           <div class="menu-card-txt">
@@ -1911,6 +1953,42 @@ async function carregarDashboard(){
     }
 
     $dashResultado.innerHTML = html;
+
+    const $btnDup = document.getElementById('btnAulasDuplas');
+    if($btnDup){
+      $btnDup.addEventListener('click', async ()=>{
+        const $box = document.getElementById('dashAulasDuplas');
+        if($box.dataset.aberto === '1'){ $box.innerHTML=''; $box.dataset.aberto='0'; return; }
+        $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Carregando...</p>';
+        $box.dataset.aberto = '1';
+        try{
+          const ad = await chamarAPI({ acao:'aulasDuplas' });
+          if(!ad.sucesso || !ad.aulas.length){ $box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:8px 0;">Nenhuma aula dupla registrada em ' + (ad.ano||'') + '.</p>'; return; }
+          let hc = `<div style="padding:8px 0;"><div style="font-size:11px;color:#8A8A82;margin-bottom:6px;">${ad.ano} \u00b7 aulas acima de 1h</div>`;
+          if(ad.resumo && ad.resumo.length){
+            hc += '<div style="background:var(--verde-escuro);border-radius:10px;padding:10px 12px;margin-bottom:8px;color:#fff;">';
+            ad.resumo.forEach(p=>{
+              hc += `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;">
+                <span>${p.professor}</span><span>${p.qtd} aula(s) \u00b7 +${p.horasExtras}h extra</span>
+              </div>`;
+            });
+            hc += '</div>';
+          }
+          ad.aulas.slice(0,30).forEach(a=>{
+            const d = a.data.split('-'); const dataBR = d.length===3 ? `${d[2]}/${d[1]}/${d[0]}` : a.data;
+            hc += `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--perola);border-radius:8px;margin-bottom:5px;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">Turma ${a.turmaId} \u00b7 ${a.nivel}</div>
+                <div style="font-size:11px;color:#8A8A82;">${a.professor} \u00b7 ${dataBR}</div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#4A6B8A;white-space:nowrap;">${a.duracao}h</span>
+            </div>`;
+          });
+          hc += '</div>';
+          $box.innerHTML = hc;
+        }catch(e){ $box.innerHTML = '<div class="assess-aviso">Erro de conex\u00e3o.</div>'; }
+      });
+    }
 
     const $btnRemar = document.getElementById('btnRemarcando');
     if($btnRemar){
@@ -2033,7 +2111,7 @@ async function carregarDashboard(){
             hc += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--perola);border-radius:8px;margin-bottom:5px;">
               <div>
                 <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${p.professor}</div>
-                <div style="font-size:11px;color:#8A8A82;">${p.turmas} turma(s) \u00b7 ~${p.aulasMes} aulas/m\u00eas</div>
+                <div style="font-size:11px;color:#8A8A82;">${p.turmas} turma(s) \u00b7 ~${p.aulasMes} aulas \u00b7 ~${p.horasMes||p.aulasMes}h/m\u00eas</div>
               </div>
               <strong style="font-size:14px;">${fmt(p.custoMes)}</strong>
             </div>`;
@@ -2289,6 +2367,135 @@ document.getElementById('recepCardPresenca').addEventListener('click', ()=>{
   document.getElementById('btnSairRecepcao').textContent = 'Voltar';
   carregarStatusDoDia();
 });
+
+document.getElementById('recepCardPanorama').addEventListener('click', ()=>{
+  document.getElementById('recepCards').classList.add('hidden');
+  document.getElementById('recepAbasPresenca').classList.add('hidden');
+  document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
+  document.getElementById('painelPanorama').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Panorama da escola';
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
+  carregarPanorama();
+});
+
+async function carregarPanorama(){
+  const $res = document.getElementById('panoramaResultado');
+  $res.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:12px 20px;">Carregando panorama...</p>';
+  try{
+    const p = await chamarAPI({ acao:'panoramaRecepcao' });
+    if(!p.sucesso){ $res.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>'; return; }
+
+    // resumo do topo (SEM valores financeiros)
+    let html = `<div style="padding:0 20px 12px;">
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;background:var(--verde-escuro);border-radius:10px;padding:12px;text-align:center;color:#fff;">
+          <div style="font-size:22px;font-weight:700;">${p.totalAlunos}</div>
+          <div style="font-size:11px;opacity:.85;">Alunos ativos</div>
+        </div>
+        <div style="flex:1;background:#8FA89B;border-radius:10px;padding:12px;text-align:center;color:#fff;">
+          <div style="font-size:22px;font-weight:700;">${p.turmasAtivas}</div>
+          <div style="font-size:11px;opacity:.85;">Turmas ativas</div>
+        </div>
+        <div style="flex:1;background:#5A7568;border-radius:10px;padding:12px;text-align:center;color:#fff;">
+          <div style="font-size:22px;font-weight:700;">${p.ocupacao}%</div>
+          <div style="font-size:11px;opacity:.85;">Ocupação</div>
+        </div>
+      </div>`;
+
+    // alunos por nível (barras)
+    const niveis = Object.keys(p.porNivel).sort();
+    if(niveis.length){
+      const maxN = Math.max.apply(null, niveis.map(n=> p.porNivel[n]));
+      html += '<div style="font-size:12px;color:#8A8A82;font-weight:600;margin-bottom:8px;">ALUNOS POR NÍVEL</div>';
+      niveis.forEach(nv=>{
+        const larg = maxN > 0 ? Math.round((p.porNivel[nv]/maxN)*100) : 0;
+        html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="width:28px;font-size:13px;font-weight:600;color:var(--verde-escuro);">${nv}</span>
+          <div style="flex:1;background:#EFEFEA;border-radius:6px;height:22px;overflow:hidden;">
+            <div style="width:${larg}%;height:100%;background:#8FA89B;"></div>
+          </div>
+          <span style="width:28px;text-align:right;font-size:13px;font-weight:700;">${p.porNivel[nv]}</span>
+        </div>`;
+      });
+    }
+
+    // turmas com vaga
+    if(p.turmasComVaga && p.turmasComVaga.length){
+      html += `<div style="font-size:12px;color:#8A8A82;font-weight:600;margin:16px 0 8px;">TURMAS COM VAGA (${p.turmasComVaga.length})</div>`;
+      p.turmasComVaga.forEach(t=>{
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#fff;border:1px solid #EFEFEA;border-radius:10px;margin-bottom:6px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">Turma ${t.turmaId} · ${t.nivel} · ${t.horario}</div>
+            <div style="font-size:11px;color:#8A8A82;">${t.professor}</div>
+          </div>
+          <span style="font-size:12px;background:var(--salmao);color:#fff;border-radius:14px;padding:4px 12px;white-space:nowrap;">${t.vagas} vaga(s)</span>
+        </div>`;
+      });
+    }
+
+    // otimização de turmas (mesmo nível)
+    if(p.sugestoesFusao && p.sugestoesFusao.length){
+      html += '<div style="font-size:12px;color:#8A8A82;font-weight:600;margin:16px 0 8px;">OTIMIZAÇÃO DE TURMAS (MESMO NÍVEL)</div>';
+      p.sugestoesFusao.forEach(f=>{
+        html += `<div style="padding:8px 12px;background:var(--perola);border-radius:8px;margin-bottom:5px;font-size:12.5px;color:var(--carvao);">
+          ${f.nivel}: Turma ${f.turmaA} (${f.alunosA} aluno${f.alunosA>1?'s':''} · ${f.horarioA}) + Turma ${f.turmaB} (${f.alunosB} aluno${f.alunosB>1?'s':''} · ${f.horarioB})
+        </div>`;
+      });
+      html += '<div style="font-size:10.5px;color:#9a9a94;margin-top:2px;">Confira os horários com os alunos antes de unir.</div>';
+    }
+
+    html += '</div>';
+    $res.innerHTML = html;
+
+    // remarcações e faltantes (carregam em paralelo, sem dados financeiros)
+    carregarPanoramaRetencao();
+  }catch(e){ $res.innerHTML = '<div class="assess-aviso">Erro de conexão.</div>'; }
+}
+
+async function carregarPanoramaRetencao(){
+  const $res = document.getElementById('panoramaResultado');
+  try{
+    const [rg, mf] = await Promise.all([
+      chamarAPI({ acao:'remarcacoesGeral' }),
+      chamarAPI({ acao:'maioresFaltantes' })
+    ]);
+    let extra = '<div style="padding:0 20px 20px;">';
+
+    if(rg && rg.sucesso && rg.lista.length){
+      extra += `<div style="font-size:12px;color:#8A8A82;font-weight:600;margin:4px 0 8px;">ALUNOS REMARCANDO (${rg.semestre})</div>`;
+      rg.lista.forEach(x=>{
+        const noLimite = x.remarcacoes >= rg.limite;
+        const cor = noLimite ? '#C1503D' : (x.remarcacoes === rg.limite-1 ? '#D9863F' : '#4A6B8A');
+        extra += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--perola);border-radius:8px;margin-bottom:5px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${x.aluno}</div>
+            <div style="font-size:11px;color:#8A8A82;">Turma ${x.turmaId} · ${x.faltas} falta(s)</div>
+          </div>
+          <span style="font-size:12px;background:${cor};color:#fff;border-radius:10px;padding:3px 10px;white-space:nowrap;">${x.remarcacoes}/${rg.limite}${noLimite?' · no limite':''}</span>
+        </div>`;
+      });
+    }
+
+    if(mf && mf.sucesso && mf.lista.length){
+      extra += `<div style="font-size:12px;color:#8A8A82;font-weight:600;margin:16px 0 8px;">ALUNOS QUE MAIS FALTAM (${mf.semestre})</div>`;
+      mf.lista.forEach((x,idx)=>{
+        const alerta = x.freqPct < 75;
+        const cor = alerta ? '#C1503D' : (x.freqPct < 85 ? '#D9863F' : '#3E8E5A');
+        extra += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:${alerta?'#FBEDEA':'var(--perola)'};border-radius:8px;margin-bottom:5px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--verde-escuro);">${idx+1}. ${x.aluno}</div>
+            <div style="font-size:11px;color:#8A8A82;">Turma ${x.turmaId} · ${x.faltas} falta(s) · ${x.presencas} presença(s)</div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:${cor};white-space:nowrap;">${x.freqPct}%</span>
+        </div>`;
+      });
+      extra += '<div style="font-size:10.5px;color:#9a9a94;margin-top:6px;">Frequência abaixo de 75% (vermelho) merece contato. Remarcações não contam como falta.</div>';
+    }
+
+    extra += '</div>';
+    $res.insertAdjacentHTML('beforeend', extra);
+  }catch(e){}
+}
 
 // ABA BUSCAR (por período)
 async function carregarBusca(){
