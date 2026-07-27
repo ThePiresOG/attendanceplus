@@ -244,6 +244,33 @@
   .pill-ok{ font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:#E3EFE7; color:#3E8E5A; }
   .pill-pendente{ font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:#FDF3D4; color:#8a6d1a; }
   .recep-extra{ font-size:11px; color:var(--verde-medio); margin-top:2px; }
+
+  /* ===== ADENDOS E BAIXAS ===== */
+  .calc-box{ background:var(--perola); border-radius:14px; padding:14px 16px; margin:10px 0; }
+  .calc-linha{ display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--linha); font-size:13.5px; }
+  .calc-linha:last-child{ border-bottom:none; }
+  .calc-rot{ color:var(--verde-escuro); }
+  .calc-val{ font-weight:600; color:var(--carvao); }
+  .calc-linha.destaque{ margin-top:6px; padding-top:12px; border-top:2px solid var(--verde-escuro); border-bottom:none; }
+  .calc-linha.destaque .calc-rot{ font-weight:600; color:var(--carvao); }
+  .calc-linha.destaque .calc-val{ font-size:17px; color:var(--verde-escuro); }
+  .msg-bloqueio{ background:#FBE9E5; border-left:3px solid var(--excluir); border-radius:8px; padding:12px 14px; font-size:13px; color:#8a3b2d; margin-bottom:8px; line-height:1.5; }
+  .msg-aviso{ background:#FDF6E3; border-left:3px solid #D9A441; border-radius:8px; padding:12px 14px; font-size:13px; color:#7a5c14; margin-bottom:8px; line-height:1.5; }
+  .msg-ok{ background:#E9F3EC; border-left:3px solid #3E8E5A; border-radius:8px; padding:12px 14px; font-size:13px; color:#2f6b45; margin-bottom:8px; line-height:1.5; }
+  .faixa-tag{ display:inline-block; font-size:10.5px; font-weight:600; padding:3px 10px; border-radius:20px; margin-left:8px; }
+  .faixa-padrao{ background:#E3EFE7; color:#3E8E5A; }
+  .faixa-excep{ background:#FDF3D4; color:#8a6d1a; }
+  .faixa-fora{ background:#FBE9E5; color:#8a3b2d; }
+  .doc-item{ border:1.5px solid var(--linha); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .doc-topo{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
+  .doc-nome{ font-size:14px; font-weight:600; color:var(--carvao); }
+  .doc-meta{ font-size:12px; color:var(--verde-escuro); line-height:1.6; }
+  .doc-acoes{ margin-top:8px; display:flex; gap:8px; }
+  .doc-link{ font-size:12px; font-weight:600; color:var(--verde-escuro); text-decoration:none; border:1.5px solid var(--verde-escuro); border-radius:8px; padding:5px 12px; }
+  .confirma-box{ background:#FBE9E5; border:1.5px solid var(--excluir); border-radius:12px; padding:14px; margin:10px 0; }
+  .confirma-box label{ display:flex; align-items:flex-start; gap:9px; font-size:13px; color:#8a3b2d; line-height:1.45; cursor:pointer; }
+  .confirma-box input{ margin-top:2px; width:17px; height:17px; flex-shrink:0; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -668,6 +695,22 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardAfastamento">
+        <div class="menu-card-icone">&#8986;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Afastamento</span>
+          <span class="menu-card-sub">Adendo de afastamento tempor&aacute;rio</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardBaixa">
+        <div class="menu-card-icone">&#10007;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Baixa de contrato</span>
+          <span class="menu-card-sub">Recibo de quita&ccedil;&atilde;o e encerramento</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
     </div>
     <div class="recep-abas hidden" id="recepAbasPresenca">
       <button class="recep-aba ativa" data-aba="hoje">Hoje</button>
@@ -814,6 +857,217 @@
         <div class="assess-resultado" id="contratoBuscaResultado"></div>
       </div>
     </div>
+
+    <div class="recep-painel hidden" id="painelAfastamento">
+      <div class="menu-opcoes" id="afastSubcards">
+        <button class="menu-card" id="subcardNovoAfast">
+          <div class="menu-card-icone">&#43;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Novo afastamento</span>
+            <span class="menu-card-sub">Gerar adendo para um contrato vigente</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardRetornos">
+          <div class="menu-card-icone">&#9200;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Retornos pr&oacute;ximos</span>
+            <span class="menu-card-sub">Quem volta nos pr&oacute;ximos dias</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardBuscarAfast">
+          <div class="menu-card-icone">&#128269;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Buscar afastamentos</span>
+            <span class="menu-card-sub">Adendos j&aacute; emitidos</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="formAfastamento">
+        <div class="controls">
+          <div class="field">
+            <label for="afastBuscaAluno">Aluno (nome ou matr&iacute;cula)</label>
+            <input type="text" id="afastBuscaAluno" placeholder="Digite para buscar">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="afastContrato">Contrato vigente</label>
+            <select id="afastContrato"><option value="">Busque o aluno primeiro</option></select>
+          </div>
+        </div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+          <div class="field">
+            <label for="afastInicio">In&iacute;cio</label>
+            <input type="date" id="afastInicio">
+          </div>
+          <div class="field">
+            <label for="afastFim">T&eacute;rmino</label>
+            <input type="date" id="afastFim">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="afastMotivo">Motivo</label>
+            <select id="afastMotivo">
+              <option value="">Selecione</option>
+              <option>Sa&uacute;de</option>
+              <option>Gesta&ccedil;&atilde;o e p&oacute;s-parto</option>
+              <option>Viagem</option>
+              <option>Trabalho</option>
+              <option>Luto familiar</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls hidden" id="afastCampoComprovante" style="padding-top:0;">
+          <div class="field">
+            <label for="afastComprovante">Documento comprobat&oacute;rio</label>
+            <input type="text" id="afastComprovante" placeholder="Ex: Atestado m&eacute;dico de 08/08/2026">
+          </div>
+        </div>
+        <div class="controls hidden" id="afastCampoAprovacao" style="padding-top:0;">
+          <div class="field">
+            <label for="afastAprovadoPor">Aprovado por (gest&atilde;o)</label>
+            <input type="text" id="afastAprovadoPor" placeholder="Nome de quem autorizou">
+          </div>
+        </div>
+        <div style="padding:0 20px;" id="afastCalculo"></div>
+        <div style="padding:12px 20px;">
+          <button class="acao salvar" id="btnGerarAdendo" style="width:100%;" disabled>Gerar adendo e PDF</button>
+        </div>
+        <div class="assess-resultado" id="afastResultado"></div>
+      </div>
+
+      <div class="hidden" id="listaAfastamento">
+        <div class="controls">
+          <div class="field">
+            <label for="afastFiltro">Aluno, n&ordm; do adendo ou matr&iacute;cula</label>
+            <input type="text" id="afastFiltro" placeholder="Deixe vazio para ver todos">
+          </div>
+        </div>
+        <div class="assess-resultado" id="afastListaResultado"></div>
+      </div>
+    </div>
+
+    <div class="recep-painel hidden" id="painelBaixa">
+      <div class="menu-opcoes" id="baixaSubcards">
+        <button class="menu-card" id="subcardNovaBaixa">
+          <div class="menu-card-icone">&#43;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Nova baixa</span>
+            <span class="menu-card-sub">Rescindir contrato e gerar recibo</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardBuscarBaixa">
+          <div class="menu-card-icone">&#128269;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Buscar baixas</span>
+            <span class="menu-card-sub">Recibos j&aacute; emitidos</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="formBaixa">
+        <div class="controls">
+          <div class="field">
+            <label for="baixaBuscaAluno">Aluno (nome ou matr&iacute;cula)</label>
+            <input type="text" id="baixaBuscaAluno" placeholder="Digite para buscar">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="baixaContrato">Contrato a rescindir</label>
+            <select id="baixaContrato"><option value="">Busque o aluno primeiro</option></select>
+          </div>
+        </div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+          <div class="field">
+            <label for="baixaData">Data do cancelamento</label>
+            <input type="date" id="baixaData">
+          </div>
+          <div class="field">
+            <label for="baixaMotivo">Motivo</label>
+            <select id="baixaMotivo">
+              <option value="">Selecione</option>
+              <option>Financeiro</option>
+              <option>Mudan&ccedil;a de cidade</option>
+              <option>Insatisfa&ccedil;&atilde;o</option>
+              <option>Falta de tempo</option>
+              <option>Conclus&atilde;o antecipada</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+          <div class="field">
+            <label for="baixaValorTotal">Valor total do contrato (R$)</label>
+            <input type="text" inputmode="decimal" id="baixaValorTotal" placeholder="Ex: 8124,00">
+          </div>
+          <div class="field">
+            <label for="baixaParcelasTotal">Total de parcelas</label>
+            <input type="text" inputmode="numeric" id="baixaParcelasTotal" placeholder="Ex: 12">
+          </div>
+        </div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+          <div class="field">
+            <label for="baixaParcelasPagas">Parcelas pagas</label>
+            <input type="text" inputmode="numeric" id="baixaParcelasPagas" placeholder="Ex: 9">
+          </div>
+          <div class="field">
+            <label for="baixaEmAberto">Mensalidade em aberto (R$)</label>
+            <input type="text" inputmode="decimal" id="baixaEmAberto" placeholder="0,00">
+          </div>
+        </div>
+        <div style="padding:0 20px;" id="baixaCalculo"></div>
+        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+          <div class="field">
+            <label for="baixaForma">Forma de pagamento</label>
+            <select id="baixaForma">
+              <option value="">Selecione</option>
+              <option>Pix</option>
+              <option>Dinheiro</option>
+              <option>Cart&atilde;o de d&eacute;bito</option>
+              <option>Cart&atilde;o de cr&eacute;dito</option>
+              <option>Transfer&ecirc;ncia</option>
+              <option>Isento</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="baixaDataPgto">Data do pagamento</label>
+            <input type="date" id="baixaDataPgto">
+          </div>
+        </div>
+        <div style="padding:0 20px;">
+          <div class="confirma-box" id="baixaConfirmaBox">
+            <label>
+              <input type="checkbox" id="baixaConfirma">
+              <span>Confirmo que o aluno assinou o formul&aacute;rio de desist&ecirc;ncia e que a baixa &eacute; definitiva. O contrato ser&aacute; encerrado.</span>
+            </label>
+          </div>
+        </div>
+        <div style="padding:0 20px 12px;">
+          <button class="acao salvar" id="btnGerarBaixa" style="width:100%;" disabled>Gerar recibo de baixa</button>
+        </div>
+        <div class="assess-resultado" id="baixaResultado"></div>
+      </div>
+
+      <div class="hidden" id="listaBaixa">
+        <div class="controls">
+          <div class="field">
+            <label for="baixaFiltro">Aluno, n&ordm; do recibo ou matr&iacute;cula</label>
+            <input type="text" id="baixaFiltro" placeholder="Deixe vazio para ver todos">
+          </div>
+        </div>
+        <div class="assess-resultado" id="baixaListaResultado"></div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -2377,6 +2631,439 @@ document.getElementById('recepCardPanorama').addEventListener('click', ()=>{
   document.getElementById('btnSairRecepcao').textContent = 'Voltar';
   carregarPanorama();
 });
+
+// ===== AFASTAMENTOS E BAIXAS =====
+
+function _brl(n){
+  return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function _num(v){
+  if(v===null||v===undefined) return 0;
+  var s = String(v).trim().replace(/\./g,'').replace(',','.');
+  var n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+function _isoParaBr(iso){
+  if(!iso) return '';
+  var p = String(iso).split('-');
+  return p.length===3 ? (p[2]+'/'+p[1]+'/'+p[0]) : iso;
+}
+function _hojeIso(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function abrirPainelRecep(idPainel, titulo){
+  document.getElementById('recepCards').classList.add('hidden');
+  document.getElementById('recepAbasPresenca').classList.add('hidden');
+  document.querySelectorAll('.recep-painel').forEach(function(p){ p.classList.add('hidden'); });
+  document.getElementById(idPainel).classList.remove('hidden');
+  $recepcaoSub.textContent = titulo;
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
+}
+
+// ---------- AFASTAMENTO ----------
+
+var _contratosAfast = [];
+
+function mostrarSubcardsAfast(){
+  document.getElementById('afastSubcards').classList.remove('hidden');
+  document.getElementById('formAfastamento').classList.add('hidden');
+  document.getElementById('listaAfastamento').classList.add('hidden');
+}
+
+document.getElementById('recepCardAfastamento').addEventListener('click', function(){
+  abrirPainelRecep('painelAfastamento','Afastamento');
+  mostrarSubcardsAfast();
+});
+
+document.getElementById('subcardNovoAfast').addEventListener('click', function(){
+  document.getElementById('afastSubcards').classList.add('hidden');
+  document.getElementById('listaAfastamento').classList.add('hidden');
+  document.getElementById('formAfastamento').classList.remove('hidden');
+  document.getElementById('afastResultado').innerHTML = '';
+  document.getElementById('afastCalculo').innerHTML = '';
+  $recepcaoSub.textContent = 'Novo afastamento';
+});
+
+document.getElementById('subcardBuscarAfast').addEventListener('click', function(){
+  document.getElementById('afastSubcards').classList.add('hidden');
+  document.getElementById('formAfastamento').classList.add('hidden');
+  document.getElementById('listaAfastamento').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Afastamentos emitidos';
+  carregarListaAfastamentos();
+});
+
+document.getElementById('subcardRetornos').addEventListener('click', function(){
+  document.getElementById('afastSubcards').classList.add('hidden');
+  document.getElementById('formAfastamento').classList.add('hidden');
+  document.getElementById('listaAfastamento').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Retornos próximos';
+  carregarRetornos();
+});
+
+document.getElementById('afastBuscaAluno').addEventListener('input', function(){
+  clearTimeout(window._afastTimer);
+  window._afastTimer = setTimeout(buscarContratosAfast, 400);
+});
+
+async function buscarContratosAfast(){
+  var termo = document.getElementById('afastBuscaAluno').value.trim();
+  var sel = document.getElementById('afastContrato');
+  if(termo.length < 2){ sel.innerHTML = '<option value="">Busque o aluno primeiro</option>'; return; }
+  sel.innerHTML = '<option value="">Buscando...</option>';
+  try{
+    var r = await chamarAPI({ acao:'contratosAtivosAluno', termo: termo });
+    _contratosAfast = (r && r.contratos) ? r.contratos : [];
+    if(!_contratosAfast.length){
+      sel.innerHTML = '<option value="">Nenhum contrato vigente encontrado</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">Selecione o contrato</option>' + _contratosAfast.map(function(c){
+      return '<option value="'+c.numeroContrato+'">Nº '+c.numeroContrato+' — '+c.aluno+' — até '+c.fim+'</option>';
+    }).join('');
+  }catch(e){
+    sel.innerHTML = '<option value="">Erro ao buscar</option>';
+  }
+}
+
+['afastContrato','afastInicio','afastFim'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', simularAfast);
+});
+
+async function simularAfast(){
+  var num = document.getElementById('afastContrato').value;
+  var ini = document.getElementById('afastInicio').value;
+  var fim = document.getElementById('afastFim').value;
+  var box = document.getElementById('afastCalculo');
+  var btn = document.getElementById('btnGerarAdendo');
+
+  if(!num || !ini || !fim){ box.innerHTML = ''; btn.disabled = true; return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Calculando...</p>';
+
+  try{
+    var r = await chamarAPI({ acao:'simularAfastamento', numContrato:num,
+                              inicio:_isoParaBr(ini), fim:_isoParaBr(fim) });
+    if(!r.sucesso){ box.innerHTML = '<div class="msg-bloqueio">'+(r.erro||'Erro')+'</div>'; btn.disabled = true; return; }
+
+    var c = r.calculo;
+    var tag = c.faixa === 'Padrão' ? 'faixa-padrao' : (c.faixa === 'Excepcional' ? 'faixa-excep' : 'faixa-fora');
+    var html = '';
+
+    r.bloqueios.forEach(function(b){ html += '<div class="msg-bloqueio">'+b+'</div>'; });
+    r.avisos.forEach(function(a){ html += '<div class="msg-aviso">'+a+'</div>'; });
+
+    html += '<div class="calc-box">'
+      + '<div class="calc-linha"><span class="calc-rot">Duração</span><span class="calc-val">'+c.dias+' dias<span class="faixa-tag '+tag+'">'+c.faixa+'</span></span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Retorna em</span><span class="calc-val">'+c.dataRetorno+'</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Aulas a repor</span><span class="calc-val">'+c.aulasARepor+' ('+c.aulasPorSemana+'x por semana)</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Fim original</span><span class="calc-val">'+c.fimOriginal+'</span></div>'
+      + '<div class="calc-linha destaque"><span class="calc-rot">Novo fim do contrato</span><span class="calc-val">'+c.novoFim+'</span></div>'
+      + '</div>';
+
+    box.innerHTML = html;
+
+    document.getElementById('afastCampoComprovante').classList.toggle('hidden', !c.exigeComprovante);
+    document.getElementById('afastCampoAprovacao').classList.toggle('hidden', !c.precisaAprovacao);
+    btn.disabled = !r.podeGerar;
+  }catch(e){
+    box.innerHTML = '<div class="msg-bloqueio">Erro de conexão.</div>';
+    btn.disabled = true;
+  }
+}
+
+document.getElementById('btnGerarAdendo').addEventListener('click', async function(){
+  var btn = this;
+  var motivo = document.getElementById('afastMotivo').value;
+  if(!motivo){ mostrarToast('Escolha o motivo'); return; }
+
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  var res = document.getElementById('afastResultado');
+  res.innerHTML = '';
+
+  try{
+    var r = await chamarAPI({
+      acao:'gerarAdendo',
+      numContrato: document.getElementById('afastContrato').value,
+      inicio: _isoParaBr(document.getElementById('afastInicio').value),
+      fim: _isoParaBr(document.getElementById('afastFim').value),
+      motivo: motivo,
+      comprovante: document.getElementById('afastComprovante').value,
+      aprovadoPor: document.getElementById('afastAprovadoPor').value,
+      emitidoPor: professorLogado || 'Recepção'
+    });
+
+    if(!r.sucesso){
+      res.innerHTML = '<div class="msg-bloqueio">'+(r.erro||'Erro ao gerar')+'</div>';
+      btn.disabled = false; btn.textContent = 'Gerar adendo e PDF';
+      return;
+    }
+
+    res.innerHTML = '<div class="msg-ok"><b>Adendo nº '+r.numeroAdendo+' gerado.</b><br>'
+      + 'Novo fim do contrato: '+r.calculo.novoFim+'</div>'
+      + '<div class="doc-acoes"><a class="doc-link" href="'+r.pdfUrl+'" target="_blank">Abrir PDF</a></div>';
+    mostrarToast('Adendo gerado');
+
+    document.getElementById('afastInicio').value = '';
+    document.getElementById('afastFim').value = '';
+    document.getElementById('afastMotivo').value = '';
+    document.getElementById('afastComprovante').value = '';
+    document.getElementById('afastAprovadoPor').value = '';
+    document.getElementById('afastCalculo').innerHTML = '';
+    btn.textContent = 'Gerar adendo e PDF';
+  }catch(e){
+    res.innerHTML = '<div class="msg-bloqueio">Erro de conexão.</div>';
+    btn.disabled = false; btn.textContent = 'Gerar adendo e PDF';
+  }
+});
+
+document.getElementById('afastFiltro').addEventListener('input', function(){
+  clearTimeout(window._afastListaTimer);
+  window._afastListaTimer = setTimeout(carregarListaAfastamentos, 400);
+});
+
+async function carregarListaAfastamentos(){
+  var box = document.getElementById('afastListaResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarAfastamentos', termo: document.getElementById('afastFiltro').value.trim() });
+    var lista = (r && r.afastamentos) ? r.afastamentos : [];
+    if(!lista.length){ box.innerHTML = '<div class="assess-aviso">Nenhum afastamento encontrado.</div>'; return; }
+    box.innerHTML = lista.map(function(a){
+      var tag = a.faixa === 'Padrão' ? 'faixa-padrao' : (a.faixa === 'Excepcional' ? 'faixa-excep' : 'faixa-fora');
+      var alerta = '';
+      if(a.status !== 'Cancelado' && a.diasParaRetorno !== null && a.diasParaRetorno < 0){
+        alerta = '<div class="msg-bloqueio" style="margin:8px 0 0;">Retorno vencido há '+Math.abs(a.diasParaRetorno)+' dias.</div>';
+      }
+      return '<div class="doc-item">'
+        + '<div class="doc-topo"><span class="doc-nome">Nº '+a.numeroAdendo+' — '+a.aluno+'</span>'
+        + '<span class="faixa-tag '+tag+'">'+(a.faixa||'')+'</span></div>'
+        + '<div class="doc-meta">Contrato '+a.numeroContrato+' · matrícula '+a.numeroMatricula+'<br>'
+        + a.inicio+' a '+a.fim+' ('+a.dias+' dias) · '+(a.motivo||'')+'<br>'
+        + 'Retorna em '+a.dataRetorno+' · '+a.aulasARepor+' aulas a repor<br>'
+        + 'Novo fim do contrato: '+a.novoFimContrato+' · '+(a.status||'')+'</div>'
+        + alerta
+        + (a.pdfUrl ? '<div class="doc-acoes"><a class="doc-link" href="'+a.pdfUrl+'" target="_blank">Abrir PDF</a></div>' : '')
+        + '</div>';
+    }).join('');
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>';
+  }
+}
+
+async function carregarRetornos(){
+  var box = document.getElementById('afastListaResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'afastamentosVencendo', dias: 7 });
+    var lista = (r && r.retornos) ? r.retornos : [];
+    if(!lista.length){ box.innerHTML = '<div class="assess-aviso">Nenhum retorno nos próximos 7 dias.</div>'; return; }
+    box.innerHTML = '<div class="assess-secao-titulo">Retornos (' + lista.length + ')</div>'
+      + lista.map(function(a){
+        var venc = a.diasParaRetorno < 0;
+        return '<div class="doc-item">'
+          + '<div class="doc-topo"><span class="doc-nome">'+a.aluno+'</span></div>'
+          + '<div class="doc-meta">Adendo nº '+a.numeroAdendo+' · contrato '+a.numeroContrato+'<br>'
+          + 'Afastado até '+a.fimAfastamento+' · '+a.aulasARepor+' aulas a repor<br>'
+          + 'Novo fim do contrato: '+a.novoFimContrato+'</div>'
+          + '<div class="'+(venc?'msg-bloqueio':'msg-aviso')+'" style="margin:8px 0 0;">'+a.situacao+'</div>'
+          + '</div>';
+      }).join('');
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>';
+  }
+}
+
+// ---------- BAIXA ----------
+
+var _contratosBaixa = [];
+
+function mostrarSubcardsBaixa(){
+  document.getElementById('baixaSubcards').classList.remove('hidden');
+  document.getElementById('formBaixa').classList.add('hidden');
+  document.getElementById('listaBaixa').classList.add('hidden');
+}
+
+document.getElementById('recepCardBaixa').addEventListener('click', function(){
+  abrirPainelRecep('painelBaixa','Baixa de contrato');
+  mostrarSubcardsBaixa();
+});
+
+document.getElementById('subcardNovaBaixa').addEventListener('click', function(){
+  document.getElementById('baixaSubcards').classList.add('hidden');
+  document.getElementById('listaBaixa').classList.add('hidden');
+  document.getElementById('formBaixa').classList.remove('hidden');
+  document.getElementById('baixaResultado').innerHTML = '';
+  document.getElementById('baixaCalculo').innerHTML = '';
+  document.getElementById('baixaData').value = _hojeIso();
+  document.getElementById('baixaDataPgto').value = _hojeIso();
+  $recepcaoSub.textContent = 'Nova baixa';
+});
+
+document.getElementById('subcardBuscarBaixa').addEventListener('click', function(){
+  document.getElementById('baixaSubcards').classList.add('hidden');
+  document.getElementById('formBaixa').classList.add('hidden');
+  document.getElementById('listaBaixa').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Baixas emitidas';
+  carregarListaBaixas();
+});
+
+document.getElementById('baixaBuscaAluno').addEventListener('input', function(){
+  clearTimeout(window._baixaTimer);
+  window._baixaTimer = setTimeout(buscarContratosBaixa, 400);
+});
+
+async function buscarContratosBaixa(){
+  var termo = document.getElementById('baixaBuscaAluno').value.trim();
+  var sel = document.getElementById('baixaContrato');
+  if(termo.length < 2){ sel.innerHTML = '<option value="">Busque o aluno primeiro</option>'; return; }
+  sel.innerHTML = '<option value="">Buscando...</option>';
+  try{
+    var r = await chamarAPI({ acao:'contratosAtivosAluno', termo: termo });
+    _contratosBaixa = (r && r.contratos) ? r.contratos : [];
+    if(!_contratosBaixa.length){
+      sel.innerHTML = '<option value="">Nenhum contrato vigente encontrado</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">Selecione o contrato</option>' + _contratosBaixa.map(function(c){
+      return '<option value="'+c.numeroContrato+'">Nº '+c.numeroContrato+' — '+c.aluno+' — até '+c.fim+'</option>';
+    }).join('');
+  }catch(e){
+    sel.innerHTML = '<option value="">Erro ao buscar</option>';
+  }
+}
+
+['baixaContrato','baixaData','baixaValorTotal','baixaParcelasTotal','baixaParcelasPagas','baixaEmAberto'].forEach(function(id){
+  var el = document.getElementById(id);
+  el.addEventListener('change', simularBaixaUI);
+  el.addEventListener('input', function(){
+    clearTimeout(window._baixaCalcTimer);
+    window._baixaCalcTimer = setTimeout(simularBaixaUI, 500);
+  });
+});
+
+async function simularBaixaUI(){
+  var num = document.getElementById('baixaContrato').value;
+  var box = document.getElementById('baixaCalculo');
+  var btn = document.getElementById('btnGerarBaixa');
+  var chk = document.getElementById('baixaConfirma');
+
+  if(!num){ box.innerHTML = ''; btn.disabled = true; return; }
+
+  try{
+    var r = await chamarAPI({
+      acao:'simularBaixa',
+      numContrato: num,
+      dataCancelamento: _isoParaBr(document.getElementById('baixaData').value),
+      valorTotal: _num(document.getElementById('baixaValorTotal').value),
+      parcelasTotal: _num(document.getElementById('baixaParcelasTotal').value),
+      parcelasPagas: _num(document.getElementById('baixaParcelasPagas').value),
+      mensalidadeEmAberto: _num(document.getElementById('baixaEmAberto').value)
+    });
+
+    if(!r.sucesso){ box.innerHTML = '<div class="msg-bloqueio">'+(r.erro||'Erro')+'</div>'; btn.disabled = true; return; }
+
+    var c = r.calculo;
+    var html = '';
+    r.bloqueios.forEach(function(b){ html += '<div class="msg-bloqueio">'+b+'</div>'; });
+    r.avisos.forEach(function(a){ html += '<div class="msg-aviso">'+a+'</div>'; });
+
+    html += '<div class="calc-box">'
+      + '<div class="calc-linha"><span class="calc-rot">Valor total</span><span class="calc-val">R$ '+_brl(c.valorTotal)+'</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Parcelas pagas</span><span class="calc-val">'+c.parcelasPagas+' de '+c.parcelasTotal+'</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Já quitado</span><span class="calc-val">R$ '+_brl(c.valorPago)+'</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Remanescente</span><span class="calc-val">R$ '+_brl(c.remanescente)+'</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">Multa 10% (cláusula VII-b)</span><span class="calc-val">R$ '+_brl(c.multa)+'</span></div>'
+      + (c.mensalidadeEmAberto > 0 ? '<div class="calc-linha"><span class="calc-rot">Mensalidade em aberto</span><span class="calc-val">R$ '+_brl(c.mensalidadeEmAberto)+'</span></div>' : '')
+      + '<div class="calc-linha destaque"><span class="calc-rot">Total a quitar</span><span class="calc-val">R$ '+_brl(c.totalQuitar)+'</span></div>'
+      + '</div>';
+
+    box.innerHTML = html;
+    btn.disabled = !(r.podeGerar && chk.checked);
+  }catch(e){
+    box.innerHTML = '<div class="msg-bloqueio">Erro de conexão.</div>';
+    btn.disabled = true;
+  }
+}
+
+document.getElementById('baixaConfirma').addEventListener('change', simularBaixaUI);
+
+document.getElementById('btnGerarBaixa').addEventListener('click', async function(){
+  var btn = this;
+  var motivo = document.getElementById('baixaMotivo').value;
+  var forma = document.getElementById('baixaForma').value;
+  if(!motivo){ mostrarToast('Escolha o motivo'); return; }
+  if(!forma){ mostrarToast('Escolha a forma de pagamento'); return; }
+  if(!document.getElementById('baixaConfirma').checked){ mostrarToast('Marque a confirmação'); return; }
+
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  var res = document.getElementById('baixaResultado');
+  res.innerHTML = '';
+
+  try{
+    var r = await chamarAPI({
+      acao:'gerarBaixa',
+      confirmar: true,
+      numContrato: document.getElementById('baixaContrato').value,
+      dataCancelamento: _isoParaBr(document.getElementById('baixaData').value),
+      motivo: motivo,
+      valorTotal: _num(document.getElementById('baixaValorTotal').value),
+      parcelasTotal: _num(document.getElementById('baixaParcelasTotal').value),
+      parcelasPagas: _num(document.getElementById('baixaParcelasPagas').value),
+      mensalidadeEmAberto: _num(document.getElementById('baixaEmAberto').value),
+      formaPagamento: forma,
+      dataPagamento: _isoParaBr(document.getElementById('baixaDataPgto').value),
+      situacao: 'Quitado',
+      emitidoPor: professorLogado || 'Recepção'
+    });
+
+    if(!r.sucesso){
+      res.innerHTML = '<div class="msg-bloqueio">'+(r.erro||'Erro ao gerar')+'</div>';
+      btn.disabled = false; btn.textContent = 'Gerar recibo de baixa';
+      return;
+    }
+
+    res.innerHTML = '<div class="msg-ok"><b>Recibo nº '+r.numeroRecibo+' gerado.</b><br>'
+      + 'Total quitado: R$ '+_brl(r.calculo.totalQuitar)+'</div>'
+      + '<div class="doc-acoes"><a class="doc-link" href="'+r.pdfUrl+'" target="_blank">Abrir PDF</a></div>';
+    mostrarToast('Baixa registrada');
+
+    document.getElementById('baixaConfirma').checked = false;
+    document.getElementById('baixaCalculo').innerHTML = '';
+    btn.textContent = 'Gerar recibo de baixa';
+  }catch(e){
+    res.innerHTML = '<div class="msg-bloqueio">Erro de conexão.</div>';
+    btn.disabled = false; btn.textContent = 'Gerar recibo de baixa';
+  }
+});
+
+document.getElementById('baixaFiltro').addEventListener('input', function(){
+  clearTimeout(window._baixaListaTimer);
+  window._baixaListaTimer = setTimeout(carregarListaBaixas, 400);
+});
+
+async function carregarListaBaixas(){
+  var box = document.getElementById('baixaListaResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarBaixas', termo: document.getElementById('baixaFiltro').value.trim() });
+    var lista = (r && r.baixas) ? r.baixas : [];
+    if(!lista.length){ box.innerHTML = '<div class="assess-aviso">Nenhuma baixa encontrada.</div>'; return; }
+    box.innerHTML = lista.map(function(b){
+      return '<div class="doc-item">'
+        + '<div class="doc-topo"><span class="doc-nome">Nº '+b.numeroRecibo+' — '+b.aluno+'</span>'
+        + '<span class="pill-ok">'+(b.situacao||'')+'</span></div>'
+        + '<div class="doc-meta">Contrato '+b.numeroContrato+' · matrícula '+b.numeroMatricula+'<br>'
+        + 'Cancelado em '+b.dataCancelamento+' · '+(b.motivo||'')+'<br>'
+        + b.parcelasPagas+' de '+b.parcelasTotal+' parcelas pagas<br>'
+        + 'Multa R$ '+_brl(b.multa)+' · total quitado R$ '+_brl(b.totalQuitar)+' ('+(b.formaPagamento||'')+')</div>'
+        + (b.pdfUrl ? '<div class="doc-acoes"><a class="doc-link" href="'+b.pdfUrl+'" target="_blank">Abrir PDF</a></div>' : '')
+        + '</div>';
+    }).join('');
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>';
+  }
+}
 
 async function carregarPanorama(){
   const $res = document.getElementById('panoramaResultado');
