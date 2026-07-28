@@ -95,7 +95,7 @@
   .alerta-sozinho{ margin:10px 20px 0; background:#FDF3D4; border:1.5px solid #E5C860; border-radius:10px; padding:10px 12px; font-size:12.5px; color:#8a6d1a; display:flex; align-items:center; gap:8px; }
 
   /* Campos de comentário e homework */
-  .campos-aula{ padding:4px 20px 0; display:flex; flex-direction:column; gap:10px; max-height:86px; overflow-y:auto; }
+  .campos-aula{ padding:4px 20px 0; display:flex; flex-direction:column; gap:10px; max-height:min(42vh, 320px); overflow-y:auto; }
   .presenca-corpo{ display:contents; }
   .campos-aula::-webkit-scrollbar{ width:6px; }
   .campos-aula::-webkit-scrollbar-track{ background:var(--perola); border-radius:10px; }
@@ -306,6 +306,28 @@
   .div-de{ color:var(--verde-medio); text-decoration:line-through; }
   .div-para{ font-weight:700; color:var(--verde-escuro); }
 
+
+  /* ===== 2.3.0: PENDENCIAS DE PRESENCA ===== */
+  .pend-box{ margin:0 20px 10px; border-radius:12px; padding:13px 15px; background:#FDF3D4; border-left:3px solid #D9A441; }
+  .pend-box.critico{ background:#FBE9E5; border-left-color:var(--excluir); }
+  .pend-topo{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .pend-titulo{ font-size:13.5px; font-weight:600; color:#7a5c14; line-height:1.4; }
+  .pend-box.critico .pend-titulo{ color:#8a3b2d; }
+  .pend-toggle{ background:none; border:none; font-size:12px; font-weight:600; color:inherit; cursor:pointer; text-decoration:underline; white-space:nowrap; font-family:'Poppins',sans-serif; padding:0; }
+  .pend-lista{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .pend-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--branco); border-radius:9px; padding:9px 11px; cursor:pointer; border:1.5px solid transparent; text-align:left; font-family:'Poppins',sans-serif; width:100%; }
+  .pend-item:hover{ border-color:var(--verde-claro); }
+  .pend-quando{ font-size:12.5px; font-weight:700; color:var(--verde-escuro); white-space:nowrap; }
+  .pend-turma{ flex:1; font-size:12.5px; color:var(--carvao); line-height:1.35; }
+  .pend-turma small{ display:block; color:var(--verde-medio); font-size:11px; }
+  .pend-atraso{ font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:20px; background:#FDF3D4; color:#8a6d1a; white-space:nowrap; }
+  .pend-atraso.velho{ background:#FBE9E5; color:#8a3b2d; }
+  .pend-prof{ font-size:11px; color:var(--verde-medio); margin-top:2px; }
+
+  /* campos de aula que crescem com o texto */
+  .campos-aula{ max-height:none; }
+  .campo-aula textarea{ overflow-y:auto; max-height:34vh; transition:height .12s ease; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -444,6 +466,7 @@
     </header>
     <div id="resumoSemana" class="hidden" style="margin:0 20px 4px; padding:12px 16px; background:var(--perola); border-radius:12px; font-size:13px; color:var(--verde-escuro);"></div>
     <div id="novidadesBanner" class="nov-banner hidden"></div>
+    <div id="pendenciasBanner" class="pend-box hidden"></div>
     <div class="menu-opcoes">
       <button class="menu-card" id="cardPresenca">
         <div class="menu-card-icone">✓</div>
@@ -1762,7 +1785,10 @@ document.getElementById('btnExportar').addEventListener('click', ()=>{
   mostrarToast('CSV exportado');
 });
 
-$turma.addEventListener('change', renderLista);
+$turma.addEventListener('change', function(){
+  renderLista();
+  setTimeout(function(){ ajustarAltura($campoComentario); ajustarAltura($campoHomework); }, 400);
+});
 $data.addEventListener('change', renderLista);
 
 $btnEntrar.addEventListener('click', async ()=>{
@@ -1794,6 +1820,7 @@ $btnEntrar.addEventListener('click', async ()=>{
       $telaLogin.classList.add('hidden');
       aplicarPermissoes();
       abrirRecepcao();
+      carregarPendencias(nome);
       return;
     }
     if(PERM.presenca){
@@ -1813,6 +1840,8 @@ $btnEntrar.addEventListener('click', async ()=>{
     // visibilidade dos cards vem do perfil na aba Professores
     aplicarPermissoes();
     mostrarNovidades(nome);
+    carregarPendencias(nome);
+    ligarAutoAltura();
     if(PERM.presenca){
       carregarResumoSemana(nome);
       popularTurmas();
@@ -3175,6 +3204,115 @@ async function carregarListaBaixas(){
   }
 }
 
+
+// ===== 2.3.0: PENDENCIAS DE PRESENCA =====
+
+var PENDENCIAS = null;
+
+async function carregarPendencias(nome){
+  var box = document.getElementById('pendenciasBanner');
+  if(!box) return;
+  try{
+    var r = await chamarAPI({ acao:'pendenciasPresenca', professor: (PERM && PERM.presenca) ? nome : '' });
+    if(!r.sucesso || !r.total){ box.classList.add('hidden'); return; }
+    PENDENCIAS = r;
+
+    var critico = r.semanaPassada > 0;
+    box.className = 'pend-box' + (critico ? ' critico' : '');
+
+    var partes = [];
+    if(r.semanaPassada) partes.push(r.semanaPassada + ' da semana passada');
+    if(r.semanaAtual) partes.push(r.semanaAtual + ' desta semana');
+
+    var titulo = (PERM && PERM.presenca)
+      ? ('Falta lançar presença de ' + r.total + (r.total > 1 ? ' aulas' : ' aula') + ': ' + partes.join(' e ') + '.')
+      : ('A escola tem ' + r.total + ' presença(s) sem lançar: ' + partes.join(' e ') + '.');
+
+    box.innerHTML = '<div class="pend-topo">'
+      + '<span class="pend-titulo">' + titulo + '</span>'
+      + '<button class="pend-toggle" id="pendToggle">ver</button>'
+      + '</div><div class="pend-lista hidden" id="pendLista"></div>';
+    box.classList.remove('hidden');
+
+    document.getElementById('pendToggle').addEventListener('click', function(){
+      var lista = document.getElementById('pendLista');
+      var aberto = !lista.classList.contains('hidden');
+      lista.classList.toggle('hidden');
+      this.textContent = aberto ? 'ver' : 'ocultar';
+      if(!aberto && !lista.innerHTML) montarListaPendencias();
+    });
+  }catch(e){
+    box.classList.add('hidden');
+  }
+}
+
+function montarListaPendencias(){
+  var lista = document.getElementById('pendLista');
+  if(!lista || !PENDENCIAS) return;
+  var euLanco = !!(PERM && PERM.presenca);
+
+  lista.innerHTML = PENDENCIAS.pendentes.map(function(p, i){
+    var atraso = p.ehHoje ? 'hoje'
+      : (p.diasDeAtraso === 1 ? 'ontem' : p.diasDeAtraso + ' dias');
+    var velho = p.diasDeAtraso >= 7 ? ' velho' : '';
+    return '<button class="pend-item" data-i="' + i + '"' + (euLanco ? '' : ' disabled style="cursor:default;"') + '>'
+      + '<span class="pend-quando">' + p.diaSemana + ' ' + p.dataBr + '</span>'
+      + '<span class="pend-turma">' + p.nivel
+      + '<small>' + p.turmaId + (p.horario ? ' · ' + p.horario : '')
+      + (euLanco ? '' : ' · ' + p.professor) + '</small></span>'
+      + '<span class="pend-atraso' + velho + '">' + atraso + '</span>'
+      + '</button>';
+  }).join('');
+
+  if(!euLanco) return;
+  lista.querySelectorAll('.pend-item').forEach(function(el){
+    el.addEventListener('click', function(){
+      irParaPendencia(PENDENCIAS.pendentes[Number(this.dataset.i)]);
+    });
+  });
+}
+
+/** Abre a tela de presença já na turma e na data que ficaram pendentes. */
+function irParaPendencia(p){
+  var t = TURMAS.find(function(x){ return String(x.turmaId) === String(p.turmaId); });
+  if(!t){ mostrarToast('Turma não encontrada na sua lista'); return; }
+
+  $telaMenu.classList.add('hidden');
+  $telaApp.classList.remove('hidden');
+  $turma.value = t.id;
+  $data.value = p.data;
+  renderLista();
+  mostrarToast('Aula de ' + p.dataBr + ' · ' + p.nivel);
+}
+
+// ===== 2.3.0: CAMPOS DE AULA QUE CRESCEM COM O TEXTO =====
+
+function ajustarAltura(el){
+  if(!el) return;
+  el.style.height = 'auto';
+  var novo = Math.max(el.scrollHeight, 38);
+  el.style.height = novo + 'px';
+}
+
+function ligarAutoAltura(){
+  [$campoComentario, $campoHomework].forEach(function(el){
+    if(!el || el._autoAltura) return;
+    el._autoAltura = true;
+    el.setAttribute('rows', '1');
+    el.addEventListener('input', function(){ ajustarAltura(el); });
+    el.addEventListener('focus', function(){
+      // no celular, garante que o campo nao fique escondido pelo teclado
+      setTimeout(function(){ el.scrollIntoView({ block:'nearest', behavior:'smooth' }); }, 250);
+    });
+    ajustarAltura(el);
+  });
+}
+
+window.addEventListener('resize', function(){
+  ajustarAltura($campoComentario);
+  ajustarAltura($campoHomework);
+});
+
 // ===== 2.2.0: PERFIS, RENOVACOES, VALORES E NOVIDADES =====
 
 var PERM = null;
@@ -3207,10 +3345,9 @@ function aplicarPermissoes(){
 /** Banner de novidades no menu, uma vez por versao. */
 async function mostrarNovidades(nome){
   try{
-    var chave = 'ap_novidades_' + String(nome).toUpperCase();
-    var vista = '';
-    try{ vista = window._novidadesVistas ? (window._novidadesVistas[chave] || '') : ''; }catch(e){}
-    var r = await chamarAPI({ acao:'novidadesApp', nome: nome, perfil: PERFIL, desdeVersao: vista });
+    // o servidor consulta a coluna F da aba Professores e so devolve o que a
+    // pessoa ainda nao viu
+    var r = await chamarAPI({ acao:'novidadesApp', nome: nome, perfil: PERFIL });
     if(!r.sucesso || !r.novidades || !r.novidades.length) return;
 
     var n = r.novidades[0];
@@ -3220,10 +3357,12 @@ async function mostrarNovidades(nome){
       + '<b>Novidades da versao ' + n.versao + ' &middot; ' + n.titulo + '</b>'
       + '<ul>' + n.itens.map(function(t){ return '<li>' + t + '</li>'; }).join('') + '</ul>';
     box.classList.remove('hidden');
+
+    // marca como vista assim que aparece, para nao repetir no proximo login
+    chamarAPI({ acao:'marcarNovidadesVistas', nome: nome, versao: r.versaoAtual });
+
     document.getElementById('novFechar').addEventListener('click', function(){
       box.classList.add('hidden');
-      if(!window._novidadesVistas) window._novidadesVistas = {};
-      window._novidadesVistas[chave] = r.versaoAtual;
     });
   }catch(e){ /* banner nunca pode travar o login */ }
 }
