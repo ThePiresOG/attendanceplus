@@ -328,6 +328,28 @@
   .campos-aula{ max-height:none; }
   .campo-aula textarea{ overflow-y:auto; max-height:34vh; transition:height .12s ease; }
 
+
+  /* ===== 2.3.1: ALUNO AFASTADO ===== */
+  .aluno.afastado{ background:#FDF3D4; border-color:#E5C860; }
+  .aluno.afastado .nome{ color:#7a5c14; }
+  .badge-afast{ font-size:10px; font-weight:600; background:#D9A441; color:#fff; border-radius:10px; padding:2px 8px; margin-left:8px; white-space:nowrap; }
+  .aluno.afastado .stamp{ opacity:.4; }
+  .aluno.afastado .stamp.liberado{ opacity:1; }
+
+
+  /* ===== 2.4.0: VINCULOS ===== */
+  .slot-vazio .campo-inicio{ display:flex; flex-direction:column; gap:3px; margin-top:8px; }
+  .slot-vazio .campo-inicio label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--verde-medio); font-weight:600; }
+  .slot-vazio .campo-inicio input{ border:1.5px solid var(--linha); border-radius:8px; padding:7px 9px; background:var(--branco); font-size:13px; }
+  .slot-vazio.expandido{ flex-direction:column; align-items:stretch; }
+  .slot-topo{ display:flex; align-items:center; gap:10px; }
+  .slot-ok{ margin-top:9px; width:100%; background:var(--verde-escuro); color:#fff; border:none; border-radius:9px; padding:9px; font-family:'Poppins',sans-serif; font-weight:600; font-size:13px; cursor:pointer; }
+  .desl-item{ border:1.5px solid var(--linha); border-left-width:4px; border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .desl-item.alta{ border-left-color:var(--excluir); }
+  .desl-item.media{ border-left-color:#D9A441; }
+  .desl-acoes{ margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .desl-data{ border:1.5px solid var(--linha); border-radius:8px; padding:6px 9px; font-family:'Poppins',sans-serif; font-size:12.5px; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -777,6 +799,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardDesligar">
+        <div class="menu-card-icone">&#9888;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Alunos para desligar</span>
+          <span class="menu-card-sub">Contrato baixado ou vencido sem renova&ccedil;&atilde;o</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card hidden" id="recepCardValores">
         <div class="menu-card-icone">&#36;</div>
         <div class="menu-card-txt">
@@ -1171,6 +1201,10 @@
       <div class="assess-resultado" id="renResultado"></div>
     </div>
 
+    <div class="recep-painel hidden" id="painelDesligar">
+      <div class="assess-resultado" id="deslResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelValores">
       <div class="assess-resultado" id="valResultado"></div>
     </div>
@@ -1330,27 +1364,51 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.0.0';
+const APP_VERSAO = '2.4.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
 });
 
 // ===== AVISO DE NOVA VERSÃO =====
+// A versao abaixo acompanha o APP_VERSAO do Code.gs. Sempre que subir um HTML
+// novo no GitHub, ela precisa bater com a do servidor, senao a faixa nao some.
 async function checarVersao(){
   try{
+    var jaTentei = '';
+    try{ jaTentei = sessionStorage.getItem('ap_recarregou') || ''; }catch(e){}
+
     const r = await chamarAPI({ acao: 'versaoApp' });
-    if(r.sucesso && r.versao && r.versao !== APP_VERSAO){
-      if(document.getElementById('bannerVersao')) return;
-      const b = document.createElement('div');
-      b.id = 'bannerVersao';
-      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--salmao);color:#fff;padding:12px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);';
-      b.innerHTML = 'Nova vers\u00e3o dispon\u00edvel &middot; toque aqui para atualizar';
-      b.addEventListener('click', ()=>{
-        location.href = location.pathname + '?v=' + encodeURIComponent(r.versao);
-      });
-      document.body.appendChild(b);
+    if(!r.sucesso || !r.versao) return;
+
+    // versoes iguais: nada a fazer, e some qualquer faixa que tenha sobrado
+    if(r.versao === APP_VERSAO){
+      const antigo = document.getElementById('bannerVersao');
+      if(antigo) antigo.remove();
+      try{ sessionStorage.removeItem('ap_recarregou'); }catch(e){}
+      return;
     }
+
+    // ja recarreguei atras dessa versao e continua diferente:
+    // o HTML no ar e que esta velho, entao nao adianta ficar insistindo
+    if(jaTentei === r.versao) return;
+
+    if(document.getElementById('bannerVersao')) return;
+
+    const b = document.createElement('div');
+    b.id = 'bannerVersao';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--salmao);color:#fff;padding:12px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+    b.innerHTML = 'Nova versão disponível &middot; toque aqui para atualizar';
+
+    b.addEventListener('click', function(){
+      b.style.cursor = 'default';
+      b.textContent = 'Atualizando...';
+      try{ sessionStorage.setItem('ap_recarregou', r.versao); }catch(e){}
+      // ?v= e t= furam o cache do navegador e do GitHub Pages
+      location.replace(location.pathname + '?v=' + encodeURIComponent(r.versao) + '&t=' + Date.now());
+    });
+
+    document.body.appendChild(b);
   }catch(e){}
 }
 setTimeout(checarVersao, 3000);
@@ -1486,6 +1544,7 @@ function renderLista(){
   desenharAlunos(t, ehVIP, capacidade);
   atualizarResumo();
   carregarAulaDoDia();
+  carregarAfastados();
 }
 
 // redesenha so a lista de alunos (sem disparar carregarAulaDoDia, evitando loop)
@@ -1547,13 +1606,19 @@ function criarLinhaAluno(nome, t){
     const cor = remFeitas >= LIMITE_REMARCACOES ? '#C1503D' : (remFeitas === LIMITE_REMARCACOES-1 ? '#D9863F' : '#4A6B8A');
     badgeRem = `<span title="Remarcacoes no semestre" style="font-size:10px;background:${cor};color:#fff;border-radius:10px;padding:2px 7px;margin-left:8px;white-space:nowrap;">${remFeitas}/${LIMITE_REMARCACOES} rem.</span>`;
   }
+  // aluno afastado: fundo amarelo, data de volta e sem cobranca de falta
+  const afast = (typeof afastamentoDe === 'function') ? afastamentoDe(nome) : null;
+  const badgeAfast = afast
+    ? `<span class="badge-afast" title="Adendo nº ${afast.numeroAdendo} · ${afast.motivo}">afastado até ${afast.fim}</span>`
+    : '';
+
   const wrap = document.createElement('div');
   wrap.className = 'aluno-wrap';
   wrap.innerHTML = `
     <div class="aluno-bg editar">Editar</div>
     <div class="aluno-bg excluir">Excluir</div>
-    <div class="aluno ${status ? 'marcado' : ''}">
-      <span class="nome">${nome}${badgeRem}</span>
+    <div class="aluno ${status ? 'marcado' : ''}${afast ? ' afastado' : ''}">
+      <span class="nome">${nome}${badgeRem}${badgeAfast}</span>
       <div class="botoes">
         <div class="stamp p ${status==='P' ? 'p-on' : ''}" title="Presente">P</div>
         <div class="stamp f ${status==='F' ? 'f-on' : ''}" title="Falta">F</div>
@@ -1676,23 +1741,43 @@ function confirmarExclusao(nome, t){
 }
 
 function ativarSlot(slot, t){
-  slot.innerHTML = `<span class="mais">+</span><input type="text" placeholder="Nome e sobrenome" autofocus>`;
-  const input = slot.querySelector('input');
+  // a data de inicio evita que o aluno apareca antes da primeira aula
+  slot.classList.add('expandido');
+  slot.innerHTML = `
+    <div class="slot-topo"><span class="mais">+</span><input type="text" placeholder="Nome e sobrenome" autofocus></div>
+    <div class="campo-inicio">
+      <label>Começa a assistir aula em</label>
+      <input type="date" class="inicio-aluno" value="${hojeISO()}">
+    </div>
+    <button class="slot-ok" type="button">Adicionar à turma</button>`;
+  const input = slot.querySelector('input[type=text]');
+  const inputIni = slot.querySelector('.inicio-aluno');
   input.focus();
   let salvando = false;
   async function confirmar(){
     const nome = input.value.trim();
     if(!nome || salvando){ renderLista(); return; }
     salvando = true;
+    const iniISO = inputIni ? inputIni.value : '';
     try{
-      const resultado = await chamarAPI({ acao:'adicionarAluno', linha: t.linha, nome });
-      if(resultado.sucesso){ t.alunos.push(nome); mostrarToast('Aluno adicionado'); }
+      const resultado = await chamarAPI({
+        acao:'adicionarAluno', linha: t.linha, nome: nome,
+        turmaId: t.turmaId, inicio: iniISO ? _isoParaBr(iniISO) : '',
+        por: professorLogado || 'Recepção'
+      });
+      if(resultado.sucesso){
+        const comecaHoje = !iniISO || iniISO <= hojeISO();
+        if(comecaHoje){ t.alunos.push(nome); mostrarToast('Aluno adicionado'); }
+        else mostrarToast('Aluno cadastrado. Aparece na lista a partir de ' + _isoParaBr(iniISO));
+      }
       else mostrarToast('Erro: ' + (resultado.erro || 'não deu pra adicionar'));
     } catch(err){
       mostrarToast('Erro de conexão ao adicionar aluno');
     }
     renderLista();
   }
+  const btnOk = slot.querySelector('.slot-ok');
+  if(btnOk) btnOk.addEventListener('click', confirmar);
   input.addEventListener('keydown', e=>{ if(e.key==='Enter') confirmar(); });
   input.addEventListener('blur', confirmar);
 }
@@ -1757,7 +1842,10 @@ document.getElementById('btnSalvar').addEventListener('click', async ()=>{
     const $dur = document.getElementById('campoDuracao');
     const duracaoAula = $dur ? (Number($dur.value) || 1) : (t.duracaoPadrao || 1);
     const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: duracaoAula, livro: t.livro || '', comentario: $campoComentario.value.trim(), homework: $campoHomework.value.trim() });
-    if(resultado.sucesso) mostrarToast('Presença salva para turma ' + t.turmaId);
+    if(resultado.sucesso){
+      mostrarToast('Presença salva para turma ' + t.turmaId);
+      if(VEIO_DE_PENDENCIA) setTimeout(voltarDaPendencia, 900);
+    }
     else mostrarToast('Erro ao salvar: ' + (resultado.erro || 'tenta de novo'));
   } catch(err){
     mostrarToast('Erro de conexão ao salvar');
@@ -3205,6 +3293,121 @@ async function carregarListaBaixas(){
 }
 
 
+
+
+// ===== 2.4.0: ALUNOS PARA DESLIGAR =====
+
+document.getElementById('recepCardDesligar').addEventListener('click', function(){
+  abrirPainelRecep('painelDesligar','Alunos para desligar');
+  carregarDesligamentos();
+});
+
+async function carregarDesligamentos(){
+  var box = document.getElementById('deslResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Verificando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'desligamentosPendentes' });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">Erro ao verificar.</div>'; return; }
+    if(!r.total){
+      box.innerHTML = '<div class="msg-ok">Nenhum aluno pendente de desligamento. '
+        + 'Todo mundo na Attendance tem contrato vigente.</div>';
+      return;
+    }
+
+    box.innerHTML = '<div class="msg-aviso">Estes alunos continuam aparecendo para o professor, '
+      + 'mas o contrato não está mais valendo. Registrar a saída tira eles da lista '
+      + 'a partir da data informada, sem apagar o histórico de aulas.<br>'
+      + 'Contratos vencidos entram aqui depois de ' + r.toleranciaDias + ' dias sem renovação.</div>'
+      + r.desligamentos.map(function(x, i){
+          var dataIso = x.dataSugerida ? _brParaIso(x.dataSugerida) : _hojeIso();
+          return '<div class="desl-item ' + x.urgencia + '" id="desl' + i + '">'
+            + '<div class="doc-topo"><span class="doc-nome">' + x.aluno + '</span>'
+            + '<span class="badge">' + x.turmaId + '</span></div>'
+            + '<div class="doc-meta">' + x.motivo + '<br>' + x.detalhe
+            + (x.professor ? '<br>Professor: ' + x.professor : '') + '</div>'
+            + '<div class="desl-acoes">'
+            + '<input type="date" class="desl-data" id="deslData' + i + '" value="' + dataIso + '">'
+            + '<button class="ren-btn" onclick="confirmarSaida(' + i + ')">Registrar saída</button>'
+            + '</div></div>';
+        }).join('');
+
+    window._DESL = r.desligamentos;
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Erro de conexão.</div>';
+  }
+}
+
+function _brParaIso(br){
+  var p = String(br||'').split('/');
+  return p.length === 3 ? (p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0')) : '';
+}
+
+async function confirmarSaida(i){
+  var x = window._DESL[i];
+  var campo = document.getElementById('deslData' + i);
+  var dataBr = campo && campo.value ? _isoParaBr(campo.value) : '';
+  if(!dataBr){ mostrarToast('Informe a data da saída'); return; }
+  if(!confirm(x.aluno + ' sai da turma ' + x.turmaId + ' em ' + dataBr
+    + '.\n\nAs aulas já dadas continuam contando no financeiro. Confirma?')) return;
+
+  var r = await chamarAPI({
+    acao:'registrarSaida', aluno: x.aluno, data: dataBr,
+    motivo: x.motivo, numeroContrato: x.numeroContrato,
+    por: professorLogado || 'Recepção'
+  });
+  if(r.sucesso){
+    mostrarToast('Saída registrada');
+    var el = document.getElementById('desl' + i);
+    if(el){ el.style.opacity = '.45'; el.querySelector('.desl-acoes').innerHTML =
+      '<span class="pill-ok">Saída em ' + dataBr + '</span>'; }
+  }else{
+    mostrarToast(r.erro || 'Erro ao registrar');
+  }
+}
+
+// ===== 2.3.1: ALUNOS AFASTADOS =====
+
+var AFASTADOS = {};
+
+function _chaveNome(s){
+  return String(s||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+/** Busca quem esta afastado na data selecionada e redesenha a lista. */
+async function carregarAfastados(){
+  try{
+    var r = await chamarAPI({ acao:'afastadosNaData', data: _isoParaBr($data.value) });
+    AFASTADOS = {};
+    if(r.sucesso){
+      (r.afastados || []).forEach(function(a){ AFASTADOS[_chaveNome(a.aluno)] = a; });
+    }
+  }catch(e){ AFASTADOS = {}; }
+  try{
+    var t = turmaAtual();
+    if(t){
+      var cap = t.capacidade || MAX_SLOTS;
+      desenharAlunos(t, cap < MAX_SLOTS, cap);
+    }
+  }catch(e){}
+}
+
+function afastamentoDe(nome){ return AFASTADOS[_chaveNome(nome)] || null; }
+
+// ===== 2.3.1: VOLTAR AO MENU DEPOIS DE LANCAR UMA PENDENCIA =====
+
+var VEIO_DE_PENDENCIA = false;
+
+async function voltarDaPendencia(){
+  VEIO_DE_PENDENCIA = false;
+  $telaApp.classList.add('hidden');
+  $telaMenu.classList.remove('hidden');
+  await carregarPendencias(professorLogado);
+  var box = document.getElementById('pendenciasBanner');
+  if(box && box.classList.contains('hidden')){
+    mostrarToast('Tudo em dia, nenhuma presença pendente');
+  }
+}
+
 // ===== 2.3.0: PENDENCIAS DE PRESENCA =====
 
 var PENDENCIAS = null;
@@ -3276,6 +3479,7 @@ function montarListaPendencias(){
 function irParaPendencia(p){
   var t = TURMAS.find(function(x){ return String(x.turmaId) === String(p.turmaId); });
   if(!t){ mostrarToast('Turma não encontrada na sua lista'); return; }
+  VEIO_DE_PENDENCIA = true;
 
   $telaMenu.classList.add('hidden');
   $telaApp.classList.remove('hidden');
