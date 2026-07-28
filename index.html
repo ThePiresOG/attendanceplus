@@ -392,6 +392,28 @@
   .busca-contador{ font-size:11.5px; color:var(--verde-medio); padding:5px 2px 0; }
   .busca-vazia{ text-align:center; padding:24px 16px; color:var(--verde-medio); font-size:13px; }
 
+
+  /* ===== 2.5.0: CALENDARIO E USUARIOS ===== */
+  .cal-item{ border:1.5px solid var(--linha); border-left-width:4px; border-radius:12px; padding:11px 13px; margin-bottom:8px; }
+  .cal-item.sem{ border-left-color:var(--salmao); }
+  .cal-item.reposicao{ border-left-color:#3E8E5A; }
+  .cal-item.excecao{ border-left-color:#4A6B8A; }
+  .cal-item.passado{ opacity:.5; }
+  .cal-topo{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:3px; }
+  .cal-desc{ font-size:13.5px; font-weight:600; color:var(--carvao); }
+  .cal-tag{ font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:20px; white-space:nowrap; }
+  .cal-tag.sem{ background:#FBE9E5; color:#8a3b2d; }
+  .cal-tag.reposicao{ background:#E3EFE7; color:#3E8E5A; }
+  .cal-tag.excecao{ background:#E5EDF4; color:#3B5A73; }
+  .cal-meta{ font-size:12px; color:var(--verde-escuro); line-height:1.55; }
+  .usr-item{ display:flex; align-items:center; gap:10px; border:1.5px solid var(--linha); border-radius:11px; padding:11px 13px; margin-bottom:7px; }
+  .usr-item.inativo{ opacity:.5; border-style:dashed; }
+  .usr-nome{ flex:1; font-size:13.5px; color:var(--carvao); line-height:1.35; }
+  .usr-nome small{ display:block; font-size:11px; color:var(--verde-medio); }
+  .usr-perfil{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; background:#E9F0EC; color:var(--verde-escuro); white-space:nowrap; }
+  .usr-perfil.admin{ background:var(--verde-escuro); color:#fff; }
+  .usr-perfil.socio{ background:var(--salmao); color:#fff; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -854,6 +876,22 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Alunos para desligar</span>
           <span class="menu-card-sub">Contrato baixado ou vencido sem renova&ccedil;&atilde;o</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardCalendario">
+        <div class="menu-card-icone">&#128197;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Calend&aacute;rio</span>
+          <span class="menu-card-sub">Recessos, feriados e reposi&ccedil;&otilde;es</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="recepCardUsuarios">
+        <div class="menu-card-icone">&#128100;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Usu&aacute;rios</span>
+          <span class="menu-card-sub">Professores, senhas e permiss&otilde;es</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -1364,6 +1402,87 @@
       <div class="assess-resultado" id="deslResultado"></div>
     </div>
 
+    <div class="recep-painel hidden" id="painelCalendario">
+      <div class="busca-box">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="ren-btn" id="btnNovoCal">+ Novo per&iacute;odo</button>
+          <select id="calFiltro" style="font-family:'Poppins',sans-serif;font-size:13px;padding:9px 11px;border-radius:9px;border:1.5px solid var(--linha);background:var(--perola);">
+            <option value="futuro">Pr&oacute;ximos</option>
+            <option value="todos">Todos</option>
+            <option value="passado">J&aacute; passaram</option>
+          </select>
+        </div>
+      </div>
+      <div class="hidden" id="formCalendario">
+        <div class="form-turma">
+          <div class="par">
+            <div class="campo"><label for="calDe">De</label><input type="date" id="calDe"></div>
+            <div class="campo"><label for="calAte">At&eacute;</label><input type="date" id="calAte"></div>
+          </div>
+          <div class="campo">
+            <label for="calDesc">Descri&ccedil;&atilde;o</label>
+            <input type="text" id="calDesc" placeholder="Ex: Recesso de julho">
+          </div>
+          <div class="campo">
+            <label for="calTipo">Tipo</label>
+            <select id="calTipo">
+              <option value="sem">Sem aula (recesso, feriado)</option>
+              <option value="excecao">Tem aula (a escola abre mesmo assim)</option>
+              <option value="reposicao">Reposi&ccedil;&atilde;o de turmas espec&iacute;ficas</option>
+            </select>
+          </div>
+          <div class="campo hidden" id="calCampoTurmas">
+            <label for="calTurmas">Turmas que t&ecirc;m aula</label>
+            <input type="text" id="calTurmas" placeholder="Ex: 138, 209">
+          </div>
+        </div>
+        <div style="padding:8px 20px 12px;">
+          <button class="acao salvar" id="btnSalvarCal" style="width:100%;">Salvar per&iacute;odo</button>
+        </div>
+        <div class="assess-resultado" id="calFormResultado"></div>
+      </div>
+      <div class="assess-resultado" id="calResultado"></div>
+    </div>
+
+    <div class="recep-painel hidden" id="painelUsuarios">
+      <div class="busca-box">
+        <button class="ren-btn" id="btnNovoUsr" style="width:100%;">+ Novo usu&aacute;rio</button>
+      </div>
+      <div class="hidden" id="formUsuario">
+        <div class="form-turma">
+          <div class="campo">
+            <label for="usrNome">Nome</label>
+            <input type="text" id="usrNome" placeholder="Como aparece na tela de login">
+          </div>
+          <div class="par">
+            <div class="campo">
+              <label for="usrSenha">Senha</label>
+              <input type="text" id="usrSenha" placeholder="Deixe vazio para manter">
+            </div>
+            <div class="campo">
+              <label for="usrTelefone">WhatsApp</label>
+              <input type="text" id="usrTelefone" placeholder="15991234567">
+            </div>
+          </div>
+          <div class="campo">
+            <label for="usrPerfil">Perfil</label>
+            <select id="usrPerfil">
+              <option value="Professor">Professor</option>
+              <option value="Recep&ccedil;&atilde;o">Recep&ccedil;&atilde;o</option>
+              <option value="S&oacute;cio">S&oacute;cio(a)</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <p class="dica" id="usrDicaPerfil"></p>
+        </div>
+        <div style="padding:8px 20px 12px;">
+          <button class="acao salvar" id="btnSalvarUsr" style="width:100%;">Salvar usu&aacute;rio</button>
+        </div>
+        <div class="assess-resultado" id="usrFormResultado"></div>
+      </div>
+      <div class="assess-resultado" id="usrResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelValores">
       <div class="assess-resultado" id="valResultado"></div>
     </div>
@@ -1543,7 +1662,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.4.3';
+const APP_VERSAO = '2.5.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3476,6 +3595,244 @@ async function carregarListaBaixas(){
 
 
 
+
+// ===== 2.5.0: CALENDARIO =====
+
+var CAL_EDITANDO = null;
+
+document.getElementById('recepCardCalendario').addEventListener('click', function(){
+  abrirPainelRecep('painelCalendario','Calendário');
+  document.getElementById('formCalendario').classList.add('hidden');
+  carregarCalendario();
+});
+
+document.getElementById('calFiltro').addEventListener('change', desenharCalendario);
+
+document.getElementById('calTipo').addEventListener('change', function(){
+  document.getElementById('calCampoTurmas').classList.toggle('hidden', this.value !== 'reposicao');
+});
+
+document.getElementById('btnNovoCal').addEventListener('click', function(){
+  abrirFormCal(null);
+});
+
+function abrirFormCal(item){
+  CAL_EDITANDO = item;
+  var f = document.getElementById('formCalendario');
+  f.classList.remove('hidden');
+  document.getElementById('calFormResultado').innerHTML = '';
+  document.getElementById('calDe').value = item ? _brParaIso(item.de) : _hojeIso();
+  document.getElementById('calAte').value = item ? _brParaIso(item.ate) : _hojeIso();
+  document.getElementById('calDesc').value = item ? item.descricao : '';
+  document.getElementById('calTurmas').value = item ? item.turmas : '';
+  var tipo = !item ? 'sem' : (item.turmas ? 'reposicao' : (item.temAula ? 'excecao' : 'sem'));
+  document.getElementById('calTipo').value = tipo;
+  document.getElementById('calCampoTurmas').classList.toggle('hidden', tipo !== 'reposicao');
+  document.getElementById('btnSalvarCal').textContent = item ? 'Salvar alterações' : 'Salvar período';
+  document.getElementById('calDesc').focus();
+}
+
+document.getElementById('btnSalvarCal').addEventListener('click', async function(){
+  var btn = this;
+  var tipo = document.getElementById('calTipo').value;
+  var dados = {
+    acao: 'salvarCalendario',
+    de: _isoParaBr(document.getElementById('calDe').value),
+    ate: _isoParaBr(document.getElementById('calAte').value),
+    descricao: document.getElementById('calDesc').value.trim(),
+    temAula: tipo !== 'sem',
+    turmas: tipo === 'reposicao' ? document.getElementById('calTurmas').value.trim() : ''
+  };
+  if(CAL_EDITANDO) dados.linha = CAL_EDITANDO.linha;
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  var box = document.getElementById('calFormResultado');
+  var r = await chamarAPI(dados);
+  btn.disabled = false;
+  btn.textContent = CAL_EDITANDO ? 'Salvar alterações' : 'Salvar período';
+
+  if(!r.sucesso){
+    box.innerHTML = '<div class="msg-bloqueio">' + (r.erro || 'Erro ao salvar') + '</div>';
+    return;
+  }
+  box.innerHTML = '<div class="msg-ok"><b>Período salvo.</b> ' + dados.de + ' a ' + dados.ate
+    + ' · ' + r.dias + ' dia(s).<br>'
+    + (r.aulasAfetadas
+        ? 'Afeta ' + r.aulasAfetadas + ' aula(s): ' + r.turmasAfetadas.join(', ')
+        : 'Nenhuma aula cai nesse período.')
+    + '</div>'
+    + (r.avisos || []).map(function(a){ return '<div class="msg-aviso">' + a + '</div>'; }).join('');
+  mostrarToast('Período salvo');
+  CAL_EDITANDO = null;
+  carregarCalendario();
+});
+
+async function carregarCalendario(){
+  var box = document.getElementById('calResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  var r = await chamarAPI({ acao:'listarCalendario' });
+  if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+  window._CAL = r.itens;
+  desenharCalendario();
+}
+
+function desenharCalendario(){
+  var box = document.getElementById('calResultado');
+  var filtro = document.getElementById('calFiltro').value;
+  var todos = window._CAL || [];
+  var lista = todos.filter(function(x){
+    if(filtro === 'futuro') return x.futuro || x.emCurso;
+    if(filtro === 'passado') return x.passado;
+    return true;
+  });
+
+  if(!lista.length){
+    box.innerHTML = '<div class="assess-aviso">'
+      + (filtro === 'futuro'
+          ? 'Nenhum recesso ou feriado cadastrado para os próximos dias. Julho e dezembro já estão previstos?'
+          : 'Nada aqui.') + '</div>';
+    return;
+  }
+
+  box.innerHTML = lista.map(function(x){
+    var t = x.turmas ? 'reposicao' : (x.temAula ? 'excecao' : 'sem');
+    var i = todos.indexOf(x);
+    return '<div class="cal-item ' + t + (x.passado ? ' passado' : '') + '">'
+      + '<div class="cal-topo"><span class="cal-desc">' + x.descricao + '</span>'
+      + '<span class="cal-tag ' + t + '">' + x.tipo + '</span></div>'
+      + '<div class="cal-meta">' + x.de + (x.de !== x.ate ? ' a ' + x.ate : '')
+      + ' · ' + x.dias + ' dia(s)'
+      + (x.turmas ? '<br>Só as turmas: ' + x.turmas : '')
+      + (x.emCurso ? '<br><b>Acontecendo agora</b>' : (x.futuro ? '<br>Começa em ' + x.diasParaComecar + ' dias' : ''))
+      + '</div>'
+      + '<div class="ren-acoes">'
+      + '<button class="ren-btn sec" onclick="editarCalUI(' + i + ')">Editar</button>'
+      + '<button class="ren-btn sec" style="border-color:var(--excluir);color:var(--excluir);" onclick="excluirCalUI(' + i + ')">Excluir</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function editarCalUI(i){ abrirFormCal(window._CAL[i]); }
+
+async function excluirCalUI(i){
+  var x = window._CAL[i];
+  if(!confirm('Excluir "' + x.descricao + '" (' + x.de + ' a ' + x.ate + ')?\n\n'
+    + 'Os dias voltam a contar como dia normal de aula.')) return;
+  var r = await chamarAPI({ acao:'excluirCalendario', linha: x.linha });
+  if(r.sucesso){ mostrarToast('Período excluído'); carregarCalendario(); }
+  else mostrarToast(r.erro || 'Erro');
+}
+
+// ===== 2.5.0: USUARIOS =====
+
+var USR_EDITANDO = null;
+
+var _DESC_PERFIL = {
+  'Professor': 'Vê presença, notas, assessment e materiais das turmas dele.',
+  'Recepção': 'Vê só a área da recepção: contratos, renovações, turmas, afastamentos e baixas.',
+  'Sócio': 'Vê tudo menos lançar presença: painel, financeiro, recepção, notas e assessment.',
+  'Admin': 'Acesso total, incluindo lançar presença.'
+};
+
+document.getElementById('recepCardUsuarios').addEventListener('click', function(){
+  abrirPainelRecep('painelUsuarios','Usuários');
+  document.getElementById('formUsuario').classList.add('hidden');
+  carregarUsuarios();
+});
+
+document.getElementById('usrPerfil').addEventListener('change', function(){
+  var k = this.value.replace('&ccedil;','ç').replace('&atilde;','ã').replace('&oacute;','ó');
+  document.getElementById('usrDicaPerfil').textContent = _DESC_PERFIL[k] || '';
+});
+
+document.getElementById('btnNovoUsr').addEventListener('click', function(){ abrirFormUsr(null); });
+
+function abrirFormUsr(u){
+  USR_EDITANDO = u;
+  document.getElementById('formUsuario').classList.remove('hidden');
+  document.getElementById('usrFormResultado').innerHTML = '';
+  document.getElementById('usrNome').value = u ? u.nome : '';
+  document.getElementById('usrSenha').value = '';
+  document.getElementById('usrSenha').placeholder = u ? 'Deixe vazio para manter a atual' : 'Defina a senha';
+  document.getElementById('usrTelefone').value = u ? u.telefone : '';
+  document.getElementById('usrPerfil').value = u ? u.perfil : 'Professor';
+  document.getElementById('usrDicaPerfil').textContent = _DESC_PERFIL[u ? u.perfil : 'Professor'] || '';
+  document.getElementById('btnSalvarUsr').textContent = u ? 'Salvar alterações' : 'Criar usuário';
+  document.getElementById('usrNome').focus();
+}
+
+document.getElementById('btnSalvarUsr').addEventListener('click', async function(){
+  var btn = this;
+  var dados = {
+    acao: 'salvarUsuario',
+    nome: document.getElementById('usrNome').value.trim(),
+    senha: document.getElementById('usrSenha').value.trim(),
+    telefone: document.getElementById('usrTelefone').value.trim(),
+    perfil: document.getElementById('usrPerfil').value
+  };
+  if(USR_EDITANDO) dados.linha = USR_EDITANDO.linha;
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  var r = await chamarAPI(dados);
+  btn.disabled = false;
+  btn.textContent = USR_EDITANDO ? 'Salvar alterações' : 'Criar usuário';
+
+  var box = document.getElementById('usrFormResultado');
+  if(!r.sucesso){
+    box.innerHTML = '<div class="msg-bloqueio">' + (r.erro || 'Erro') + '</div>';
+    return;
+  }
+  box.innerHTML = '<div class="msg-ok"><b>' + r.nome + '</b> salvo como ' + r.perfil + '.'
+    + (r.novo ? '<br>Já pode entrar no app com a senha que você definiu.' : '') + '</div>';
+  mostrarToast('Usuário salvo');
+  USR_EDITANDO = null;
+  carregarUsuarios();
+});
+
+async function carregarUsuarios(){
+  var box = document.getElementById('usrResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  var r = await chamarAPI({ acao:'listarUsuarios' });
+  if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+  window._USUARIOS = r.usuarios;
+
+  box.innerHTML = '<div class="assess-secao-titulo">' + r.total + ' usuários</div>'
+    + r.usuarios.map(function(u, i){
+        var cls = u.perfil === 'Admin' ? 'admin' : (u.perfil === 'Sócio(a)' ? 'socio' : '');
+        return '<div class="usr-item ' + (u.temSenha ? '' : 'inativo') + '">'
+          + '<span class="usr-nome">' + u.nome
+          + '<small>' + (u.temSenha ? 'último acesso: ' + u.ultimoAcesso : 'sem senha, não consegue entrar')
+          + (u.telefone ? ' · ' + u.telefone : ' · sem WhatsApp') + '</small></span>'
+          + '<span class="usr-perfil ' + cls + '">' + u.perfil + '</span>'
+          + '<button class="al-btn" onclick="editarUsrUI(' + i + ')">Editar</button>'
+          + (u.temSenha ? '<button class="al-btn perigo" onclick="desativarUsrUI(' + i + ')">Bloquear</button>' : '')
+          + '</div>';
+      }).join('');
+}
+
+function editarUsrUI(i){ abrirFormUsr(window._USUARIOS[i]); }
+
+async function desativarUsrUI(i){
+  var u = window._USUARIOS[i];
+  if(!confirm('Bloquear o acesso de ' + u.nome + '?\n\n'
+    + 'O nome continua no histórico de aulas, só a senha é apagada. '
+    + 'Para reativar, é só definir uma senha nova.')) return;
+
+  var r = await chamarAPI({ acao:'desativarUsuario', linha: u.linha });
+  if(!r.sucesso && r.precisaConfirmar){
+    if(!confirm(r.erro + '\n\nBloquear mesmo assim?')) return;
+    r = await chamarAPI({ acao:'desativarUsuario', linha: u.linha, confirmar: true });
+  }
+  if(r.sucesso){
+    mostrarToast('Acesso bloqueado');
+    if(r.turmasOrfas && r.turmasOrfas.length){
+      alert('Atenção: as turmas ' + r.turmasOrfas.join(', ')
+        + ' ficaram sem professor ativo. Reatribua em Turmas → Editar.');
+    }
+    carregarUsuarios();
+  }else mostrarToast(r.erro || 'Erro');
+}
+
 // ===== 2.4.2: ALUNOS DA TURMA (visao da recepcao) =====
 
 var TURMA_ABERTA = null;
@@ -4094,7 +4451,7 @@ function aplicarPermissoes(){
     if(el) el.classList.toggle('hidden', !podeVer(par[1]));
   });
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
-  ['recepCardValores','recepCardNovidades'].forEach(function(id){
+  ['recepCardValores','recepCardNovidades','recepCardUsuarios'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
