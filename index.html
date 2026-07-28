@@ -382,6 +382,16 @@
   .al-form input, .al-form select{ font-family:'Poppins',sans-serif; font-size:13px; padding:9px 11px; border-radius:9px; border:1.5px solid var(--linha); background:var(--branco); width:100%; }
   .al-form .par{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 
+
+  /* ===== 2.4.3: BUSCA ===== */
+  .busca-box{ padding:14px 20px 4px; position:sticky; top:0; background:var(--branco); z-index:5; }
+  .busca-campo{ position:relative; }
+  .busca-campo input{ width:100%; font-family:'Poppins',sans-serif; font-size:13.5px; padding:11px 36px 11px 14px; border-radius:11px; border:1.5px solid var(--linha); background:var(--perola); color:var(--carvao); }
+  .busca-campo input:focus{ outline:2px solid var(--salmao); outline-offset:1px; }
+  .busca-limpar{ position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:18px; color:var(--verde-medio); cursor:pointer; line-height:1; padding:0 4px; }
+  .busca-contador{ font-size:11.5px; color:var(--verde-medio); padding:5px 2px 0; }
+  .busca-vazia{ text-align:center; padding:24px 16px; color:var(--verde-medio); font-size:13px; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -1313,6 +1323,13 @@
       </div>
 
       <div class="hidden" id="listaTurmas">
+        <div class="busca-box">
+          <div class="busca-campo">
+            <input type="text" id="turmaBusca" placeholder="Buscar por turma, professor, aluno, dia ou hor&aacute;rio">
+            <button class="busca-limpar" id="turmaBuscaLimpar" title="Limpar">&times;</button>
+          </div>
+          <div class="busca-contador" id="turmaBuscaContador"></div>
+        </div>
         <div class="assess-resultado" id="turmaListaResultado"></div>
       </div>
 
@@ -1375,12 +1392,32 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzfE-xbQXShs1ClnjyazisN
 let TURMAS = [];
 
 async function chamarAPI(payload){
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  });
-  return res.json();
+  let res;
+  try{
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){
+    // aqui e internet mesmo: celular sem sinal, wifi caiu
+    return { sucesso:false, erro:'Sem conexão com a internet. Tente de novo.', ondeQuebrou:'rede' };
+  }
+
+  const txt = await res.text();
+  try{
+    return JSON.parse(txt);
+  }catch(e){
+    // resposta nao e JSON: quase sempre o Apps Script devolvendo pagina de erro,
+    // ou uma implantacao desatualizada
+    console.error('Resposta não-JSON de ' + (payload && payload.acao), txt.slice(0, 400));
+    let motivo = 'O servidor respondeu algo inesperado.';
+    if(res.status === 401 || res.status === 403) motivo = 'Sem permissão. Reimplante o app no Apps Script como "Qualquer pessoa".';
+    else if(txt.indexOf('Autoriza') !== -1 || txt.indexOf('authoriz') !== -1) motivo = 'O Google está pedindo autorização. Abra o Apps Script e rode AUTORIZAR().';
+    else if(txt.indexOf('<') === 0) motivo = 'A implantação parece desatualizada. Publique uma nova versão no Apps Script.';
+    return { sucesso:false, erro:motivo, ondeQuebrou:'resposta', status:res.status,
+             acao: payload ? payload.acao : '' };
+  }
 }
 
 async function buscarTurmas(professor){
@@ -1506,7 +1543,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.4.2';
+const APP_VERSAO = '2.4.3';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3717,7 +3754,7 @@ document.getElementById('btnSalvarTurma').addEventListener('click', async functi
       document.getElementById('subcardListaTurmas').click();
     }, 1400);
   }catch(e){
-    box.innerHTML = '<div class="msg-bloqueio">Erro de conexão.</div>';
+    box.innerHTML = '<div class="msg-bloqueio">Não consegui salvar: ' + (e.message || e) + '</div>';
     btn.disabled = false;
     btn.textContent = TURMA_EDITANDO ? 'Salvar alterações' : 'Salvar turma';
   }
@@ -3728,33 +3765,85 @@ async function carregarListaTurmas(){
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
   try{
     var r = await chamarAPI({ acao:'listarTurmas' });
-    if(!r.sucesso || !r.total){
+    if(!r.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + (r.erro || 'Erro ao carregar.') + '</div>';
+      return;
+    }
+    if(!r.total){
       box.innerHTML = '<div class="assess-aviso">Nenhuma turma cadastrada ainda.</div>';
       return;
     }
     window._TURMAS_LISTA = r.turmas;
-    box.innerHTML = '<div class="assess-secao-titulo">' + r.total + ' turmas</div>'
-      + r.turmas.map(function(t, i){
-          var cls = t.vazia ? 'vazia' : (t.vagas === 0 ? 'cheia' : '');
-          return '<div class="turma-item ' + (t.vazia ? 'vazia' : '') + '">'
-            + '<div class="turma-topo"><span class="turma-cod">' + t.turmaId
-            + (t.nivel ? ' · ' + t.nivel : '') + '</span>'
-            + '<span class="turma-ocup ' + cls + '">' + t.totalAlunos + '/' + t.capacidade + '</span></div>'
-            + '<div class="turma-meta">' + t.professor + ' · ' + t.dias + ' · ' + t.horario + '<br>'
-            + t.tipo + ' · ' + t.modalidade + ' · ' + t.duracao + 'h por aula'
-            + (t.futuros ? '<br>' + t.futuros + ' aluno(s) começam depois' : '')
-            + (t.afastados ? '<br>' + t.afastados + ' afastado(s)' : '')
-            + (t.vazia ? '<br><span style="color:#8a3b2d;">Turma sem aluno ativo</span>' : '')
-            + '</div>'
-            + '<div class="ren-acoes">'
-            + '<button class="ren-btn" onclick="abrirAlunosTurma(' + i + ')">Alunos</button>'
-            + '<button class="ren-btn sec" onclick="editarTurmaUI(' + i + ')">Editar</button></div>'
-            + '</div>';
-        }).join('');
+    desenharTurmas();
   }catch(e){
-    box.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>';
+    box.innerHTML = '<div class="assess-aviso">Não consegui carregar: ' + (e.message || e) + '</div>';
   }
 }
+
+/** Normaliza para busca: sem acento, minusculo. */
+function _busca(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+/** Desenha a lista aplicando o filtro digitado. */
+function desenharTurmas(){
+  var box = document.getElementById('turmaListaResultado');
+  var cont = document.getElementById('turmaBuscaContador');
+  var termo = _busca((document.getElementById('turmaBusca') || {}).value || '').trim();
+  var todas = window._TURMAS_LISTA || [];
+
+  var lista = !termo ? todas : todas.filter(function(t){
+    var alvo = _busca([
+      t.turmaId, t.nivel, t.livro, t.professor, t.dias, t.horario,
+      t.modalidade, t.tipo, (t.alunos || []).join(' ')
+    ].join(' '));
+    // cada palavra digitada precisa aparecer em algum lugar
+    return termo.split(/\s+/).every(function(p){ return alvo.indexOf(p) !== -1; });
+  });
+
+  cont.textContent = termo
+    ? (lista.length + ' de ' + todas.length + ' turmas')
+    : (todas.length + ' turmas');
+
+  if(!lista.length){
+    box.innerHTML = '<div class="busca-vazia">Nenhuma turma encontrada para "' 
+      + ((document.getElementById('turmaBusca')||{}).value || '') + '".<br>'
+      + 'Tente pelo código, nome do professor ou do aluno.</div>';
+    return;
+  }
+
+  box.innerHTML = lista.map(function(t){
+    var i = todas.indexOf(t);
+    var cls = t.vazia ? 'vazia' : (t.vagas === 0 ? 'cheia' : '');
+    var achouAluno = termo && (t.alunos || []).some(function(a){ return _busca(a).indexOf(termo) !== -1; });
+    return '<div class="turma-item ' + (t.vazia ? 'vazia' : '') + '">'
+      + '<div class="turma-topo"><span class="turma-cod">' + t.turmaId
+      + (t.nivel ? ' · ' + t.nivel : '') + '</span>'
+      + '<span class="turma-ocup ' + cls + '">' + t.totalAlunos + '/' + t.capacidade + '</span></div>'
+      + '<div class="turma-meta">' + t.professor + ' · ' + t.dias + ' · ' + t.horario + '<br>'
+      + t.tipo + ' · ' + t.modalidade + ' · ' + t.duracao + 'h por aula'
+      + (achouAluno ? '<br><span style="color:var(--verde-escuro);font-weight:600;">Alunos: ' + t.alunos.join(', ') + '</span>' : '')
+      + (t.futuros ? '<br>' + t.futuros + ' aluno(s) começam depois' : '')
+      + (t.afastados ? '<br>' + t.afastados + ' afastado(s)' : '')
+      + (t.vazia ? '<br><span style="color:#8a3b2d;">Turma sem aluno ativo</span>' : '')
+      + '</div>'
+      + '<div class="ren-acoes">'
+      + '<button class="ren-btn" onclick="abrirAlunosTurma(' + i + ')">Alunos</button>'
+      + '<button class="ren-btn sec" onclick="editarTurmaUI(' + i + ')">Editar</button></div>'
+      + '</div>';
+  }).join('');
+}
+
+document.getElementById('turmaBusca').addEventListener('input', function(){
+  clearTimeout(window._turmaBuscaTimer);
+  window._turmaBuscaTimer = setTimeout(desenharTurmas, 180);
+});
+
+document.getElementById('turmaBuscaLimpar').addEventListener('click', function(){
+  document.getElementById('turmaBusca').value = '';
+  desenharTurmas();
+  document.getElementById('turmaBusca').focus();
+});
 
 function editarTurmaUI(i){
   abrirFormTurma(window._TURMAS_LISTA[i]);
