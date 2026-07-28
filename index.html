@@ -350,6 +350,38 @@
   .desl-acoes{ margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .desl-data{ border:1.5px solid var(--linha); border-radius:8px; padding:6px 9px; font-family:'Poppins',sans-serif; font-size:12.5px; }
 
+
+  /* ===== 2.4.1: TURMAS ===== */
+  .turma-item{ border:1.5px solid var(--linha); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .turma-item.vazia{ border-style:dashed; opacity:.75; }
+  .turma-topo{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px; }
+  .turma-cod{ font-size:14px; font-weight:600; color:var(--carvao); }
+  .turma-meta{ font-size:12px; color:var(--verde-escuro); line-height:1.6; }
+  .turma-ocup{ font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:#E9F0EC; color:var(--verde-escuro); white-space:nowrap; }
+  .turma-ocup.cheia{ background:#E3EFE7; color:#3E8E5A; }
+  .turma-ocup.vazia{ background:#FBE9E5; color:#8a3b2d; }
+  .form-turma{ padding:0 20px; }
+  .form-turma .par{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .form-turma .campo{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+  .form-turma label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--verde-escuro); font-weight:600; }
+  .form-turma input, .form-turma select{ font-family:'Poppins',sans-serif; font-size:13.5px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--linha); background:var(--perola); color:var(--carvao); width:100%; }
+  .form-turma .dica{ font-size:11.5px; color:var(--verde-medio); margin-top:-4px; }
+
+
+  /* ===== 2.4.2: ALUNOS DA TURMA ===== */
+  .al-item{ display:flex; align-items:center; gap:10px; border:1.5px solid var(--linha); border-radius:11px; padding:11px 13px; margin-bottom:7px; }
+  .al-item.futuro{ background:#EEF3F7; border-color:#BBD0E0; }
+  .al-item.afastado{ background:#FDF3D4; border-color:#E5C860; }
+  .al-item.saiu{ opacity:.5; }
+  .al-nome{ flex:1; font-size:13.5px; color:var(--carvao); line-height:1.35; }
+  .al-nome small{ display:block; font-size:11px; color:var(--verde-medio); }
+  .al-btn{ border:1.5px solid var(--linha); background:var(--branco); border-radius:8px; padding:5px 10px; font-family:'Poppins',sans-serif; font-size:11.5px; font-weight:600; color:var(--verde-escuro); cursor:pointer; white-space:nowrap; }
+  .al-btn.perigo{ border-color:var(--excluir); color:var(--excluir); }
+  .al-vaga{ border:1.5px dashed var(--azul-claro); border-radius:11px; padding:12px 13px; margin-bottom:7px; }
+  .al-form{ display:grid; grid-template-columns:1fr; gap:8px; }
+  .al-form input, .al-form select{ font-family:'Poppins',sans-serif; font-size:13px; padding:9px 11px; border-radius:9px; border:1.5px solid var(--linha); background:var(--branco); width:100%; }
+  .al-form .par{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -799,6 +831,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardTurmas">
+        <div class="menu-card-icone">&#9783;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Turmas</span>
+          <span class="menu-card-sub">Criar, editar e ver ocupa&ccedil;&atilde;o das turmas</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardDesligar">
         <div class="menu-card-icone">&#9888;</div>
         <div class="menu-card-txt">
@@ -1179,6 +1219,108 @@
         <div class="assess-resultado" id="baixaListaResultado"></div>
       </div>
 
+</div>
+
+    <div class="recep-painel hidden" id="painelTurmas">
+      <div class="menu-opcoes" id="turmaSubcards">
+        <button class="menu-card" id="subcardNovaTurma">
+          <div class="menu-card-icone">&#43;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Nova turma</span>
+            <span class="menu-card-sub">Cadastrar turma e hor&aacute;rio</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardListaTurmas">
+          <div class="menu-card-icone">&#9776;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Turmas cadastradas</span>
+            <span class="menu-card-sub">Ver ocupa&ccedil;&atilde;o e editar</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="formTurma">
+        <div class="form-turma">
+          <div class="par">
+            <div class="campo">
+              <label for="tmCodigo">C&oacute;digo da turma</label>
+              <input type="text" id="tmCodigo" placeholder="Ex: T42">
+            </div>
+            <div class="campo">
+              <label for="tmProfessor">Professor</label>
+              <select id="tmProfessor"><option value="">Selecione</option></select>
+            </div>
+          </div>
+          <div class="par">
+            <div class="campo">
+              <label for="tmNivel">N&iacute;vel</label>
+              <input type="text" id="tmNivel" placeholder="Ex: Functional English II">
+            </div>
+            <div class="campo">
+              <label for="tmLivro">Livro</label>
+              <input type="text" id="tmLivro" placeholder="Ex: FE2">
+            </div>
+          </div>
+          <div class="par">
+            <div class="campo">
+              <label for="tmDias">Dias de aula</label>
+              <input type="text" id="tmDias" placeholder="Ex: SEG / QUA">
+            </div>
+            <div class="campo">
+              <label for="tmHorario">Hor&aacute;rio</label>
+              <input type="text" id="tmHorario" placeholder="Ex: 19h &agrave;s 20h">
+            </div>
+          </div>
+          <p class="dica">Use SEG, TER, QUA, QUI, SEX ou SAB. O sistema avisa se bater com outra turma do mesmo professor.</p>
+          <div class="par">
+            <div class="campo">
+              <label for="tmModalidade">Modalidade</label>
+              <select id="tmModalidade">
+                <option>Presencial</option>
+                <option>Online</option>
+                <option>H&iacute;brido</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="tmCapacidade">Capacidade</label>
+              <select id="tmCapacidade">
+                <option value="1">1 (VIP)</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6" selected>6 (Grupo)</option>
+              </select>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="tmDuracao">Dura&ccedil;&atilde;o da aula</label>
+            <select id="tmDuracao">
+              <option value="0.5">30 minutos</option>
+              <option value="1" selected>1 hora</option>
+              <option value="1.5">1h30</option>
+              <option value="2">2 horas (aula dupla)</option>
+            </select>
+          </div>
+          <p class="dica">Isso vira a coluna Y da Attendance e define o pagamento do professor.</p>
+        </div>
+        <div style="padding:8px 20px 12px;">
+          <button class="acao salvar" id="btnSalvarTurma" style="width:100%;">Salvar turma</button>
+        </div>
+        <div class="assess-resultado" id="turmaResultado"></div>
+      </div>
+
+      <div class="hidden" id="listaTurmas">
+        <div class="assess-resultado" id="turmaListaResultado"></div>
+      </div>
+
+      <div class="hidden" id="alunosTurma">
+        <div class="assess-resultado" id="alunosResultado"></div>
+      </div>
+    </div>
+
     <div class="recep-painel hidden" id="painelRenovacoes">
       <div class="controls">
         <div class="field">
@@ -1218,7 +1360,7 @@
       </div>
       <div class="assess-resultado" id="novResultado"></div>
     </div>
-    </div>
+
 
   </div>
 
@@ -1364,7 +1506,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.4.0';
+const APP_VERSAO = '2.4.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3294,6 +3436,329 @@ async function carregarListaBaixas(){
 
 
 
+
+
+
+// ===== 2.4.2: ALUNOS DA TURMA (visao da recepcao) =====
+
+var TURMA_ABERTA = null;
+
+/** Abre a lista de alunos de uma turma, com a situacao de cada um. */
+async function abrirAlunosTurma(i){
+  var t = window._TURMAS_LISTA[i];
+  TURMA_ABERTA = t;
+  document.getElementById('turmaSubcards').classList.add('hidden');
+  document.getElementById('formTurma').classList.add('hidden');
+  document.getElementById('listaTurmas').classList.add('hidden');
+  document.getElementById('alunosTurma').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Alunos de ' + t.turmaId;
+  carregarAlunosTurma();
+}
+
+async function carregarAlunosTurma(){
+  var t = TURMA_ABERTA;
+  var box = document.getElementById('alunosResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'vinculosDaTurma', turmaId: t.turmaId });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    window._ALUNOS_TURMA = r.alunos;
+
+    var ativos = r.alunos.filter(function(a){ return a.situacao !== 'saiu'; }).length;
+    var html = '<div class="calc-box" style="margin-top:0;">'
+      + '<div class="calc-linha"><span class="calc-rot">' + t.turmaId + (t.nivel ? ' · ' + t.nivel : '') + '</span>'
+      + '<span class="calc-val">' + ativos + '/' + t.capacidade + '</span></div>'
+      + '<div class="calc-linha"><span class="calc-rot">' + t.professor + '</span>'
+      + '<span class="calc-val">' + t.dias + ' · ' + t.horario + '</span></div></div>';
+
+    html += r.alunos.map(function(a, k){
+      var cls = a.situacao === 'futuro' ? 'futuro' : (a.situacao === 'afastado' ? 'afastado' : (a.situacao === 'saiu' ? 'saiu' : ''));
+      return '<div class="al-item ' + cls + '">'
+        + '<span class="al-nome">' + a.nome
+        + (a.detalhe ? '<small>' + a.detalhe + '</small>'
+            : (a.inicio ? '<small>desde ' + a.inicio + '</small>' : '<small>sem data de início cadastrada</small>'))
+        + '</span>'
+        + (a.situacao === 'saiu' ? ''
+            : '<button class="al-btn" onclick="moverAlunoUI(' + k + ')">Mover</button>'
+              + '<button class="al-btn perigo" onclick="saidaAlunoUI(' + k + ')">Desligar</button>')
+        + '</div>';
+    }).join('');
+
+    var vagas = Math.max(0, t.capacidade - ativos);
+    if(vagas > 0){
+      html += '<div class="al-vaga" id="boxNovoAluno">'
+        + '<button class="al-btn" style="width:100%;" onclick="abrirNovoAluno()">+ Adicionar aluno ('
+        + vagas + ' vaga' + (vagas>1?'s':'') + ')</button></div>';
+    }else{
+      html += '<div class="msg-aviso">Turma cheia. Para incluir mais alguém, aumente a capacidade em Editar turma.</div>';
+    }
+
+    html += '<div style="padding:12px 0;"><button class="sair" style="width:100%;background:var(--verde-escuro);" '
+      + 'onclick="document.getElementById(\'subcardListaTurmas\').click()">Voltar para as turmas</button></div>';
+
+    box.innerHTML = html;
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Erro de conexão.</div>';
+  }
+}
+
+function abrirNovoAluno(){
+  var t = TURMA_ABERTA;
+  document.getElementById('boxNovoAluno').innerHTML =
+      '<div class="al-form">'
+    + '<input type="text" id="novoAlunoNome" placeholder="Nome e sobrenome do aluno">'
+    + '<div class="par">'
+    + '<input type="date" id="novoAlunoInicio" value="' + _hojeIso() + '">'
+    + '<input type="text" inputmode="numeric" id="novoAlunoMat" placeholder="Nº matrícula (opcional)">'
+    + '</div>'
+    + '<button class="ren-btn" onclick="confirmarNovoAluno()">Adicionar à turma ' + t.turmaId + '</button>'
+    + '<p class="dica" style="margin:0;font-size:11.5px;color:var(--verde-medio);">'
+    + 'A data é quando ele começa a assistir aula. Antes dela, o professor não vê o aluno na lista.</p>'
+    + '</div>';
+  document.getElementById('novoAlunoNome').focus();
+}
+
+async function confirmarNovoAluno(){
+  var t = TURMA_ABERTA;
+  var nome = document.getElementById('novoAlunoNome').value.trim();
+  if(!nome){ mostrarToast('Digite o nome do aluno'); return; }
+  var ini = document.getElementById('novoAlunoInicio').value;
+  var mat = document.getElementById('novoAlunoMat').value.trim();
+
+  var r = await chamarAPI({
+    acao:'adicionarAluno', linha: t.linha, nome: nome, turmaId: t.turmaId,
+    inicio: ini ? _isoParaBr(ini) : '', matricula: mat,
+    por: professorLogado || 'Recepção'
+  });
+  if(r.sucesso){
+    mostrarToast(ini && ini > _hojeIso()
+      ? 'Cadastrado. Aparece para o professor em ' + _isoParaBr(ini)
+      : 'Aluno adicionado');
+    carregarAlunosTurma();
+  }else{
+    mostrarToast(r.erro || 'Erro ao adicionar');
+  }
+}
+
+async function saidaAlunoUI(k){
+  var a = window._ALUNOS_TURMA[k];
+  var t = TURMA_ABERTA;
+
+  var opcao = prompt('O que houve com ' + a.nome + '?\n\n'
+    + '1 = Saiu da turma (guarda o histórico das aulas que teve)\n'
+    + '2 = Foi incluído por engano (apaga sem deixar rastro)\n\n'
+    + 'Digite 1 ou 2:', '1');
+  if(!opcao) return;
+
+  if(opcao.trim() === '2'){
+    if(!confirm('Apagar ' + a.nome + ' da turma ' + t.turmaId + ' como se nunca tivesse entrado?')) return;
+    var d = await chamarAPI({ acao:'desfazerInclusao', linha: t.linha, nome: a.nome, turmaId: t.turmaId });
+    if(d.sucesso){ mostrarToast('Inclusão desfeita'); carregarAlunosTurma(); }
+    else mostrarToast(d.erro || 'Erro');
+    return;
+  }
+
+  var dataBr = prompt('Último dia de aula de ' + a.nome + ' (dd/mm/aaaa):',
+                      _isoParaBr(_hojeIso()));
+  if(!dataBr) return;
+  var motivo = prompt('Motivo da saída:', 'Não renovou') || 'Saída';
+
+  var r = await chamarAPI({
+    acao:'registrarSaida', aluno: a.nome, data: dataBr, motivo: motivo,
+    por: professorLogado || 'Recepção'
+  });
+  if(r.sucesso){
+    mostrarToast('Saída registrada em ' + dataBr);
+    carregarAlunosTurma();
+  }else{
+    mostrarToast(r.erro || 'Erro ao registrar');
+  }
+}
+
+async function moverAlunoUI(k){
+  var a = window._ALUNOS_TURMA[k];
+  var t = TURMA_ABERTA;
+  var outras = (window._TURMAS_LISTA || []).filter(function(x){
+    return x.turmaId !== t.turmaId && x.vagas > 0;
+  });
+  if(!outras.length){ mostrarToast('Nenhuma outra turma com vaga'); return; }
+
+  var lista = outras.map(function(x, i){
+    return (i+1) + ' = ' + x.turmaId + ' · ' + x.professor + ' · ' + x.dias + ' ' + x.horario
+      + ' (' + x.vagas + ' vaga' + (x.vagas>1?'s':'') + ')';
+  }).join('\n');
+
+  var esc = prompt('Mover ' + a.nome + ' para qual turma?\n\n' + lista + '\n\nDigite o número:');
+  if(!esc) return;
+  var idx = Number(esc) - 1;
+  if(isNaN(idx) || !outras[idx]){ mostrarToast('Opção inválida'); return; }
+  var destino = outras[idx];
+
+  var dataBr = prompt('A partir de quando ele assiste na turma ' + destino.turmaId + '? (dd/mm/aaaa)',
+                      _isoParaBr(_hojeIso()));
+  if(!dataBr) return;
+
+  var r = await chamarAPI({
+    acao:'moverAluno', alunoNome: a.nome,
+    linhaOrigem: t.linha, turmaOrigem: t.turmaId,
+    linhaDestino: destino.linha, turmaDestino: destino.turmaId,
+    inicio: dataBr, por: professorLogado || 'Recepção'
+  });
+  if(r.sucesso){
+    mostrarToast(a.nome + ' movido para ' + destino.turmaId);
+    document.getElementById('subcardListaTurmas').click();
+  }else{
+    mostrarToast(r.erro || 'Erro ao mover');
+  }
+}
+
+// ===== 2.4.1: TURMAS =====
+
+var TURMA_EDITANDO = null;
+
+document.getElementById('recepCardTurmas').addEventListener('click', function(){
+  abrirPainelRecep('painelTurmas','Turmas');
+  mostrarSubcardsTurma();
+});
+
+function mostrarSubcardsTurma(){
+  document.getElementById('turmaSubcards').classList.remove('hidden');
+  document.getElementById('formTurma').classList.add('hidden');
+  document.getElementById('listaTurmas').classList.add('hidden');
+  document.getElementById('alunosTurma').classList.add('hidden');
+}
+
+document.getElementById('subcardNovaTurma').addEventListener('click', function(){
+  abrirFormTurma(null);
+});
+
+document.getElementById('subcardListaTurmas').addEventListener('click', function(){
+  document.getElementById('turmaSubcards').classList.add('hidden');
+  document.getElementById('formTurma').classList.add('hidden');
+  document.getElementById('alunosTurma').classList.add('hidden');
+  document.getElementById('listaTurmas').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Turmas cadastradas';
+  carregarListaTurmas();
+});
+
+async function abrirFormTurma(t){
+  TURMA_EDITANDO = t;
+  document.getElementById('turmaSubcards').classList.add('hidden');
+  document.getElementById('listaTurmas').classList.add('hidden');
+  document.getElementById('formTurma').classList.remove('hidden');
+  document.getElementById('turmaResultado').innerHTML = '';
+  $recepcaoSub.textContent = t ? ('Editando ' + t.turmaId) : 'Nova turma';
+  document.getElementById('btnSalvarTurma').textContent = t ? 'Salvar alterações' : 'Salvar turma';
+
+  var sel = document.getElementById('tmProfessor');
+  if(sel.options.length <= 1){
+    (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; }).forEach(function(p){
+      var o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
+    });
+  }
+
+  document.getElementById('tmNivel').value = t ? t.nivel : '';
+  document.getElementById('tmLivro').value = t ? t.livro : '';
+  document.getElementById('tmProfessor').value = t ? t.professor : '';
+  document.getElementById('tmDias').value = t ? t.dias : '';
+  document.getElementById('tmHorario').value = t ? t.horario : '';
+  document.getElementById('tmModalidade').value = t ? (t.modalidade || 'Presencial') : 'Presencial';
+  document.getElementById('tmCapacidade').value = t ? String(t.capacidade) : '6';
+  document.getElementById('tmDuracao').value = t ? String(t.duracao) : '1';
+
+  if(t){
+    document.getElementById('tmCodigo').value = t.turmaId;
+  }else{
+    document.getElementById('tmCodigo').value = '';
+    try{
+      var r = await chamarAPI({ acao:'proximoCodigoTurma' });
+      if(r.sucesso) document.getElementById('tmCodigo').value = r.sugestao;
+    }catch(e){}
+  }
+}
+
+document.getElementById('btnSalvarTurma').addEventListener('click', async function(){
+  var btn = this;
+  var dados = {
+    turmaId: document.getElementById('tmCodigo').value.trim(),
+    nivel: document.getElementById('tmNivel').value.trim(),
+    livro: document.getElementById('tmLivro').value.trim(),
+    professor: document.getElementById('tmProfessor').value,
+    dias: document.getElementById('tmDias').value.trim(),
+    horario: document.getElementById('tmHorario').value.trim(),
+    modalidade: document.getElementById('tmModalidade').value,
+    capacidade: Number(document.getElementById('tmCapacidade').value),
+    duracao: Number(document.getElementById('tmDuracao').value)
+  };
+  if(TURMA_EDITANDO){ dados.linha = TURMA_EDITANDO.linha; dados.acao = 'editarTurma'; }
+  else { dados.acao = 'criarTurma'; }
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  var box = document.getElementById('turmaResultado');
+  box.innerHTML = '';
+
+  try{
+    var r = await chamarAPI(dados);
+    if(!r.sucesso){
+      box.innerHTML = (r.erros && r.erros.length)
+        ? r.erros.map(function(e){ return '<div class="msg-bloqueio">' + e + '</div>'; }).join('')
+        : '<div class="msg-bloqueio">' + (r.erro || 'Erro ao salvar') + '</div>';
+      btn.disabled = false;
+      btn.textContent = TURMA_EDITANDO ? 'Salvar alterações' : 'Salvar turma';
+      return;
+    }
+    box.innerHTML = '<div class="msg-ok"><b>Turma ' + r.turmaId + ' salva.</b>'
+      + (r.aviso ? '<br>' + r.aviso : '')
+      + '<br>Agora é só adicionar os alunos pela tela de presença, informando quando cada um começa.</div>';
+    mostrarToast('Turma salva');
+    TURMA_EDITANDO = null;
+    btn.disabled = false; btn.textContent = 'Salvar turma';
+    setTimeout(function(){
+      document.getElementById('subcardListaTurmas').click();
+    }, 1400);
+  }catch(e){
+    box.innerHTML = '<div class="msg-bloqueio">Erro de conexão.</div>';
+    btn.disabled = false;
+    btn.textContent = TURMA_EDITANDO ? 'Salvar alterações' : 'Salvar turma';
+  }
+});
+
+async function carregarListaTurmas(){
+  var box = document.getElementById('turmaListaResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarTurmas' });
+    if(!r.sucesso || !r.total){
+      box.innerHTML = '<div class="assess-aviso">Nenhuma turma cadastrada ainda.</div>';
+      return;
+    }
+    window._TURMAS_LISTA = r.turmas;
+    box.innerHTML = '<div class="assess-secao-titulo">' + r.total + ' turmas</div>'
+      + r.turmas.map(function(t, i){
+          var cls = t.vazia ? 'vazia' : (t.vagas === 0 ? 'cheia' : '');
+          return '<div class="turma-item ' + (t.vazia ? 'vazia' : '') + '">'
+            + '<div class="turma-topo"><span class="turma-cod">' + t.turmaId
+            + (t.nivel ? ' · ' + t.nivel : '') + '</span>'
+            + '<span class="turma-ocup ' + cls + '">' + t.totalAlunos + '/' + t.capacidade + '</span></div>'
+            + '<div class="turma-meta">' + t.professor + ' · ' + t.dias + ' · ' + t.horario + '<br>'
+            + t.tipo + ' · ' + t.modalidade + ' · ' + t.duracao + 'h por aula'
+            + (t.futuros ? '<br>' + t.futuros + ' aluno(s) começam depois' : '')
+            + (t.afastados ? '<br>' + t.afastados + ' afastado(s)' : '')
+            + (t.vazia ? '<br><span style="color:#8a3b2d;">Turma sem aluno ativo</span>' : '')
+            + '</div>'
+            + '<div class="ren-acoes">'
+            + '<button class="ren-btn" onclick="abrirAlunosTurma(' + i + ')">Alunos</button>'
+            + '<button class="ren-btn sec" onclick="editarTurmaUI(' + i + ')">Editar</button></div>'
+            + '</div>';
+        }).join('');
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>';
+  }
+}
+
+function editarTurmaUI(i){
+  abrirFormTurma(window._TURMAS_LISTA[i]);
+}
 
 // ===== 2.4.0: ALUNOS PARA DESLIGAR =====
 
