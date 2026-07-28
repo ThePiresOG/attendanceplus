@@ -414,6 +414,13 @@
   .usr-perfil.admin{ background:var(--verde-escuro); color:#fff; }
   .usr-perfil.socio{ background:var(--salmao); color:#fff; }
 
+
+  /* ===== 2.5.1: ESCOLHER ALUNO ===== */
+  .sel-aluno{ font-family:'Poppins',sans-serif; font-size:13px; padding:10px 11px; border-radius:9px; border:1.5px solid var(--linha); background:var(--branco); width:100%; }
+  .sel-aluno optgroup{ font-size:12px; color:var(--verde-medio); }
+  .al-info{ background:var(--perola); border-radius:9px; padding:9px 11px; font-size:12px; color:var(--verde-escuro); line-height:1.5; margin-top:2px; }
+  .al-troca{ background:none; border:none; color:var(--verde-escuro); font-size:11.5px; text-decoration:underline; cursor:pointer; font-family:'Poppins',sans-serif; padding:2px 0 0; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -1518,9 +1525,24 @@ async function chamarAPI(payload){
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
-  }catch(e){
-    // aqui e internet mesmo: celular sem sinal, wifi caiu
-    return { sucesso:false, erro:'Sem conexão com a internet. Tente de novo.', ondeQuebrou:'rede' };
+  }catch(e1){
+    // pode ser oscilacao momentanea: tenta mais uma vez antes de desistir
+    await new Promise(function(r){ setTimeout(r, 1200); });
+    try{
+      res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+    }catch(e2){
+      console.error('fetch falhou 2x em ' + (payload && payload.acao), e1, e2);
+      return {
+        sucesso:false, ondeQuebrou:'rede', acao: payload ? payload.acao : '',
+        erro: (navigator.onLine === false)
+          ? 'Você está sem internet. Reconecte e tente de novo.'
+          : 'Não consegui falar com o servidor. Se persistir, republique o app no Apps Script (Implantar › Gerenciar implantações › Nova versão).'
+      };
+    }
   }
 
   const txt = await res.text();
@@ -1662,7 +1684,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.5.0';
+const APP_VERSAO = '2.5.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3896,7 +3918,80 @@ async function carregarAlunosTurma(){
   }
 }
 
-function abrirNovoAluno(){
+async function abrirNovoAluno(){
+  var t = TURMA_ABERTA;
+  var box = document.getElementById('boxNovoAluno');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Buscando alunos com contrato...</p>';
+
+  var r = await chamarAPI({ acao:'alunosDisponiveis', turmaId: t.turmaId });
+  if(!r.sucesso){
+    box.innerHTML = '<div class="msg-bloqueio">' + (r.erro || 'Erro ao buscar alunos') + '</div>';
+    return;
+  }
+  window._DISPONIVEIS = r.alunos;
+
+  var semTurma = r.alunos.filter(function(a){ return a.semTurma; });
+  var comTurma = r.alunos.filter(function(a){ return !a.semTurma; });
+
+  var opcoes = '<option value="">Selecione o aluno</option>';
+  if(semTurma.length){
+    opcoes += '<optgroup label="Ainda sem turma (' + semTurma.length + ')">'
+      + semTurma.map(function(a,i){
+          return '<option value="' + r.alunos.indexOf(a) + '">' + a.nome + '</option>';
+        }).join('') + '</optgroup>';
+  }
+  if(comTurma.length){
+    opcoes += '<optgroup label="Já em outra turma (' + comTurma.length + ')">'
+      + comTurma.map(function(a){
+          return '<option value="' + r.alunos.indexOf(a) + '">' + a.nome + ' — ' + a.turmas.join(', ') + '</option>';
+        }).join('') + '</optgroup>';
+  }
+
+  box.innerHTML =
+      '<div class="al-form">'
+    + '<select class="sel-aluno" id="selAluno">' + opcoes + '</select>'
+    + '<div id="alDetalhe"></div>'
+    + '<div class="par">'
+    + '<input type="date" id="novoAlunoInicio" value="' + _hojeIso() + '">'
+    + '<button class="ren-btn" id="btnConfirmaAluno" disabled>Adicionar</button>'
+    + '</div>'
+    + '<p class="dica" style="margin:0;font-size:11.5px;color:var(--verde-medio);">'
+    + 'A data é quando ele começa a assistir aula. Antes dela, o professor não vê o aluno na lista.</p>'
+    + '<button class="al-troca" id="btnAlunoManual">Não achei o aluno, quero digitar o nome</button>'
+    + '</div>';
+
+  if(!r.total){
+    document.getElementById('alDetalhe').innerHTML =
+      '<div class="msg-aviso" style="margin:0;">Nenhum aluno com contrato vigente disponível. '
+      + 'Gere o contrato primeiro em Contratos, ou use a opção de digitar o nome.</div>';
+  }
+
+  document.getElementById('selAluno').addEventListener('change', function(){
+    var a = window._DISPONIVEIS[Number(this.value)];
+    var det = document.getElementById('alDetalhe');
+    var btn = document.getElementById('btnConfirmaAluno');
+    if(!a){ det.innerHTML = ''; btn.disabled = true; return; }
+    det.innerHTML = '<div class="al-info">'
+      + 'Matrícula ' + a.matricula + ' · contrato ' + a.numeroContrato + ' · ' + a.tipo + '<br>'
+      + 'Vence em ' + a.fimContrato
+      + (a.mensalidade ? ' · R$ ' + _brl(a.mensalidade) : '')
+      + (a.responsavel ? '<br>Responsável: ' + a.responsavel : '')
+      + (a.turmas.length ? '<br><b>Atenção:</b> já está em ' + a.turmas.join(', ') + '. Para transferir, use o botão Mover.' : '')
+      + '</div>';
+    btn.disabled = false;
+  });
+
+  document.getElementById('btnConfirmaAluno').addEventListener('click', function(){
+    var a = window._DISPONIVEIS[Number(document.getElementById('selAluno').value)];
+    if(!a) return;
+    confirmarNovoAluno(a.nome, a.matricula, a.numeroContrato);
+  });
+
+  document.getElementById('btnAlunoManual').addEventListener('click', abrirNovoAlunoManual);
+}
+
+/** Plano B: aluno sem contrato ainda, ou nome que nao esta na lista. */
+function abrirNovoAlunoManual(){
   var t = TURMA_ABERTA;
   document.getElementById('boxNovoAluno').innerHTML =
       '<div class="al-form">'
@@ -3906,22 +4001,28 @@ function abrirNovoAluno(){
     + '<input type="text" inputmode="numeric" id="novoAlunoMat" placeholder="Nº matrícula (opcional)">'
     + '</div>'
     + '<button class="ren-btn" onclick="confirmarNovoAluno()">Adicionar à turma ' + t.turmaId + '</button>'
-    + '<p class="dica" style="margin:0;font-size:11.5px;color:var(--verde-medio);">'
-    + 'A data é quando ele começa a assistir aula. Antes dela, o professor não vê o aluno na lista.</p>'
+    + '<div class="msg-aviso" style="margin:0;">Digitando o nome na mão, ele precisa ficar '
+    + '<b>idêntico</b> ao do contrato, senão o app não liga os dois e o valor não aparece no painel.</div>'
+    + '<button class="al-troca" onclick="abrirNovoAluno()">Voltar para a lista</button>'
     + '</div>';
   document.getElementById('novoAlunoNome').focus();
 }
 
-async function confirmarNovoAluno(){
+async function confirmarNovoAluno(nomeEscolhido, matricula, numeroContrato){
   var t = TURMA_ABERTA;
-  var nome = document.getElementById('novoAlunoNome').value.trim();
-  if(!nome){ mostrarToast('Digite o nome do aluno'); return; }
-  var ini = document.getElementById('novoAlunoInicio').value;
-  var mat = document.getElementById('novoAlunoMat').value.trim();
+  var campoNome = document.getElementById('novoAlunoNome');
+  var nome = nomeEscolhido || (campoNome ? campoNome.value.trim() : '');
+  if(!nome){ mostrarToast('Escolha ou digite o aluno'); return; }
+
+  var campoIni = document.getElementById('novoAlunoInicio');
+  var ini = campoIni ? campoIni.value : '';
+  var campoMat = document.getElementById('novoAlunoMat');
+  var mat = matricula || (campoMat ? campoMat.value.trim() : '');
 
   var r = await chamarAPI({
     acao:'adicionarAluno', linha: t.linha, nome: nome, turmaId: t.turmaId,
     inicio: ini ? _isoParaBr(ini) : '', matricula: mat,
+    numeroContrato: numeroContrato || '',
     por: professorLogado || 'Recepção'
   });
   if(r.sucesso){
