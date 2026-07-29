@@ -1319,7 +1319,19 @@
           <div class="par">
             <div class="campo">
               <label for="tmNivel">N&iacute;vel</label>
-              <input type="text" id="tmNivel" placeholder="Ex: Functional English II">
+              <input type="text" id="tmNivel" list="niveisCEFR" placeholder="Escolha ou digite">
+              <datalist id="niveisCEFR">
+                <option value="A1">A1 &middot; iniciante</option>
+                <option value="A2">A2 &middot; b&aacute;sico</option>
+                <option value="B1">B1 &middot; intermedi&aacute;rio</option>
+                <option value="B2">B2 &middot; intermedi&aacute;rio superior</option>
+                <option value="C1">C1 &middot; avan&ccedil;ado</option>
+                <option value="C2">C2 &middot; profici&ecirc;ncia</option>
+                <option value="Kids">Kids</option>
+                <option value="Teens">Teens</option>
+                <option value="Conversation">Conversation</option>
+                <option value="Business">Business</option>
+              </datalist>
             </div>
             <div class="campo">
               <label for="tmLivro">Livro</label>
@@ -1532,48 +1544,70 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzfE-xbQXShs1ClnjyazisN
 
 let TURMAS = [];
 
+var ULTIMO_ERRO_API = null;
+
 async function chamarAPI(payload){
-  let res;
+  var acao = (payload && payload.acao) || 'sem-acao';
+  var tentativas = [];
+
+  // ---- 1a tentativa: POST ----
   try{
-    res = await fetch(API_URL, {
+    var res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
-  }catch(e1){
-    // pode ser oscilacao momentanea: tenta mais uma vez antes de desistir
-    await new Promise(function(r){ setTimeout(r, 1200); });
-    try{
-      res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-    }catch(e2){
-      console.error('fetch falhou 2x em ' + (payload && payload.acao), e1, e2);
-      return {
-        sucesso:false, ondeQuebrou:'rede', acao: payload ? payload.acao : '',
-        erro: (navigator.onLine === false)
-          ? 'Você está sem internet. Reconecte e tente de novo.'
-          : 'Não consegui falar com o servidor. Se persistir, republique o app no Apps Script (Implantar › Gerenciar implantações › Nova versão).'
-      };
+    var txt = await res.text();
+    try{ return JSON.parse(txt); }
+    catch(e){
+      tentativas.push('POST respondeu HTTP ' + res.status + ' mas não era JSON: ' + txt.slice(0,120));
     }
+  }catch(e){
+    tentativas.push('POST falhou: ' + (e.name || '') + ' ' + (e.message || e));
   }
 
-  const txt = await res.text();
+  // ---- 2a tentativa: GET com o payload na URL ----
+  // Alguns ambientes bloqueiam o POST para o Apps Script. O GET costuma passar.
   try{
-    return JSON.parse(txt);
+    var url = API_URL + '?p=' + encodeURIComponent(JSON.stringify(payload));
+    if(url.length < 7500){
+      var res2 = await fetch(url, { method: 'GET' });
+      var txt2 = await res2.text();
+      try{
+        var dados = JSON.parse(txt2);
+        console.info('[AttendancePlus] "' + acao + '" foi pelo caminho alternativo (GET).');
+        return dados;
+      }catch(e){
+        tentativas.push('GET respondeu HTTP ' + res2.status + ' mas não era JSON: ' + txt2.slice(0,120));
+      }
+    }else{
+      tentativas.push('GET não tentado: payload grande demais para a URL');
+    }
   }catch(e){
-    // resposta nao e JSON: quase sempre o Apps Script devolvendo pagina de erro,
-    // ou uma implantacao desatualizada
-    console.error('Resposta não-JSON de ' + (payload && payload.acao), txt.slice(0, 400));
-    let motivo = 'O servidor respondeu algo inesperado.';
-    if(res.status === 401 || res.status === 403) motivo = 'Sem permissão. Reimplante o app no Apps Script como "Qualquer pessoa".';
-    else if(txt.indexOf('Autoriza') !== -1 || txt.indexOf('authoriz') !== -1) motivo = 'O Google está pedindo autorização. Abra o Apps Script e rode AUTORIZAR().';
-    else if(txt.indexOf('<') === 0) motivo = 'A implantação parece desatualizada. Publique uma nova versão no Apps Script.';
-    return { sucesso:false, erro:motivo, ondeQuebrou:'resposta', status:res.status,
-             acao: payload ? payload.acao : '' };
+    tentativas.push('GET falhou: ' + (e.name || '') + ' ' + (e.message || e));
   }
+
+  // ---- desistiu: guarda o diagnostico para a tela mostrar ----
+  ULTIMO_ERRO_API = { acao: acao, quando: new Date().toLocaleTimeString(), tentativas: tentativas };
+  console.error('[AttendancePlus] falhou em "' + acao + '"', tentativas);
+
+  return {
+    sucesso: false,
+    ondeQuebrou: 'transporte',
+    acao: acao,
+    tentativas: tentativas,
+    erro: (navigator.onLine === false)
+      ? 'Você está sem internet. Reconecte e tente de novo.'
+      : 'As duas formas de falar com o servidor falharam.'
+  };
+}
+
+/** Bloco de detalhe para colar em qualquer tela de erro. */
+function detalheErro(r){
+  if(!r || !r.tentativas || !r.tentativas.length) return '';
+  return '<div class="msg-aviso" style="font-size:11.5px;line-height:1.5;">'
+    + '<b>Detalhe técnico</b><br>· ' + r.tentativas.join('<br>· ')
+    + '<br><br>Mande esta mensagem para o Felipe.</div>';
 }
 
 async function buscarTurmas(professor){
@@ -1699,7 +1733,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.5.3';
+const APP_VERSAO = '2.5.4';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4323,7 +4357,7 @@ document.getElementById('btnSalvarTurma').addEventListener('click', async functi
     if(!r.sucesso){
       box.innerHTML = (r.erros && r.erros.length)
         ? r.erros.map(function(e){ return '<div class="msg-bloqueio">' + e + '</div>'; }).join('')
-        : '<div class="msg-bloqueio">' + (r.erro || 'Erro ao salvar') + '</div>';
+        : '<div class="msg-bloqueio">' + (r.erro || 'Erro ao salvar') + '</div>' + detalheErro(r);
       btn.disabled = false;
       btn.textContent = TURMA_EDITANDO ? 'Salvar alterações' : 'Salvar turma';
       return;
