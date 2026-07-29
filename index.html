@@ -444,6 +444,16 @@
   .rel-num span.ruim{ background:#FBE9E5; color:#8a3b2d; font-weight:600; }
   .rel-num span.aviso{ background:#FDF3D4; color:#8a6d1a; font-weight:600; }
 
+
+  /* ===== 2.8.0: MENU DA RECEPCAO EM SECOES ===== */
+  .sec-titulo{ grid-column:1/-1; font-size:10.5px; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--verde-medio); font-weight:700; margin:15px 4px 1px; display:flex; align-items:center; gap:9px; }
+  .sec-titulo::after{ content:''; flex:1; height:1px; background:var(--linha); }
+  #recepCards .menu-card{ padding:14px 15px; }
+  #recepCards .menu-card-icone{ width:38px; height:38px; font-size:18px; border-radius:10px; }
+  #recepCards .menu-card-titulo{ font-size:14.5px; }
+  #recepCards .menu-card-sub{ font-size:12px; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -844,7 +854,8 @@
       </div>
           <div class="header-alca" title="Arraste para ajustar a altura"></div>
     </header>
-    <div class="menu-opcoes" id="recepCards">
+        <div class="menu-opcoes" id="recepCards">
+      <div class="sec-titulo" data-sec="Atendimento">Atendimento</div>
       <button class="menu-card" id="recepCardContratos">
         <div class="menu-card-icone">C</div>
         <div class="menu-card-txt">
@@ -858,38 +869,6 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Renova&ccedil;&otilde;es</span>
           <span class="menu-card-sub">Contratos vencendo, por ordem de urg&ecirc;ncia</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
-      <button class="menu-card" id="recepCardPresenca">
-        <div class="menu-card-icone">P</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Presença</span>
-          <span class="menu-card-sub">Registros do dia, busca e relatório</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
-      <button class="menu-card" id="recepCardPanorama">
-        <div class="menu-card-icone">V</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Panorama da escola</span>
-          <span class="menu-card-sub">Vagas, turmas, remarcações e faltas</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
-      <button class="menu-card" id="recepCardAfastamento">
-        <div class="menu-card-icone">&#8986;</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Afastamento</span>
-          <span class="menu-card-sub">Adendo de afastamento tempor&aacute;rio</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
-      <button class="menu-card" id="recepCardBaixa">
-        <div class="menu-card-icone">&#10007;</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Baixa de contrato</span>
-          <span class="menu-card-sub">Recibo de quita&ccedil;&atilde;o e encerramento</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -909,6 +888,15 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <div class="sec-titulo" data-sec="No dia a dia">No dia a dia</div>
+      <button class="menu-card" id="recepCardPresenca">
+        <div class="menu-card-icone">P</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Presença</span>
+          <span class="menu-card-sub">Registros do dia, busca e relatório</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardConversa">
         <div class="menu-card-icone">&#128172;</div>
         <div class="menu-card-txt">
@@ -925,22 +913,32 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
-      <button class="menu-card hidden" id="recepCardConexao">
-        <div class="menu-card-icone">&#9889;</div>
+      <button class="menu-card" id="recepCardPanorama">
+        <div class="menu-card-icone">V</div>
         <div class="menu-card-txt">
-          <span class="menu-card-titulo">Testar conex&atilde;o</span>
-          <span class="menu-card-sub">Descobrir onde o app est&aacute; travando</span>
+          <span class="menu-card-titulo">Panorama da escola</span>
+          <span class="menu-card-sub">Vagas, turmas, remarcações e faltas</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
-      <button class="menu-card hidden" id="recepCardUsuarios">
-        <div class="menu-card-icone">&#128100;</div>
+      <div class="sec-titulo" data-sec="Documentos">Documentos</div>
+      <button class="menu-card" id="recepCardAfastamento">
+        <div class="menu-card-icone">&#8986;</div>
         <div class="menu-card-txt">
-          <span class="menu-card-titulo">Usu&aacute;rios</span>
-          <span class="menu-card-sub">Professores, senhas e permiss&otilde;es</span>
+          <span class="menu-card-titulo">Afastamento</span>
+          <span class="menu-card-sub">Adendo de afastamento tempor&aacute;rio</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardBaixa">
+        <div class="menu-card-icone">&#10007;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Baixa de contrato</span>
+          <span class="menu-card-sub">Recibo de quita&ccedil;&atilde;o e encerramento</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <div class="sec-titulo" data-sec="Gestão">Gestão</div>
       <button class="menu-card hidden" id="recepCardRelatorio">
         <div class="menu-card-icone">&#128196;</div>
         <div class="menu-card-txt">
@@ -957,11 +955,27 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card hidden" id="recepCardUsuarios">
+        <div class="menu-card-icone">&#128100;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Usu&aacute;rios</span>
+          <span class="menu-card-sub">Professores, senhas e permiss&otilde;es</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card hidden" id="recepCardNovidades">
         <div class="menu-card-icone">&#9993;</div>
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Avisar a equipe</span>
           <span class="menu-card-sub">Mensagem de novidades para os professores</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="recepCardConexao">
+        <div class="menu-card-icone">&#9889;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Testar conex&atilde;o</span>
+          <span class="menu-card-sub">Descobrir onde o app est&aacute; travando</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -1358,19 +1372,7 @@
           <div class="par">
             <div class="campo">
               <label for="tmNivel">N&iacute;vel</label>
-              <input type="text" id="tmNivel" list="niveisCEFR" placeholder="Escolha ou digite">
-              <datalist id="niveisCEFR">
-                <option value="A1">A1 &middot; iniciante</option>
-                <option value="A2">A2 &middot; b&aacute;sico</option>
-                <option value="B1">B1 &middot; intermedi&aacute;rio</option>
-                <option value="B2">B2 &middot; intermedi&aacute;rio superior</option>
-                <option value="C1">C1 &middot; avan&ccedil;ado</option>
-                <option value="C2">C2 &middot; profici&ecirc;ncia</option>
-                <option value="Kids">Kids</option>
-                <option value="Teens">Teens</option>
-                <option value="Conversation">Conversation</option>
-                <option value="Business">Business</option>
-              </datalist>
+              <select id="tmNivel"><option value="">Selecione</option></select>
             </div>
             <div class="campo">
               <label for="tmLivro">Livro</label>
@@ -1391,11 +1393,7 @@
           <div class="par">
             <div class="campo">
               <label for="tmModalidade">Modalidade</label>
-              <select id="tmModalidade">
-                <option>Presencial</option>
-                <option>Online</option>
-                <option>H&iacute;brido</option>
-              </select>
+              <select id="tmModalidade"><option value="">Selecione</option></select>
             </div>
             <div class="campo">
               <label for="tmCapacidade">Capacidade</label>
@@ -1603,15 +1601,21 @@
       <div class="assess-resultado" id="usrResultado"></div>
     </div>
 
-    <div class="recep-painel hidden" id="painelRelatorio">
+    <div class="recep-painel hidden" id="painelRelAulas">
       <div class="controls">
         <div class="field">
-          <label for="relMes">M&ecirc;s</label>
-          <select id="relMes"></select>
+          <label for="relAulasMes">M&ecirc;s</label>
+          <select id="relAulasMes"></select>
         </div>
         <div class="field">
-          <label for="relAno">Ano</label>
-          <select id="relAno"></select>
+          <label for="relAulasAno">Ano</label>
+          <select id="relAulasAno"></select>
+        </div>
+      </div>
+      <div class="controls" style="padding-top:0;">
+        <div class="field">
+          <label for="relAulasProf">Professor</label>
+          <select id="relAulasProf"><option value="">Todos os professores</option></select>
         </div>
       </div>
       <div style="padding:4px 20px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1877,7 +1881,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.7.4';
+const APP_VERSAO = '2.8.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3934,9 +3938,9 @@ var MESES_NOME = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 document.getElementById('recepCardRelatorio').addEventListener('click', function(){
-  abrirPainelRecep('painelRelatorio','Relatório de aulas');
-  var mes = document.getElementById('relMes');
-  var ano = document.getElementById('relAno');
+  abrirPainelRecep('painelRelAulas','Relatório de aulas');
+  var mes = document.getElementById('relAulasMes');
+  var ano = document.getElementById('relAulasAno');
   if(!mes.options.length){
     var hoje = new Date();
     MESES_NOME.forEach(function(m, i){
@@ -3950,6 +3954,12 @@ document.getElementById('recepCardRelatorio').addEventListener('click', function
     mes.value = m0 === 0 ? 12 : m0;
     ano.value = m0 === 0 ? hoje.getFullYear()-1 : hoje.getFullYear();
   }
+  var selP = document.getElementById('relAulasProf');
+  if(selP.options.length <= 1){
+    (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; }).forEach(function(p){
+      var o = document.createElement('option'); o.value = p; o.textContent = p; selP.appendChild(o);
+    });
+  }
   document.getElementById('relResultado').innerHTML =
     '<div class="msg-aviso">Escolha o mês e toque em <b>Ver resumo</b>. '
     + 'O relatório compara o calendário de cada turma com o que foi lançado, '
@@ -3961,11 +3971,13 @@ document.getElementById('btnRelTodos').addEventListener('click', gerarPdfTodos);
 
 async function verResumoMensal(){
   var box = document.getElementById('relResultado');
-  var mes = Number(document.getElementById('relMes').value);
-  var ano = Number(document.getElementById('relAno').value);
+  var mes = Number(document.getElementById('relAulasMes').value);
+  var ano = Number(document.getElementById('relAulasAno').value);
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Apurando...</p>';
 
+  var escolhido = document.getElementById('relAulasProf').value;
   var profs = (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; });
+  if(escolhido) profs = profs.filter(function(p){ return p === escolhido; });
   if(!profs.length){ box.innerHTML = '<div class="assess-aviso">Nenhum professor cadastrado.</div>'; return; }
 
   var html = '<div class="assess-secao-titulo">' + MESES_NOME[mes-1] + ' de ' + ano + '</div>';
@@ -4013,8 +4025,8 @@ async function gerarPdfProfessor(nome){
   mostrarToast('Gerando o PDF de ' + nome + '...');
   var r = await chamarAPI({
     acao:'pdfRelatorioMensal', professor: nome,
-    mes: Number(document.getElementById('relMes').value),
-    ano: Number(document.getElementById('relAno').value)
+    mes: Number(document.getElementById('relAulasMes').value),
+    ano: Number(document.getElementById('relAulasAno').value)
   });
   if(!r.sucesso){
     mostrarToast(r.erro || 'Erro ao gerar');
@@ -4033,8 +4045,8 @@ async function gerarPdfProfessor(nome){
 
 async function gerarPdfTodos(){
   var btn = document.getElementById('btnRelTodos');
-  var mes = Number(document.getElementById('relMes').value);
-  var ano = Number(document.getElementById('relAno').value);
+  var mes = Number(document.getElementById('relAulasMes').value);
+  var ano = Number(document.getElementById('relAulasAno').value);
   if(!confirm('Gerar um PDF para cada professor de ' + MESES_NOME[mes-1] + '/' + ano + '?\n\n'
     + 'Pode levar alguns minutos.')) return;
 
@@ -4423,7 +4435,10 @@ document.getElementById('btnSalvarUsr').addEventListener('click', async function
     return;
   }
   box.innerHTML = '<div class="msg-ok"><b>' + r.nome + '</b> salvo como ' + r.perfil + '.'
-    + (r.novo ? '<br>Já pode entrar no app com a senha que você definiu.' : '') + '</div>';
+    + (r.novo ? '<br>Já pode entrar no app com a senha que você definiu.' : '')
+    + (r.validacaoAtualizada ? '<br>A lista de professores da planilha foi atualizada.' : '')
+    + '</div>';
+  OPCOES_TURMA = null;   // forca recarregar as opcoes na proxima turma
   mostrarToast('Usuário salvo');
   USR_EDITANDO = null;
   carregarUsuarios();
@@ -4615,7 +4630,7 @@ function abrirNovoAlunoManual(){
       '<div class="al-form">'
     + '<input type="text" id="novoAlunoNome" placeholder="Nome e sobrenome do aluno">'
     + '<div class="par">'
-    + '<input type="date" id="novoAlunoInicio" value="' + _hojeIso() + '">'
+    + '<input type="date" id="novoAlunoIniManual" value="' + _hojeIso() + '">'
     + '<input type="text" inputmode="numeric" id="novoAlunoMat" placeholder="Nº matrícula (opcional)">'
     + '</div>'
     + '<button class="ren-btn" onclick="confirmarNovoAluno()">Adicionar à turma ' + t.turmaId + '</button>'
@@ -4632,7 +4647,8 @@ async function confirmarNovoAluno(nomeEscolhido, matricula, numeroContrato){
   var nome = nomeEscolhido || (campoNome ? campoNome.value.trim() : '');
   if(!nome){ mostrarToast('Escolha ou digite o aluno'); return; }
 
-  var campoIni = document.getElementById('novoAlunoInicio');
+  var campoIni = document.getElementById('novoAlunoInicio')
+                 || document.getElementById('novoAlunoIniManual');
   var ini = campoIni ? campoIni.value : '';
   var campoMat = document.getElementById('novoAlunoMat');
   var mat = matricula || (campoMat ? campoMat.value.trim() : '');
@@ -4754,6 +4770,29 @@ document.getElementById('subcardListaTurmas').addEventListener('click', function
   carregarListaTurmas();
 });
 
+var OPCOES_TURMA = null;
+
+/** Busca uma vez as listas de professor, nível e modalidade do servidor. */
+async function carregarOpcoesTurma(){
+  if(OPCOES_TURMA) return OPCOES_TURMA;
+  try{
+    var r = await chamarAPI({ acao:'opcoesTurma' });
+    if(r.sucesso) OPCOES_TURMA = r;
+  }catch(e){}
+  return OPCOES_TURMA;
+}
+
+function _preencherSelect(el, lista, valorAtual){
+  if(!el || !lista) return;
+  el.innerHTML = '<option value="">Selecione</option>'
+    + lista.map(function(x){ return '<option value="' + x + '">' + x + '</option>'; }).join('');
+  // valor que ja existia e nao esta na lista continua disponivel
+  if(valorAtual && lista.indexOf(valorAtual) === -1){
+    el.innerHTML += '<option value="' + valorAtual + '">' + valorAtual + ' (fora da lista)</option>';
+  }
+  if(valorAtual) el.value = valorAtual;
+}
+
 async function abrirFormTurma(t){
   TURMA_EDITANDO = t;
   document.getElementById('turmaSubcards').classList.add('hidden');
@@ -4763,19 +4802,19 @@ async function abrirFormTurma(t){
   $recepcaoSub.textContent = t ? ('Editando ' + t.turmaId) : 'Nova turma';
   document.getElementById('btnSalvarTurma').textContent = t ? 'Salvar alterações' : 'Salvar turma';
 
-  var sel = document.getElementById('tmProfessor');
-  if(sel.options.length <= 1){
-    (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; }).forEach(function(p){
-      var o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
-    });
-  }
+  var op = await carregarOpcoesTurma();
+  _preencherSelect(document.getElementById('tmProfessor'),
+    (op && op.professores) || (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; }),
+    t ? t.professor : '');
+  _preencherSelect(document.getElementById('tmNivel'),
+    (op && op.niveis) || ['A1','A2','B1','B2','C1','C2','Kids','Teens'], t ? t.nivel : '');
+  _preencherSelect(document.getElementById('tmModalidade'),
+    (op && op.modalidades) || ['PRESENCIAL','ONLINE','HIBRIDO'],
+    t ? t.modalidade : 'PRESENCIAL');
 
-  document.getElementById('tmNivel').value = t ? t.nivel : '';
   document.getElementById('tmLivro').value = t ? t.livro : '';
-  document.getElementById('tmProfessor').value = t ? t.professor : '';
   document.getElementById('tmDias').value = t ? t.dias : '';
   document.getElementById('tmHorario').value = t ? t.horario : '';
-  document.getElementById('tmModalidade').value = t ? (t.modalidade || 'Presencial') : 'Presencial';
   document.getElementById('tmCapacidade').value = t ? String(t.capacidade) : '6';
   document.getElementById('tmDuracao').value = t ? String(t.duracao) : '1';
 
@@ -5173,6 +5212,17 @@ function aplicarPermissoes(){
     if(el) el.classList.toggle('hidden', !podeVer(par[1]));
   });
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
+  // titulo de secao sem nenhum card visivel some junto
+  setTimeout(function(){
+    document.querySelectorAll('#recepCards .sec-titulo').forEach(function(t){
+      var visivel = false, el = t.nextElementSibling;
+      while(el && !el.classList.contains('sec-titulo')){
+        if(el.classList.contains('menu-card') && !el.classList.contains('hidden')) visivel = true;
+        el = el.nextElementSibling;
+      }
+      t.classList.toggle('hidden', !visivel);
+    });
+  }, 0);
   ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
    'recepCardRelatorio'].forEach(function(id){
     var el = document.getElementById(id);
