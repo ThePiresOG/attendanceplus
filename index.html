@@ -894,6 +894,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card hidden" id="recepCardConexao">
+        <div class="menu-card-icone">&#9889;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Testar conex&atilde;o</span>
+          <span class="menu-card-sub">Descobrir onde o app est&aacute; travando</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card hidden" id="recepCardUsuarios">
         <div class="menu-card-icone">&#128100;</div>
         <div class="menu-card-txt">
@@ -1451,6 +1459,13 @@
       <div class="assess-resultado" id="calResultado"></div>
     </div>
 
+    <div class="recep-painel hidden" id="painelConexao">
+      <div class="busca-box">
+        <button class="ren-btn" id="btnRodarPing" style="width:100%;">Rodar teste de conex&atilde;o</button>
+      </div>
+      <div class="assess-resultado" id="pingResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelUsuarios">
       <div class="busca-box">
         <button class="ren-btn" id="btnNovoUsr" style="width:100%;">+ Novo usu&aacute;rio</button>
@@ -1684,7 +1699,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.5.1';
+const APP_VERSAO = '2.5.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3618,6 +3633,117 @@ async function carregarListaBaixas(){
 
 
 
+
+// ===== 2.5.2: TESTE DE CONEXAO =====
+
+document.getElementById('recepCardConexao').addEventListener('click', function(){
+  abrirPainelRecep('painelConexao','Testar conexão');
+  document.getElementById('pingResultado').innerHTML =
+    '<div class="msg-aviso">Toque em "Rodar teste" acima. Ele faz 5 chamadas em sequência, '
+    + 'da mais simples para a mais parecida com salvar uma turma, e mostra onde para de funcionar.</div>';
+});
+
+document.getElementById('btnRodarPing').addEventListener('click', rodarPing);
+
+/** Chamada crua, sem os tratamentos do chamarAPI, para capturar o erro puro. */
+async function _pingCru(payload){
+  var t0 = Date.now();
+  try{
+    var res = await fetch(API_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    var txt = await res.text();
+    var ms = Date.now() - t0;
+    try{
+      return { ok:true, ms:ms, status:res.status, dados: JSON.parse(txt) };
+    }catch(e){
+      return { ok:false, ms:ms, status:res.status, tipo:'resposta não é JSON',
+               detalhe: txt.slice(0,200).replace(/</g,'&lt;') };
+    }
+  }catch(e){
+    return { ok:false, ms:Date.now()-t0, tipo:'fetch falhou',
+             detalhe: (e && e.name ? e.name + ': ' : '') + (e && e.message ? e.message : String(e)) };
+  }
+}
+
+async function rodarPing(){
+  var box = document.getElementById('pingResultado');
+  var btn = document.getElementById('btnRodarPing');
+  btn.disabled = true; btn.textContent = 'Testando...';
+  box.innerHTML = '';
+
+  var t = (window._TURMAS_LISTA && window._TURMAS_LISTA[0]) || null;
+
+  var testes = [
+    ['1. Servidor responde?', { acao:'versaoApp' }],
+    ['2. Aceita texto com acento?', { acao:'pingLeitura', eco:'Lídia · SÁBADO · ação' }],
+    ['3. Consegue escrever?', { acao:'pingEscrita', quem: professorLogado || 'teste', origem:'painel' }],
+    ['4. Lê a lista de turmas?', { acao:'listarTurmas' }]
+  ];
+
+  if(t){
+    testes.push(['5. Simula salvar a turma ' + t.turmaId, {
+      acao:'pingEditarTurma', linha:t.linha, turmaId:t.turmaId, nivel:t.nivel, livro:t.livro,
+      professor:t.professor, dias:t.dias, horario:t.horario, modalidade:t.modalidade,
+      capacidade:t.capacidade, duracao:t.duracao
+    }]);
+  }
+
+  var html = '<div class="calc-box" style="margin-top:0;">'
+    + '<div class="calc-linha"><span class="calc-rot">Versão deste HTML</span><span class="calc-val">' + APP_VERSAO + '</span></div>'
+    + '<div class="calc-linha"><span class="calc-rot">Navegador online</span><span class="calc-val">' + (navigator.onLine ? 'sim' : 'NÃO') + '</span></div>'
+    + '</div>';
+  box.innerHTML = html;
+
+  var versaoServidor = null;
+
+  for(var i = 0; i < testes.length; i++){
+    var nome = testes[i][0];
+    var r = await _pingCru(testes[i][1]);
+
+    if(r.ok && r.dados && r.dados.versao) versaoServidor = r.dados.versao;
+
+    var detalhe = '';
+    if(r.ok){
+      var d = r.dados || {};
+      if(d.sucesso === false) detalhe = 'servidor respondeu, mas recusou: ' + (d.erro || '');
+      else if(d.versao) detalhe = 'versão do servidor: ' + d.versao;
+      else if(d.total !== undefined) detalhe = d.total + ' registros';
+      else detalhe = 'resposta recebida';
+    }else{
+      detalhe = r.tipo + ' — ' + r.detalhe;
+    }
+
+    var cor = r.ok && (!r.dados || r.dados.sucesso !== false) ? 'msg-ok' : 'msg-bloqueio';
+    html += '<div class="' + cor + '"><b>' + nome + '</b><br>'
+      + detalhe + '<br><span style="opacity:.7;font-size:11.5px;">' + r.ms + ' ms'
+      + (r.status ? ' · HTTP ' + r.status : '') + '</span></div>';
+    box.innerHTML = html;
+  }
+
+  // veredito
+  var veredito = '';
+  if(versaoServidor && versaoServidor !== APP_VERSAO){
+    veredito = '<div class="msg-bloqueio"><b>Achei o problema.</b><br>'
+      + 'O servidor está na versão ' + versaoServidor + ' e este HTML na ' + APP_VERSAO + '.<br>'
+      + 'No Apps Script: Implantar › Gerenciar implantações › lápis › Versão: <b>Nova versão</b> › Implantar. '
+      + 'Não crie uma implantação nova, senão a URL muda.</div>';
+  }else if(versaoServidor){
+    veredito = '<div class="msg-ok"><b>Servidor e app na mesma versão (' + versaoServidor + ').</b><br>'
+      + 'Se algum teste acima falhou, o problema está naquela etapa específica. '
+      + 'Me mande esta tela que eu ataco direto.</div>';
+  }else{
+    veredito = '<div class="msg-bloqueio"><b>O servidor não respondeu nenhuma vez.</b><br>'
+      + 'Confira se a URL do app no HTML é a mesma da implantação ativa, '
+      + 'e se ela está publicada para "Qualquer pessoa".</div>';
+  }
+  box.innerHTML = html + veredito;
+
+  btn.disabled = false; btn.textContent = 'Rodar teste de conexão';
+}
+
 // ===== 2.5.0: CALENDARIO =====
 
 var CAL_EDITANDO = null;
@@ -4552,7 +4678,7 @@ function aplicarPermissoes(){
     if(el) el.classList.toggle('hidden', !podeVer(par[1]));
   });
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
-  ['recepCardValores','recepCardNovidades','recepCardUsuarios'].forEach(function(id){
+  ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
