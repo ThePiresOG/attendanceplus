@@ -1877,7 +1877,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.7.3';
+const APP_VERSAO = '2.7.4';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4822,6 +4822,8 @@ document.getElementById('btnSalvarTurma').addEventListener('click', async functi
     }
     box.innerHTML = '<div class="msg-ok"><b>Turma ' + r.turmaId + ' salva'
       + (r.ms ? ' em ' + r.ms + ' ms' : '') + '.</b>'
+      + ((r.ajustes && r.ajustes.length)
+          ? '<br>Ajustado ao formato da planilha: ' + r.ajustes.join(', ') : '')
       + (r.aviso ? '<br>' + r.aviso : '')
       + '<br>Agora é só adicionar os alunos pela tela de presença, informando quando cada um começa.</div>';
     mostrarToast('Turma salva');
