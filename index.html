@@ -421,6 +421,29 @@
   .al-info{ background:var(--perola); border-radius:9px; padding:9px 11px; font-size:12px; color:var(--verde-escuro); line-height:1.5; margin-top:2px; }
   .al-troca{ background:none; border:none; color:var(--verde-escuro); font-size:11.5px; text-decoration:underline; cursor:pointer; font-family:'Poppins',sans-serif; padding:2px 0 0; }
 
+
+  /* ===== 2.6.0: CONVERSACAO ===== */
+  .conv-aluno{ display:flex; align-items:center; gap:10px; border:1.5px solid var(--linha); border-radius:11px; padding:10px 12px; margin-bottom:6px; cursor:pointer; }
+  .conv-aluno.marcado{ background:#E9F3EC; border-color:#3E8E5A; }
+  .conv-aluno input{ width:18px; height:18px; flex-shrink:0; }
+  .conv-nome{ flex:1; font-size:13.5px; color:var(--carvao); line-height:1.3; }
+  .conv-nome small{ display:block; font-size:11px; color:var(--verde-medio); }
+  .conv-ja{ font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:20px; background:#E3EFE7; color:#3E8E5A; white-space:nowrap; }
+  .conv-barra{ position:sticky; bottom:0; background:var(--branco); padding:10px 0; border-top:1.5px solid var(--linha); }
+
+
+  /* ===== 2.7.0: RELATORIO MENSAL ===== */
+  .rel-card{ border:1.5px solid var(--linha); border-left-width:4px; border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .rel-card.limpo{ border-left-color:#3E8E5A; }
+  .rel-card.atencao{ border-left-color:var(--excluir); }
+  .rel-topo{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
+  .rel-nome{ font-size:14px; font-weight:600; color:var(--carvao); }
+  .rel-valor{ font-size:13px; font-weight:700; color:var(--verde-escuro); white-space:nowrap; }
+  .rel-num{ display:flex; gap:6px; flex-wrap:wrap; margin:6px 0; }
+  .rel-num span{ font-size:11px; padding:3px 9px; border-radius:20px; background:#E9F0EC; color:var(--verde-escuro); }
+  .rel-num span.ruim{ background:#FBE9E5; color:#8a3b2d; font-weight:600; }
+  .rel-num span.aviso{ background:#FDF3D4; color:#8a6d1a; font-weight:600; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -886,6 +909,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardConversa">
+        <div class="menu-card-icone">&#128172;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Conversa&ccedil;&atilde;o</span>
+          <span class="menu-card-sub">Check-in de quem veio na aula avulsa</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardCalendario">
         <div class="menu-card-icone">&#128197;</div>
         <div class="menu-card-txt">
@@ -907,6 +938,14 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Usu&aacute;rios</span>
           <span class="menu-card-sub">Professores, senhas e permiss&otilde;es</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="recepCardRelatorio">
+        <div class="menu-card-icone">&#128196;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Relat&oacute;rio de aulas</span>
+          <span class="menu-card-sub">PDF mensal por professor, com o que faltou lan&ccedil;ar</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -1429,6 +1468,53 @@
       <div class="assess-resultado" id="deslResultado"></div>
     </div>
 
+    <div class="recep-painel hidden" id="painelConversa">
+      <div class="controls">
+        <div class="field">
+          <label for="convData">Data</label>
+          <input type="date" id="convData">
+        </div>
+        <div class="field">
+          <label for="convHorario">Hor&aacute;rio</label>
+          <input type="text" id="convHorario" list="horariosConversa" placeholder="18h &agrave;s 19h">
+          <datalist id="horariosConversa">
+            <option value="08h às 09h"></option>
+            <option value="09h às 10h"></option>
+            <option value="10h às 11h"></option>
+            <option value="14h às 15h"></option>
+            <option value="17h às 18h"></option>
+            <option value="18h às 19h"></option>
+            <option value="19h às 20h"></option>
+            <option value="20h às 21h"></option>
+          </datalist>
+        </div>
+      </div>
+      <div class="controls" style="padding-top:0;">
+        <div class="field">
+          <label for="convProfessor">Professor que ministrou</label>
+          <select id="convProfessor"><option value="">Selecione</option></select>
+        </div>
+        <div class="field">
+          <label for="convDuracao">Dura&ccedil;&atilde;o</label>
+          <select id="convDuracao">
+            <option value="">Pelo hor&aacute;rio</option>
+            <option value="0.5">30 minutos</option>
+            <option value="1">1 hora</option>
+            <option value="1.5">1h30</option>
+            <option value="2">2 horas</option>
+          </select>
+        </div>
+      </div>
+      <div class="busca-box" style="padding-top:6px;">
+        <div class="busca-campo">
+          <input type="text" id="convBusca" placeholder="Buscar aluno pelo nome">
+          <button class="busca-limpar" id="convBuscaLimpar">&times;</button>
+        </div>
+        <div class="busca-contador" id="convContador"></div>
+      </div>
+      <div class="assess-resultado" id="convResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelCalendario">
       <div class="busca-box">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1517,6 +1603,24 @@
       <div class="assess-resultado" id="usrResultado"></div>
     </div>
 
+    <div class="recep-painel hidden" id="painelRelatorio">
+      <div class="controls">
+        <div class="field">
+          <label for="relMes">M&ecirc;s</label>
+          <select id="relMes"></select>
+        </div>
+        <div class="field">
+          <label for="relAno">Ano</label>
+          <select id="relAno"></select>
+        </div>
+      </div>
+      <div style="padding:4px 20px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="ren-btn" id="btnRelVer">Ver resumo</button>
+        <button class="ren-btn sec" id="btnRelTodos">PDF de todos</button>
+      </div>
+      <div class="assess-resultado" id="relResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelValores">
       <div class="assess-resultado" id="valResultado"></div>
     </div>
@@ -1587,6 +1691,17 @@ async function chamarAPI(payload){
     tentativas.push('GET falhou: ' + (e.name || '') + ' ' + (e.message || e));
   }
 
+  // ---- 3a tentativa: JSONP (tag <script>, nao usa fetch) ----
+  // Quando extensao, antivirus ou proxy bloqueia o fetch, isso ainda passa,
+  // porque o navegador trata como carregar um script comum.
+  try{
+    var dados3 = await chamarJSONP(payload);
+    console.info('[AttendancePlus] "' + acao + '" foi por JSONP.');
+    return dados3;
+  }catch(e){
+    tentativas.push('JSONP falhou: ' + (e.message || e));
+  }
+
   // ---- desistiu: guarda o diagnostico para a tela mostrar ----
   ULTIMO_ERRO_API = { acao: acao, quando: new Date().toLocaleTimeString(), tentativas: tentativas };
   console.error('[AttendancePlus] falhou em "' + acao + '"', tentativas);
@@ -1600,6 +1715,35 @@ async function chamarAPI(payload){
       ? 'Você está sem internet. Reconecte e tente de novo.'
       : 'As duas formas de falar com o servidor falharam.'
   };
+}
+
+/** Transporte alternativo por tag <script>. Nao passa por CORS nem por fetch. */
+function chamarJSONP(payload, timeoutMs){
+  return new Promise(function(resolve, reject){
+    var cb = '_apcb' + Date.now() + Math.floor(Math.random() * 10000);
+    var s = document.createElement('script');
+    var pronto = false;
+
+    var t = setTimeout(function(){
+      if(pronto) return;
+      limpar(); reject(new Error('sem resposta em ' + ((timeoutMs || 30000)/1000) + 's'));
+    }, timeoutMs || 30000);
+
+    function limpar(){
+      pronto = true;
+      clearTimeout(t);
+      try{ delete window[cb]; }catch(e){ window[cb] = undefined; }
+      if(s.parentNode) s.parentNode.removeChild(s);
+    }
+
+    window[cb] = function(dados){ limpar(); resolve(dados); };
+    s.onerror = function(){ limpar(); reject(new Error('o script não carregou')); };
+
+    var url = API_URL + '?callback=' + cb + '&p=' + encodeURIComponent(JSON.stringify(payload));
+    if(url.length > 7500){ limpar(); reject(new Error('dados grandes demais para esta rota')); return; }
+    s.src = url;
+    document.body.appendChild(s);
+  });
 }
 
 /** Bloco de detalhe para colar em qualquer tela de erro. */
@@ -1733,7 +1877,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.5.4';
+const APP_VERSAO = '2.7.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3778,6 +3922,316 @@ async function rodarPing(){
   btn.disabled = false; btn.textContent = 'Rodar teste de conexão';
 }
 
+
+
+// ===== 2.7.0: RELATORIO MENSAL =====
+
+var MESES_NOME = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+document.getElementById('recepCardRelatorio').addEventListener('click', function(){
+  abrirPainelRecep('painelRelatorio','Relatório de aulas');
+  var mes = document.getElementById('relMes');
+  var ano = document.getElementById('relAno');
+  if(!mes.options.length){
+    var hoje = new Date();
+    MESES_NOME.forEach(function(m, i){
+      var o = document.createElement('option'); o.value = i+1; o.textContent = m; mes.appendChild(o);
+    });
+    for(var a = hoje.getFullYear(); a >= hoje.getFullYear()-2; a--){
+      var o2 = document.createElement('option'); o2.value = a; o2.textContent = a; ano.appendChild(o2);
+    }
+    // por padrao, o mes que acabou de fechar
+    var m0 = hoje.getMonth();
+    mes.value = m0 === 0 ? 12 : m0;
+    ano.value = m0 === 0 ? hoje.getFullYear()-1 : hoje.getFullYear();
+  }
+  document.getElementById('relResultado').innerHTML =
+    '<div class="msg-aviso">Escolha o mês e toque em <b>Ver resumo</b>. '
+    + 'O relatório compara o calendário de cada turma com o que foi lançado, '
+    + 'e aponta aula que faltou marcar e aula lançada fora do previsto.</div>';
+});
+
+document.getElementById('btnRelVer').addEventListener('click', verResumoMensal);
+document.getElementById('btnRelTodos').addEventListener('click', gerarPdfTodos);
+
+async function verResumoMensal(){
+  var box = document.getElementById('relResultado');
+  var mes = Number(document.getElementById('relMes').value);
+  var ano = Number(document.getElementById('relAno').value);
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Apurando...</p>';
+
+  var profs = (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; });
+  if(!profs.length){ box.innerHTML = '<div class="assess-aviso">Nenhum professor cadastrado.</div>'; return; }
+
+  var html = '<div class="assess-secao-titulo">' + MESES_NOME[mes-1] + ' de ' + ano + '</div>';
+  box.innerHTML = html;
+  var totalGeral = 0, totalFaltando = 0;
+
+  for(var i = 0; i < profs.length; i++){
+    var r = await chamarAPI({ acao:'relatorioMensal', professor: profs[i], mes: mes, ano: ano });
+    if(!r.sucesso) continue;
+    var s = r.resumo;
+    if(!s.lancadas && !s.faltando) continue;
+
+    totalGeral += s.valor;
+    totalFaltando += s.faltando;
+
+    html += '<div class="rel-card ' + (s.faltando || s.extras ? 'atencao' : 'limpo') + '">'
+      + '<div class="rel-topo"><span class="rel-nome">' + r.professor + '</span>'
+      + '<span class="rel-valor">R$ ' + _brl(s.valor) + '</span></div>'
+      + '<div class="rel-num">'
+      + '<span>' + s.lancadas + ' lançadas</span>'
+      + '<span>' + s.horasLancadas + 'h</span>'
+      + (s.faltando ? '<span class="ruim">' + s.faltando + ' não lançadas</span>' : '')
+      + (s.extras ? '<span class="aviso">' + s.extras + ' fora do previsto</span>' : '')
+      + (s.conversas ? '<span>' + s.conversas + ' conversação</span>' : '')
+      + '</div>'
+      + (s.faltando
+          ? '<div class="doc-meta" style="color:#8a3b2d;">Faltam ' + s.horasFaltando
+            + 'h, equivalente a R$ ' + _brl(s.valorEmRisco) + '</div>'
+          : '<div class="doc-meta" style="color:#3E8E5A;">Todas as aulas previstas foram lançadas</div>')
+      + '<div class="ren-acoes">'
+      + '<button class="ren-btn" onclick="gerarPdfProfessor(\'' + r.professor.replace(/'/g,"\\'") + '\')">Gerar PDF</button>'
+      + '</div></div>';
+    box.innerHTML = html;
+  }
+
+  html += '<div class="calc-box">'
+    + '<div class="calc-linha"><span class="calc-rot">Aulas sem lançamento</span>'
+    + '<span class="calc-val">' + totalFaltando + '</span></div>'
+    + '<div class="calc-linha destaque"><span class="calc-rot">Total a pagar no mês</span>'
+    + '<span class="calc-val">R$ ' + _brl(totalGeral) + '</span></div></div>';
+  box.innerHTML = html;
+}
+
+async function gerarPdfProfessor(nome){
+  mostrarToast('Gerando o PDF de ' + nome + '...');
+  var r = await chamarAPI({
+    acao:'pdfRelatorioMensal', professor: nome,
+    mes: Number(document.getElementById('relMes').value),
+    ano: Number(document.getElementById('relAno').value)
+  });
+  if(!r.sucesso){
+    mostrarToast(r.erro || 'Erro ao gerar');
+    document.getElementById('relResultado').insertAdjacentHTML('afterbegin',
+      '<div class="msg-bloqueio">' + (r.erro || 'Erro') + '</div>' + detalheErro(r));
+    return;
+  }
+  document.getElementById('relResultado').insertAdjacentHTML('afterbegin',
+    '<div class="msg-ok"><b>' + r.nome + '</b><br>'
+    + 'Salvo em ' + (r.pasta || 'Drive')
+    + (r.substituido ? ' · a versão anterior deste mês foi para a lixeira' : '')
+    + '<div class="doc-acoes"><a class="doc-link" target="_blank" href="' + r.url + '">Abrir PDF</a></div></div>');
+  mostrarToast('PDF gerado');
+  window.open(r.url, '_blank');
+}
+
+async function gerarPdfTodos(){
+  var btn = document.getElementById('btnRelTodos');
+  var mes = Number(document.getElementById('relMes').value);
+  var ano = Number(document.getElementById('relAno').value);
+  if(!confirm('Gerar um PDF para cada professor de ' + MESES_NOME[mes-1] + '/' + ano + '?\n\n'
+    + 'Pode levar alguns minutos.')) return;
+
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  var box = document.getElementById('relResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Gerando os PDFs, aguarde...</p>';
+
+  var r = await chamarAPI({ acao:'pdfTodosProfessores', mes: mes, ano: ano });
+  btn.disabled = false; btn.textContent = 'PDF de todos';
+
+  if(!r.sucesso){
+    box.innerHTML = '<div class="assess-aviso">' + (r.erro || 'Erro') + '</div>' + detalheErro(r);
+    return;
+  }
+
+  box.innerHTML = '<div class="assess-secao-titulo">' + r.relatorios.length + ' relatórios de '
+      + MESES_NOME[mes-1] + '/' + ano + '</div>'
+    + r.relatorios.map(function(x){
+        return '<div class="rel-card ' + (x.faltando ? 'atencao' : 'limpo') + '">'
+          + '<div class="rel-topo"><span class="rel-nome">' + x.professor + '</span>'
+          + '<span class="rel-valor">R$ ' + _brl(x.valor) + '</span></div>'
+          + '<div class="rel-num"><span>' + x.lancadas + ' lançadas</span>'
+          + (x.faltando ? '<span class="ruim">' + x.faltando + ' faltando</span>' : '') + '</div>'
+          + (x.url ? '<div class="ren-acoes"><a class="doc-link" target="_blank" href="' + x.url + '">Abrir PDF</a></div>'
+                   : '<div class="doc-meta" style="color:#8a3b2d;">' + x.erro + '</div>')
+          + '</div>';
+      }).join('')
+    + '<div class="calc-box"><div class="calc-linha destaque">'
+    + '<span class="calc-rot">Total a pagar</span>'
+    + '<span class="calc-val">R$ ' + _brl(r.totalPagar) + '</span></div></div>';
+}
+
+// ===== 2.6.0: CONVERSACAO =====
+
+var CONV_ALUNOS = [];
+var CONV_PRESENTES = {};
+var CONV_MARCADOS = {};
+
+document.getElementById('recepCardConversa').addEventListener('click', function(){
+  abrirPainelRecep('painelConversa','Conversação');
+  var d = document.getElementById('convData');
+  if(!d.value) d.value = _hojeIso();
+  var sel = document.getElementById('convProfessor');
+  if(sel.options.length <= 1){
+    (PROFESSORES || []).filter(function(p){ return p !== 'Recepção'; }).forEach(function(p){
+      var o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
+    });
+    if(PERM && PERM.presenca && professorLogado) sel.value = professorLogado;
+  }
+  carregarConversa();
+});
+
+['convData','convProfessor'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', carregarConversa);
+});
+document.getElementById('convHorario').addEventListener('input', function(){
+  clearTimeout(window._convHoraTimer);
+  window._convHoraTimer = setTimeout(desenharConversa, 300);
+});
+document.getElementById('convBusca').addEventListener('input', function(){
+  clearTimeout(window._convBuscaTimer);
+  window._convBuscaTimer = setTimeout(desenharConversa, 180);
+});
+document.getElementById('convBuscaLimpar').addEventListener('click', function(){
+  document.getElementById('convBusca').value = '';
+  desenharConversa();
+});
+
+async function carregarConversa(){
+  var box = document.getElementById('convResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  CONV_MARCADOS = {};
+
+  var dataBr = _isoParaBr(document.getElementById('convData').value);
+
+  var r1 = await chamarAPI({ acao:'alunosDisponiveis' });
+  if(!r1.sucesso){
+    box.innerHTML = '<div class="assess-aviso">' + (r1.erro || 'Erro') + '</div>' + detalheErro(r1);
+    return;
+  }
+  CONV_ALUNOS = r1.alunos;
+
+  var r2 = await chamarAPI({ acao:'listarConversacao', data: dataBr });
+  CONV_PRESENTES = {};
+  if(r2.sucesso){
+    (r2.presentes || []).forEach(function(p){
+      CONV_PRESENTES[_chaveNome(p.aluno)] = p;
+    });
+  }
+  desenharConversa();
+}
+
+function desenharConversa(){
+  var box = document.getElementById('convResultado');
+  var termo = _busca((document.getElementById('convBusca').value || '').trim());
+  var horario = document.getElementById('convHorario').value.trim();
+
+  var lista = !termo ? CONV_ALUNOS : CONV_ALUNOS.filter(function(a){
+    return _busca(a.nome).indexOf(termo) !== -1;
+  });
+
+  var jaMarcados = Object.keys(CONV_PRESENTES).length;
+  document.getElementById('convContador').textContent =
+    lista.length + ' de ' + CONV_ALUNOS.length + ' alunos'
+    + (jaMarcados ? ' · ' + jaMarcados + ' já com presença nesse dia' : '');
+
+  if(!CONV_ALUNOS.length){
+    box.innerHTML = '<div class="assess-aviso">Nenhum aluno com contrato vigente encontrado.</div>';
+    return;
+  }
+  if(!lista.length){
+    box.innerHTML = '<div class="busca-vazia">Nenhum aluno com esse nome.</div>';
+    return;
+  }
+
+  var html = lista.map(function(a){
+    var k = _chaveNome(a.nome);
+    var ja = CONV_PRESENTES[k];
+    var marcado = !!CONV_MARCADOS[k];
+    return '<label class="conv-aluno ' + (marcado ? 'marcado' : '') + '">'
+      + '<input type="checkbox" data-nome="' + a.nome.replace(/"/g,'&quot;') + '"'
+      + (marcado ? ' checked' : '') + (ja ? ' disabled' : '') + '>'
+      + '<span class="conv-nome">' + a.nome
+      + '<small>' + (a.turmas.length ? a.turmas.join(', ') : 'sem turma fixa') + '</small></span>'
+      + (ja ? '<span class="conv-ja">já veio ' + (ja.horario || '') + '</span>' : '')
+      + '</label>';
+  }).join('');
+
+  var qtd = Object.keys(CONV_MARCADOS).length;
+  html += '<div class="conv-barra">'
+    + '<button class="acao salvar" id="btnSalvarConv" style="width:100%;"' + (qtd ? '' : ' disabled') + '>'
+    + (qtd ? 'Registrar presença de ' + qtd + ' aluno' + (qtd>1?'s':'') : 'Marque quem veio') + '</button>'
+    + (horario ? '' : '<p class="dica" style="margin:6px 0 0;font-size:11.5px;color:#8a6d1a;">Preencha o horário antes de salvar.</p>')
+    + '</div>';
+
+  box.innerHTML = html;
+
+  box.querySelectorAll('.conv-aluno input').forEach(function(el){
+    el.addEventListener('change', function(){
+      var k = _chaveNome(this.dataset.nome);
+      if(this.checked) CONV_MARCADOS[k] = this.dataset.nome;
+      else delete CONV_MARCADOS[k];
+      this.closest('.conv-aluno').classList.toggle('marcado', this.checked);
+      var b = document.getElementById('btnSalvarConv');
+      var n = Object.keys(CONV_MARCADOS).length;
+      b.disabled = !n;
+      b.textContent = n ? 'Registrar presença de ' + n + ' aluno' + (n>1?'s':'') : 'Marque quem veio';
+    });
+  });
+
+  var btn = document.getElementById('btnSalvarConv');
+  if(btn) btn.addEventListener('click', salvarConversa);
+}
+
+async function salvarConversa(){
+  var btn = document.getElementById('btnSalvarConv');
+  var horario = document.getElementById('convHorario').value.trim();
+  var professor = document.getElementById('convProfessor').value;
+  if(!horario){ mostrarToast('Preencha o horário'); return; }
+  if(!professor){ mostrarToast('Escolha o professor'); return; }
+
+  var nomes = Object.keys(CONV_MARCADOS).map(function(k){ return CONV_MARCADOS[k]; });
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  var r = await chamarAPI({
+    acao:'checkinConversacao',
+    data: _isoParaBr(document.getElementById('convData').value),
+    horario: horario, professor: professor, alunos: nomes,
+    duracao: document.getElementById('convDuracao').value,
+    por: professorLogado || 'Recepção'
+  });
+
+  if(!r.sucesso){
+    mostrarToast(r.erro || 'Erro ao registrar');
+    document.getElementById('convResultado').insertAdjacentHTML('afterbegin',
+      '<div class="msg-bloqueio">' + (r.erro || 'Erro') + '</div>' + detalheErro(r));
+    btn.disabled = false;
+    return;
+  }
+
+  mostrarToast(r.registrados + ' presença(s) registrada(s)');
+  if(r.repetidos && r.repetidos.length){
+    alert('Já tinham presença nesse horário: ' + r.repetidos.join(', '));
+  }
+
+  var p = r.pagamento;
+  if(p && p.ok){
+    document.getElementById('convResultado').insertAdjacentHTML('afterbegin',
+      '<div class="msg-ok"><b>' + r.totalNoDia + ' aluno(s) no encontro.</b><br>'
+      + (p.novo ? 'Aula lançada' : 'Aula atualizada')
+      + ' para ' + professor + ': ' + p.horas + 'h como ' + p.turmaId
+      + '. Entra no pagamento do mês.</div>');
+  }else if(p && p.motivo){
+    document.getElementById('convResultado').insertAdjacentHTML('afterbegin',
+      '<div class="msg-aviso">Presenças salvas, mas não consegui lançar a aula para pagamento: '
+      + p.motivo + '</div>');
+  }
+
+  carregarConversa();
+}
+
 // ===== 2.5.0: CALENDARIO =====
 
 var CAL_EDITANDO = null;
@@ -4713,7 +5167,8 @@ function aplicarPermissoes(){
     if(el) el.classList.toggle('hidden', !podeVer(par[1]));
   });
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
-  ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao'].forEach(function(id){
+  ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
+   'recepCardRelatorio'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
