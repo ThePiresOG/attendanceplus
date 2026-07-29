@@ -454,6 +454,24 @@
   #recepCards .menu-card-titulo{ font-size:14.5px; }
   #recepCards .menu-card-sub{ font-size:12px; }
 
+
+  /* ===== 2.9.0: PAINEL DO DONO EM SECOES ===== */
+  .dash-sec{ grid-column:1/-1; font-size:10.5px; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--verde-medio); font-weight:700; margin:18px 20px 6px; display:flex; align-items:center; gap:9px; }
+  .dash-sec::after{ content:''; flex:1; height:1px; background:var(--linha); }
+  .dash-acordeao{ margin:0 20px 7px; }
+  .dash-acordeao .menu-card{ width:100%; margin:0; padding:13px 15px; }
+  .dash-acordeao .menu-card-icone{ width:34px; height:34px; font-size:15px; border-radius:9px; }
+  .dash-acordeao .menu-card-titulo{ font-size:14px; }
+  .dash-acordeao .menu-card-sub{ font-size:11.5px; }
+  .dash-corpo{ padding:2px 0 6px; }
+  .dash-lista-compacta{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  @media (max-width:600px){ .dash-lista-compacta{ grid-template-columns:1fr; } }
+  .vaga-chip{ display:flex; justify-content:space-between; align-items:center; gap:8px;
+    border:1.5px solid var(--linha); border-radius:9px; padding:8px 11px; font-size:12px; }
+  .vaga-chip b{ color:var(--carvao); }
+  .vaga-chip span.q{ font-weight:700; color:var(--verde-escuro); white-space:nowrap; }
+
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
   @media (min-width: 820px){
     .app{ max-width:1100px; background:transparent; }
@@ -602,6 +620,14 @@
         </div>
         <span class="menu-card-seta">→</span>
       </button>
+      <button class="menu-card hidden" id="cardConversaProf">
+        <div class="menu-card-icone">&#128172;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Conversa&ccedil;&atilde;o</span>
+          <span class="menu-card-sub">Check-in de quem veio na aula avulsa</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="cardNotas">
         <div class="menu-card-icone">★</div>
         <div class="menu-card-txt">
@@ -641,6 +667,22 @@
           <span class="menu-card-sub">Áudios e suporte por turma</span>
         </div>
         <span class="menu-card-seta">→</span>
+      </button>
+      <button class="menu-card hidden" id="cardFechamento">
+        <div class="menu-card-icone">&#128196;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Fechamento dos professores</span>
+          <span class="menu-card-sub">Relat&oacute;rio mensal de aulas em PDF</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="cardFaltas">
+        <div class="menu-card-icone">&#9888;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Faltas e frequ&ecirc;ncia</span>
+          <span class="menu-card-sub">Quem est&aacute; em risco de desistir, em PDF</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
       </button>
       <button class="menu-card hidden" id="cardRecepcao">
         <div class="menu-card-icone">&#9776;</div>
@@ -944,6 +986,14 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Relat&oacute;rio de aulas</span>
           <span class="menu-card-sub">PDF mensal por professor, com o que faltou lan&ccedil;ar</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="recepCardFaltas">
+        <div class="menu-card-icone">&#9888;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Faltas e frequ&ecirc;ncia</span>
+          <span class="menu-card-sub">Quem est&aacute; faltando, em PDF</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -1618,11 +1668,49 @@
           <select id="relAulasProf"><option value="">Todos os professores</option></select>
         </div>
       </div>
+      <div style="padding:0 20px 6px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--verde-escuro);cursor:pointer;">
+          <input type="checkbox" id="relAulasLivre" style="width:16px;height:16px;">
+          Usar per&iacute;odo espec&iacute;fico em vez do m&ecirc;s inteiro
+        </label>
+      </div>
+      <div class="controls hidden" id="relAulasPeriodo" style="padding-top:0;">
+        <div class="field"><label for="relAulasDe">De</label><input type="date" id="relAulasDe"></div>
+        <div class="field"><label for="relAulasAte">At&eacute;</label><input type="date" id="relAulasAte"></div>
+      </div>
       <div style="padding:4px 20px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button class="ren-btn" id="btnRelVer">Ver resumo</button>
         <button class="ren-btn sec" id="btnRelTodos">PDF de todos</button>
       </div>
       <div class="assess-resultado" id="relResultado"></div>
+    </div>
+
+    <div class="recep-painel hidden" id="painelFaltas">
+      <div class="controls">
+        <div class="field">
+          <label for="fltMes">M&ecirc;s</label>
+          <select id="fltMes"></select>
+        </div>
+        <div class="field">
+          <label for="fltAno">Ano</label>
+          <select id="fltAno"></select>
+        </div>
+      </div>
+      <div style="padding:0 20px 6px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--verde-escuro);cursor:pointer;">
+          <input type="checkbox" id="fltLivre" style="width:16px;height:16px;">
+          Usar per&iacute;odo espec&iacute;fico em vez do m&ecirc;s inteiro
+        </label>
+      </div>
+      <div class="controls hidden" id="fltPeriodo" style="padding-top:0;">
+        <div class="field"><label for="fltDe">De</label><input type="date" id="fltDe"></div>
+        <div class="field"><label for="fltAte">At&eacute;</label><input type="date" id="fltAte"></div>
+      </div>
+      <div style="padding:4px 20px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="ren-btn" id="btnFltVer">Ver na tela</button>
+        <button class="ren-btn sec" id="btnFltPdf">Gerar PDF</button>
+      </div>
+      <div class="assess-resultado" id="fltResultado"></div>
     </div>
 
     <div class="recep-painel hidden" id="painelValores">
@@ -1881,7 +1969,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.8.1';
+const APP_VERSAO = '2.9.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -2804,7 +2892,8 @@ async function carregarDashboard(){
           </div>
           <span style="font-size:22px;font-weight:700;color:#4A6B8A;">${r.aulasPerdidas || 0}</span>
         </div>
-        <button class="menu-card" id="btnAulasFora" style="margin-top:8px;width:100%;">
+        <div class="dash-sec" style="margin-left:0;margin-right:0;">Calendário</div>
+        <button class="menu-card" id="btnAulasFora" style="margin-top:0;width:100%;">
           <div class="menu-card-icone">R</div>
           <div class="menu-card-txt">
             <span class="menu-card-titulo">Aulas fora do calendário</span>
@@ -2857,7 +2946,8 @@ async function carregarDashboard(){
           </div>` : ''}
         </div>
 
-        <button class="menu-card" id="btnReajustes" style="margin-top:8px;width:100%;">
+        <div class="dash-sec" style="margin-left:0;margin-right:0;">Dinheiro</div>
+        <button class="menu-card" id="btnReajustes" style="margin-top:0;width:100%;">
           <div class="menu-card-icone">$</div>
           <div class="menu-card-txt">
             <span class="menu-card-titulo">Reajuste de mensalidades</span>
@@ -2887,7 +2977,8 @@ async function carregarDashboard(){
         </button>
         <div id="dashCustoProf"></div>
 
-        <button class="menu-card" id="btnAulasDuplas" style="margin-top:8px;width:100%;">
+        <div class="dash-sec" style="margin-left:0;margin-right:0;">Aulas e alunos</div>
+        <button class="menu-card" id="btnAulasDuplas" style="margin-top:0;width:100%;">
           <div class="menu-card-icone">2h</div>
           <div class="menu-card-txt">
             <span class="menu-card-titulo">Aulas duplas / estendidas</span>
@@ -2918,39 +3009,66 @@ async function carregarDashboard(){
         <div id="dashFaltantes"></div>
       </div>`;
 
-    // alunos por nível
-    html += '<div class="assess-secao-titulo">Alunos por nível</div>';
-    if(r.porNivel.length){
+    // ocupação: recolhida, para não ocupar meia tela
+    html += '<div class="dash-sec" style="margin-left:20px;margin-right:20px;">Ocupação</div>';
+    html += '<div style="padding:0 20px;">'
+      + '<button class="menu-card" id="btnDashNivel" style="width:100%;">'
+      + '<div class="menu-card-icone">%</div><div class="menu-card-txt">'
+      + '<span class="menu-card-titulo">Alunos por nível</span>'
+      + '<span class="menu-card-sub">' + (r.porNivel ? r.porNivel.length : 0) + ' níveis com aluno ativo</span>'
+      + '</div><span class="menu-card-seta">&rarr;</span></button>'
+      + '<div id="dashNivelCorpo" class="dash-corpo hidden"></div>'
+      + '<button class="menu-card" id="btnDashVagas" style="width:100%;margin-top:7px;">'
+      + '<div class="menu-card-icone">V</div><div class="menu-card-txt">'
+      + '<span class="menu-card-titulo">Turmas com vaga</span>'
+      + '<span class="menu-card-sub">' + (r.turmasComVaga ? r.turmasComVaga.length : 0)
+      + ' turma(s) com espaço para novo aluno</span>'
+      + '</div><span class="menu-card-seta">&rarr;</span></button>'
+      + '<div id="dashVagasCorpo" class="dash-corpo hidden"></div></div>';
+
+    // conteudo dos dois acordeoes, montado escondido
+    var htmlNivel = '';
+    if(r.porNivel && r.porNivel.length){
       const maxN = Math.max(...r.porNivel.map(n=>n.qtd));
       r.porNivel.forEach(n=>{
-        const larg = maxN > 0 ? Math.round((n.qtd/maxN)*100) : 0;
-        html += `<div class="dash-barra-linha">
-          <span class="dash-barra-nivel">${n.nivel}</span>
-          <div class="dash-barra-fundo"><div class="dash-barra" style="width:${larg}%;"></div></div>
-          <span class="dash-barra-qtd">${n.qtd}</span>
-        </div>`;
+        htmlNivel += `<div class="dash-barra-linha">
+          <span class="dash-barra-rot">${n.nivel}</span>
+          <span class="dash-barra"><span class="dash-barra-fill" style="width:${Math.round((n.qtd/maxN)*100)}%"></span></span>
+          <span class="dash-barra-num">${n.qtd}</span></div>`;
       });
-    } else {
-      html += '<p style="color:#9a9a94;font-size:13px;">Sem dados de alunos.</p>';
+    }else{
+      htmlNivel = '<p style="color:#9a9a94;font-size:13px;">Sem dados de alunos.</p>';
     }
 
-    // turmas com vaga
-    html += `<div class="assess-secao-titulo">Turmas com vaga (${r.turmasComVaga.length})</div>`;
-    if(r.turmasComVaga.length){
-      r.turmasComVaga.forEach(t=>{
-        html += `<div class="skill-linha" style="align-items:flex-start;">
-          <div style="flex:1;">
-            <span class="skill-nome">Turma ${t.turmaId} · ${t.nivel} · ${formatarHorario(t.horario)}</span>
-            <div class="recep-extra">${t.professor}</div>
-          </div>
-          <span class="pill-ok" style="background:var(--salmao);color:#FFFFFF;">${t.vagas} vaga(s)</span>
-        </div>`;
-      });
-    } else {
-      html += '<p style="color:#9a9a94;font-size:13px;">Todas as turmas estão cheias. Hora de abrir turma nova!</p>';
+    var htmlVagas = '';
+    if(r.turmasComVaga && r.turmasComVaga.length){
+      htmlVagas = '<div class="dash-lista-compacta">'
+        + r.turmasComVaga.map(function(t){
+            return '<div class="vaga-chip"><b>' + t.turmaId + '</b> · ' + (t.nivel||'') + '<br>'
+              + '<span style="font-size:11px;color:var(--verde-medio);">' + (t.professor||'')
+              + (t.horario ? ' · ' + t.horario : '') + '</span>'
+              + '<span class="q">' + t.vagas + ' vaga' + (t.vagas>1?'s':'') + '</span></div>';
+          }).join('')
+        + '</div>';
+    }else{
+      htmlVagas = '<div class="msg-ok">Todas as turmas estão cheias. Hora de abrir turma nova.</div>';
     }
 
     $dashResultado.innerHTML = html;
+
+    // acordeoes de ocupacao
+    [['btnDashNivel','dashNivelCorpo',htmlNivel],['btnDashVagas','dashVagasCorpo',htmlVagas]]
+      .forEach(function(par){
+        var b = document.getElementById(par[0]), c = document.getElementById(par[1]);
+        if(!b || !c) return;
+        b.addEventListener('click', function(){
+          var fechado = c.classList.contains('hidden');
+          if(fechado && !c.innerHTML) c.innerHTML = par[2];
+          c.classList.toggle('hidden');
+          var seta = b.querySelector('.menu-card-seta');
+          if(seta) seta.innerHTML = fechado ? '&darr;' : '&rarr;';
+        });
+      });
 
     const $btnDup = document.getElementById('btnAulasDuplas');
     if($btnDup){
@@ -3932,6 +4050,148 @@ async function rodarPing(){
 
 
 
+
+// ===== 2.9.0: FALTAS E ATALHOS DO DONO =====
+
+/** Preenche selects de mes e ano, com o mes fechado anterior por padrao. */
+function _mesAnoPadrao(idMes, idAno){
+  var mes = document.getElementById(idMes), ano = document.getElementById(idAno);
+  if(mes.options.length) return;
+  var hoje = new Date();
+  MESES_NOME.forEach(function(m,i){
+    var o=document.createElement('option'); o.value=i+1; o.textContent=m; mes.appendChild(o);
+  });
+  for(var a=hoje.getFullYear(); a>=hoje.getFullYear()-2; a--){
+    var o2=document.createElement('option'); o2.value=a; o2.textContent=a; ano.appendChild(o2);
+  }
+  var m0=hoje.getMonth();
+  mes.value = m0===0 ? 12 : m0;
+  ano.value = m0===0 ? hoje.getFullYear()-1 : hoje.getFullYear();
+}
+
+/** Período escolhido nos campos, ou null para usar mês/ano. */
+function _periodoDe(idCheck, idDe, idAte){
+  if(!document.getElementById(idCheck).checked) return null;
+  var de = document.getElementById(idDe).value, ate = document.getElementById(idAte).value;
+  if(!de || !ate) return 'incompleto';
+  return { de: _isoParaBr(de), ate: _isoParaBr(ate) };
+}
+
+// ---------- atalhos no menu do dono ----------
+
+document.getElementById('cardFechamento').addEventListener('click', function(){
+  $telaMenu.classList.add('hidden');
+  abrirRecepcao();
+  document.getElementById('recepCardRelatorio').click();
+});
+
+document.getElementById('cardFaltas').addEventListener('click', function(){
+  $telaMenu.classList.add('hidden');
+  abrirRecepcao();
+  document.getElementById('recepCardFaltas').click();
+});
+
+document.getElementById('cardConversaProf').addEventListener('click', function(){
+  $telaMenu.classList.add('hidden');
+  abrirRecepcao();
+  document.getElementById('recepCardConversa').click();
+});
+
+// ---------- periodo livre no relatorio de aulas ----------
+
+document.getElementById('relAulasLivre').addEventListener('change', function(){
+  document.getElementById('relAulasPeriodo').classList.toggle('hidden', !this.checked);
+  if(this.checked && !document.getElementById('relAulasDe').value){
+    var hoje = new Date();
+    var p = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    document.getElementById('relAulasDe').value = p.toISOString().slice(0,10);
+    document.getElementById('relAulasAte').value = _hojeIso();
+  }
+});
+
+// ---------- faltas ----------
+
+document.getElementById('recepCardFaltas').addEventListener('click', function(){
+  abrirPainelRecep('painelFaltas','Faltas e frequência');
+  _mesAnoPadrao('fltMes','fltAno');
+  document.getElementById('fltResultado').innerHTML =
+    '<div class="msg-aviso">Escolha o período e toque em <b>Ver na tela</b> ou <b>Gerar PDF</b>.<br>'
+    + 'O relatório mostra a frequência de cada aluno, destaca quem está abaixo de 75% '
+    + 'e lista as datas em que cada um faltou. Remarcação não conta como falta.</div>';
+});
+
+document.getElementById('fltLivre').addEventListener('change', function(){
+  document.getElementById('fltPeriodo').classList.toggle('hidden', !this.checked);
+  if(this.checked && !document.getElementById('fltDe').value){
+    var hoje = new Date();
+    document.getElementById('fltDe').value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
+    document.getElementById('fltAte').value = _hojeIso();
+  }
+});
+
+function _corpoFaltas(){
+  var p = _periodoDe('fltLivre','fltDe','fltAte');
+  if(p === 'incompleto'){ mostrarToast('Preencha as duas datas'); return null; }
+  return p ? p : { mes: Number(document.getElementById('fltMes').value),
+                   ano: Number(document.getElementById('fltAno').value) };
+}
+
+document.getElementById('btnFltVer').addEventListener('click', async function(){
+  var corpo = _corpoFaltas(); if(!corpo) return;
+  var box = document.getElementById('fltResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Apurando...</p>';
+
+  var r = await chamarAPI(Object.assign({ acao:'relatorioFaltas' }, corpo));
+  if(!r.sucesso){
+    box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>' + detalheErro(r);
+    return;
+  }
+  var s = r.resumo;
+  var html = '<div class="assess-secao-titulo">' + r.periodo + '</div>'
+    + '<div class="ren-resumo">'
+    + '<div><span class="n">' + s.frequenciaGeral + '%</span><span class="r">frequência</span></div>'
+    + '<div class="' + (s.faltas ? 'alerta' : '') + '"><span class="n">' + s.faltas + '</span><span class="r">faltas</span></div>'
+    + '<div class="' + (s.risco ? 'alerta' : '') + '"><span class="n">' + s.risco + '</span><span class="r">em risco</span></div>'
+    + '</div>';
+
+  if(!r.comFalta.length){
+    html += '<div class="msg-ok">Nenhuma falta registrada no período.</div>';
+  }else{
+    html += r.comFalta.map(function(x){
+      var cls = x.risco === 'alto' ? 'critico' : (x.risco === 'medio' ? 'atencao' : 'planejado');
+      return '<div class="ren-item ' + cls + '">'
+        + '<div class="ren-topo"><span class="ren-nome">' + x.aluno + '</span>'
+        + '<span class="ren-prazo ' + cls + '">' + x.frequencia + '%</span></div>'
+        + '<div class="ren-meta">' + (x.turmas.join(', ') || 'sem turma') + '<br>'
+        + x.faltas + ' falta(s) em ' + x.aulas + ' aula(s)'
+        + (x.remarcacoes ? ' · ' + x.remarcacoes + ' remarcação(ões)' : '')
+        + (x.datasFalta.length ? '<br>Faltou em: ' + x.datasFalta.join(' · ') : '')
+        + '</div></div>';
+    }).join('');
+  }
+  box.innerHTML = html;
+});
+
+document.getElementById('btnFltPdf').addEventListener('click', async function(){
+  var corpo = _corpoFaltas(); if(!corpo) return;
+  var btn = this; btn.disabled = true; btn.textContent = 'Gerando...';
+
+  var r = await chamarAPI(Object.assign({ acao:'pdfRelatorioFaltas' }, corpo));
+  btn.disabled = false; btn.textContent = 'Gerar PDF';
+
+  var box = document.getElementById('fltResultado');
+  if(!r.sucesso){
+    box.insertAdjacentHTML('afterbegin', '<div class="msg-bloqueio">' + (r.erro||'Erro') + '</div>' + detalheErro(r));
+    return;
+  }
+  box.insertAdjacentHTML('afterbegin',
+    '<div class="msg-ok"><b>' + r.nome + '</b><br>Salvo em ' + (r.pasta || 'Drive')
+    + (r.substituido ? ' · versão anterior foi para a lixeira' : '')
+    + '<div class="doc-acoes"><a class="doc-link" target="_blank" href="' + r.url + '">Abrir PDF</a></div></div>');
+  mostrarToast('PDF gerado');
+  window.open(r.url, '_blank');
+});
+
 // ===== 2.7.0: RELATORIO MENSAL =====
 
 var MESES_NOME = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -3985,7 +4245,11 @@ async function verResumoMensal(){
   var totalGeral = 0, totalFaltando = 0;
 
   for(var i = 0; i < profs.length; i++){
-    var r = await chamarAPI({ acao:'relatorioMensal', professor: profs[i], mes: mes, ano: ano });
+    var pLivre = _periodoDe('relAulasLivre','relAulasDe','relAulasAte');
+    if(pLivre === 'incompleto'){ mostrarToast('Preencha as duas datas'); return; }
+    var r = await chamarAPI(pLivre
+      ? { acao:'relatorioMensal', professor: profs[i], de: pLivre.de, ate: pLivre.ate }
+      : { acao:'relatorioMensal', professor: profs[i], mes: mes, ano: ano });
     if(!r.sucesso) continue;
     var s = r.resumo;
     if(!s.lancadas && !s.faltando) continue;
@@ -4023,11 +4287,13 @@ async function verResumoMensal(){
 
 async function gerarPdfProfessor(nome){
   mostrarToast('Gerando o PDF de ' + nome + '...');
-  var r = await chamarAPI({
-    acao:'pdfRelatorioMensal', professor: nome,
-    mes: Number(document.getElementById('relAulasMes').value),
-    ano: Number(document.getElementById('relAulasAno').value)
-  });
+  var pLivre = _periodoDe('relAulasLivre','relAulasDe','relAulasAte');
+  if(pLivre === 'incompleto'){ mostrarToast('Preencha as duas datas'); return; }
+  var r = await chamarAPI(pLivre
+    ? { acao:'pdfRelatorioMensal', professor: nome, de: pLivre.de, ate: pLivre.ate }
+    : { acao:'pdfRelatorioMensal', professor: nome,
+        mes: Number(document.getElementById('relAulasMes').value),
+        ano: Number(document.getElementById('relAulasAno').value) });
   if(!r.sucesso){
     mostrarToast(r.erro || 'Erro ao gerar');
     document.getElementById('relResultado').insertAdjacentHTML('afterbegin',
@@ -5205,7 +5471,10 @@ function aplicarPermissoes(){
     ['cardMateriais', 'materiais'],
     ['cardDashboard', 'dashboard'],
     ['cardFinanceiro', 'financeiro'],
-    ['cardRecepcao', 'recepcao']
+    ['cardRecepcao', 'recepcao'],
+    ['cardConversaProf', 'presenca'],
+    ['cardFechamento', 'financeiro'],
+    ['cardFaltas', 'dashboard']
   ];
   mapa.forEach(function(par){
     var el = document.getElementById(par[0]);
@@ -5224,7 +5493,7 @@ function aplicarPermissoes(){
     });
   }, 0);
   ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
-   'recepCardRelatorio'].forEach(function(id){
+   'recepCardRelatorio','recepCardFaltas'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
