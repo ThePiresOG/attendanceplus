@@ -590,6 +590,37 @@
     .deco-risco{ margin:20px auto; width:44px; }
     .deco-sub{ font-size:10.5px; letter-spacing:.22em; }
   }
+  /* ===== 3.3.0: BUSCA E CONSULTA DE TURMA ===== */
+  .busca-linha{ display:flex; gap:10px; align-items:flex-end; padding:14px 20px 4px; }
+  .busca-linha .campo{ flex:1; }
+  .busca-linha .campo label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:#9a9a94; font-weight:600; display:block; margin-bottom:5px; }
+  .busca-linha input{ width:100%; box-sizing:border-box; font-family:'Poppins',sans-serif;
+    font-size:15px; padding:12px 13px; border-radius:12px; border:1px solid var(--linha);
+    background:var(--perola); color:var(--carvao); }
+  .busca-btn{ font-family:'Poppins',sans-serif; font-size:14px; font-weight:600; color:#fff;
+    background:var(--verde-escuro); border:none; border-radius:12px; padding:13px 20px;
+    cursor:pointer; white-space:nowrap; }
+  .busca-btn:disabled{ opacity:.6; }
+
+  .ct-card{ background:var(--branco); border:1px solid var(--linha); border-left:3px solid var(--verde-escuro);
+    border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .ct-topo{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
+  .ct-cod{ font-size:16px; font-weight:700; color:var(--carvao); }
+  .ct-grade{ display:grid; grid-template-columns:1fr 1fr; gap:6px 16px; margin-bottom:10px; }
+  .ct-item{ font-size:12.5px; color:var(--verde-escuro); line-height:1.5; }
+  .ct-item b{ color:var(--carvao); font-weight:600; }
+  .ct-rot{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#9a9a94;
+    display:block; font-weight:600; }
+  .ct-alunos{ border-top:1px solid var(--linha); padding-top:10px; }
+  .ct-aluno{ font-size:13px; color:var(--carvao); padding:4px 0; display:flex; gap:8px; align-items:center; }
+  .ct-aluno .num{ font-size:10px; color:#9a9a94; width:16px; }
+  .ct-vaga{ font-size:12.5px; color:#9a9a94; padding:4px 0 4px 24px; font-style:italic; }
+  @media (min-width:820px){
+    .ct-grade{ grid-template-columns:1fr 1fr 1fr; }
+    #ctResultado{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    #ctResultado > .assess-aviso, #ctResultado > .msg-aviso{ grid-column:1 / -1; }
+  }
 </style>
 </head>
 <body>
@@ -1570,6 +1601,25 @@
           </div>
           <span class="menu-card-seta">&rarr;</span>
         </button>
+        <button class="menu-card" id="subcardConsultarTurma">
+          <div class="menu-card-icone">&#128269;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Consultar turma</span>
+            <span class="menu-card-sub">Dias, hor&aacute;rio, alunos, professor e livro</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="consultaTurma">
+        <div class="busca-linha">
+          <div class="campo">
+            <label for="ctBusca">Buscar turma</label>
+            <input type="text" id="ctBusca" autocomplete="off"
+                   placeholder="C&oacute;digo, professor, aluno, n&iacute;vel, livro ou dia">
+          </div>
+        </div>
+        <div class="assess-resultado" id="ctResultado"></div>
       </div>
 
       <div class="hidden" id="formTurma">
@@ -1678,6 +1728,14 @@
     </div>
 
     <div class="recep-painel hidden" id="painelDesligar">
+      <div class="busca-linha">
+        <div class="campo">
+          <label for="deslBusca">Encerrar as aulas de um aluno</label>
+          <input type="text" id="deslBusca" placeholder="Digite o nome do aluno" autocomplete="off">
+        </div>
+        <button class="busca-btn" id="btnDeslBuscar">Buscar</button>
+      </div>
+      <div class="assess-resultado" id="deslBuscaResultado"></div>
       <div class="assess-resultado" id="deslResultado"></div>
     </div>
 
@@ -2212,7 +2270,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.2.0';
+const APP_VERSAO = '3.3.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -2779,6 +2837,7 @@ $btnEntrar.addEventListener('click', async ()=>{
     }else{
       TURMAS = [];
     }
+    _navLimpar();
     $telaLogin.classList.add('hidden');
     $menuProfNome.textContent = nome;
     const $mf = document.getElementById('menuFrase');
@@ -2814,6 +2873,7 @@ $btnSair.addEventListener('click', ()=>{
 
 // ===== NAVEGAÇÃO ENTRE TELAS =====
 function irParaMenu(){
+  if(typeof navVoltar === 'function' && navVoltar()) return;
   $telaApp.classList.add('hidden');
   $telaNotas.classList.add('hidden');
   $telaMenu.classList.remove('hidden');
@@ -2836,6 +2896,7 @@ document.getElementById('cardBoletim').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnSairMenu').addEventListener('click', ()=>{
+  _navLimpar();
   professorLogado = null;
   $loginSenha.value = '';
   $telaMenu.classList.add('hidden');
@@ -2991,9 +3052,10 @@ document.getElementById('cardBoletim').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnVoltarAssess').addEventListener('click', ()=>{
+  $assessResultado.innerHTML = '';
+  if(typeof navVoltar === 'function' && navVoltar()) return;
   $telaAssessment.classList.add('hidden');
   $telaMenu.classList.remove('hidden');
-  $assessResultado.innerHTML = '';
 });
 
 function popularTurmasAssess(){
@@ -3121,6 +3183,7 @@ document.getElementById('cardDashboard').addEventListener('click', ()=>{
   carregarDashboard();
 });
 document.getElementById('btnVoltarDash').addEventListener('click', ()=>{
+  if(typeof navVoltar === 'function' && navVoltar()) return;
   $telaDashboard.classList.add('hidden');
   $telaMenu.classList.remove('hidden');
 });
@@ -3629,6 +3692,7 @@ document.getElementById('cardFinanceiro').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnVoltarFin').addEventListener('click', ()=>{
+  if(typeof navVoltar === 'function' && navVoltar()) return;
   $telaFinanceiro.classList.add('hidden');
   $telaMenu.classList.remove('hidden');
 });
@@ -3720,6 +3784,7 @@ function mostrarCardsRecepcao(){
     return;
   }
   aplicarPermissoes();
+  if(typeof _navPodarRecepcao === 'function') _navPodarRecepcao();
   document.getElementById('recepCards').classList.remove('hidden');
   document.getElementById('recepAbasPresenca').classList.add('hidden');
   document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
@@ -4318,6 +4383,7 @@ async function rodarPing(){
 // ===== 3.1.0: HISTORICO DE VERSOES E SENHA =====
 
 function _voltarAoMenu(){
+  if(typeof navVoltar === 'function' && navVoltar()) return;
   ['telaHistorico','telaSenha'].forEach(function(id){
     var t = document.getElementById(id); if(t) t.classList.add('hidden');
   });
@@ -4479,6 +4545,316 @@ function pintarForcaSenha(){
   if(inp) inp.addEventListener('input', pintarForcaSenha);
   // ja sorteia o lettering da lateral antes mesmo do login
   if(typeof sortearFraseLateral === 'function') sortearFraseLateral();
+})();
+
+
+
+/* ============================================================================
+ * 3.3.0 - NAVEGACAO, BUSCA DE ALUNO E CONSULTA DE TURMA
+ * ========================================================================== */
+
+/* ---------- pilha de navegacao: Voltar leva para a tela anterior ---------- */
+
+// blocos que ligam e desligam durante a navegacao. Campo solto nao entra aqui.
+var _NAV_BLOCOS = [
+  'telaMenu','telaApp','telaNotas','telaAssessment','telaMateriais','telaFinanceiro',
+  'telaDashboard','telaRecepcao','telaHistorico','telaSenha',
+  'recepCards','recepAbasPresenca','painelHoje','painelBuscar','painelRelatorio',
+  'painelPanorama','painelContratos','painelAfastamento','painelBaixa','painelTurmas',
+  'painelRenovacoes','painelDesligar','painelConversa','painelCalendario','painelConexao',
+  'painelUsuarios','painelRelAulas','painelFaltas','painelValores','painelNovidades',
+  'contratoSubcards','formContrato','buscaContrato',
+  'afastSubcards','formAfastamento','listaAfastamento',
+  'baixaSubcards','formBaixa','listaBaixa',
+  'turmaSubcards','formTurma','listaTurmas','consultaTurma',
+  'matSubcards','formCalendario','formUsuario'
+];
+
+var _NAV_HIST = [];
+
+/** Fotografa o que esta na tela agora. */
+function _navFoto(){
+  var abertos = [];
+  _NAV_BLOCOS.forEach(function(id){
+    var e = document.getElementById(id);
+    if(e && !e.classList.contains('hidden')) abertos.push(id);
+  });
+  if(!abertos.length) return null;
+  var sub = document.getElementById('recepcaoSub');
+  var btn = document.getElementById('btnSairRecepcao');
+  return {
+    abertos: abertos,
+    sub: sub ? sub.textContent : '',
+    rotulo: btn ? btn.textContent : ''
+  };
+}
+
+/** Volta a tela para o estado fotografado. */
+function _navAplicar(f){
+  _NAV_BLOCOS.forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', f.abertos.indexOf(id) < 0);
+  });
+  var sub = document.getElementById('recepcaoSub');
+  if(sub && f.sub) sub.textContent = f.sub;
+  var btn = document.getElementById('btnSairRecepcao');
+  if(btn && f.rotulo) btn.textContent = f.rotulo;
+}
+
+/** Guarda o passo atual. Chamado antes de qualquer card abrir outra tela. */
+function _navGuardar(){
+  var f = _navFoto();
+  if(!f) return;
+  _NAV_HIST.push(f);
+  if(_NAV_HIST.length > 30) _NAV_HIST.shift();
+}
+
+/** Desfaz um passo. Devolve false quando nao ha para onde voltar. */
+function navVoltar(){
+  var f = _NAV_HIST.pop();
+  if(!f) return false;
+  _navAplicar(f);
+  return true;
+}
+
+function _navLimpar(){ _NAV_HIST.length = 0; }
+
+/**
+ * Ao voltar para os cards da recepcao, apaga so os passos dados DENTRO dela.
+ * O passo que trouxe a pessoa ate aqui (o menu, por exemplo) continua guardado,
+ * senao o Voltar dos cards da recepcao perderia o caminho de casa.
+ */
+function _navPodarRecepcao(){
+  _NAV_HIST = _NAV_HIST.filter(function(f){
+    return f.abertos.indexOf('telaRecepcao') < 0;
+  });
+}
+
+// todo card do app tem a classe menu-card, entao um ouvinte so cobre a navegacao inteira
+document.addEventListener('click', function(ev){
+  var alvo = ev.target;
+  var card = (alvo && alvo.closest) ? alvo.closest('.menu-card') : null;
+  if(!card || card.disabled) return;
+  _navGuardar();
+}, true);
+
+
+/* ---------- busca de aluno para encerrar as aulas ---------- */
+
+var MOTIVOS_ENCERRAR = [
+  'Aulas antecipadas concluídas',
+  'Trancou o curso',
+  'Mudou de cidade',
+  'Transferido para outra turma',
+  'Desistiu',
+  'Outro'
+];
+
+async function buscarAlunoParaEncerrar(){
+  var campo = document.getElementById('deslBusca');
+  var box = document.getElementById('deslBuscaResultado');
+  var btn = document.getElementById('btnDeslBuscar');
+  var termo = String(campo.value || '').trim();
+
+  if(termo.length < 2){
+    box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras do nome.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Procurando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'buscarAlunoAtivo', termo: termo });
+    btn.disabled = false;
+    if(!r.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + (r.erro || 'Erro na busca.') + '</div>';
+      return;
+    }
+    if(!r.total){
+      box.innerHTML = '<div class="assess-aviso">Nenhum aluno com &ldquo;'
+        + termo + '&rdquo; nas turmas.</div>';
+      return;
+    }
+
+    window._BUSCA_ALUNO = r.alunos;
+    var hojeIso = _hojeIso();
+
+    box.innerHTML = '<div class="msg-aviso">Encerrar as aulas tira o aluno da lista do professor '
+      + 'a partir da data informada. <b>O contrato continua valendo</b> e a mensalidade segue '
+      + 'contando no Painel do Dono at&eacute; a data final dele.</div>'
+      + r.alunos.map(function(a, i){
+          var acoes = a.podeEncerrar
+            ? ('<div class="desl-acoes">'
+               + '<input type="date" class="desl-data" id="encData' + i + '" value="' + hojeIso + '">'
+               + '<select class="desl-data" id="encMotivo' + i + '" style="min-width:190px;">'
+               + MOTIVOS_ENCERRAR.map(function(m){
+                   return '<option value="' + m + '">' + m + '</option>'; }).join('')
+               + '</select>'
+               + '<button class="ren-btn" onclick="confirmarEncerramento(' + i + ')">Encerrar aulas</button>'
+               + '</div>')
+            : '<div class="doc-meta" style="color:#3E8E5A;">Nada a fazer aqui.</div>';
+          return '<div class="desl-item" id="enc' + i + '">'
+            + '<div class="doc-topo"><span class="doc-nome">' + a.aluno + '</span>'
+            + '<span class="badge">' + a.turmaId + '</span></div>'
+            + '<div class="doc-meta">' + a.situacao + '<br>' + a.contrato
+            + '<br>Professor: ' + (a.professor || '—')
+            + ' &middot; ' + (a.dias || '—') + ' &middot; ' + (a.horario || '—') + '</div>'
+            + acoes + '</div>';
+        }).join('');
+  }catch(e){
+    btn.disabled = false;
+    box.innerHTML = '<div class="assess-aviso">Erro de conex&atilde;o.</div>';
+  }
+}
+
+async function confirmarEncerramento(i){
+  var a = window._BUSCA_ALUNO[i];
+  var campoData = document.getElementById('encData' + i);
+  var campoMot = document.getElementById('encMotivo' + i);
+  var dataBr = campoData && campoData.value ? _isoParaBr(campoData.value) : '';
+  var motivo = campoMot ? campoMot.value : 'Saída';
+
+  if(!dataBr){ mostrarToast('Informe a data'); return; }
+  if(motivo === 'Outro'){
+    var livre = prompt('Qual o motivo?', '');
+    if(livre === null) return;
+    motivo = String(livre).trim() || 'Saída';
+  }
+
+  if(!confirm(a.aluno + ' deixa de aparecer na turma ' + a.turmaId + ' a partir de '
+    + dataBr + '.\n\nMotivo: ' + motivo
+    + '\n\nO contrato NAO e cancelado e o historico de aulas continua inteiro. Confirma?')) return;
+
+  var r = await chamarAPI({
+    acao:'registrarSaida', aluno: a.aluno, data: dataBr, motivo: motivo,
+    numeroContrato: a.numeroContrato || '',
+    por: professorLogado || 'Recepção'
+  });
+
+  if(r.sucesso){
+    mostrarToast('Aulas encerradas');
+    var el = document.getElementById('enc' + i);
+    if(el){
+      el.style.opacity = '.5';
+      el.querySelector('.desl-acoes').innerHTML =
+        '<span style="font-size:12.5px;color:#3E8E5A;font-weight:600;">Encerrado em ' + dataBr + '</span>';
+    }
+  }else{
+    mostrarToast(r.erro || 'Nao consegui encerrar');
+  }
+}
+
+(function(){
+  var b = document.getElementById('btnDeslBuscar');
+  if(b) b.addEventListener('click', buscarAlunoParaEncerrar);
+  var c = document.getElementById('deslBusca');
+  if(c) c.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') buscarAlunoParaEncerrar();
+  });
+})();
+
+
+/* ---------- consultar turma ---------- */
+
+var _TURMAS_CONSULTA = null;
+
+function mostrarConsultaTurma(){
+  document.getElementById('turmaSubcards').classList.add('hidden');
+  document.getElementById('formTurma').classList.add('hidden');
+  document.getElementById('listaTurmas').classList.add('hidden');
+  document.getElementById('consultaTurma').classList.remove('hidden');
+  document.getElementById('recepcaoSub').textContent = 'Consultar turma';
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
+  document.getElementById('ctBusca').value = '';
+  document.getElementById('ctResultado').innerHTML =
+    '<div class="assess-aviso">Digite o c&oacute;digo da turma, o nome do professor, '
+    + 'o nome de um aluno, o n&iacute;vel, o livro ou o dia da semana.</div>';
+  carregarTurmasConsulta();
+  setTimeout(function(){ document.getElementById('ctBusca').focus(); }, 120);
+}
+
+async function carregarTurmasConsulta(forcar){
+  if(_TURMAS_CONSULTA && !forcar) return _TURMAS_CONSULTA;
+  try{
+    var r = await chamarAPI({ acao:'listarTurmas' });
+    if(r.sucesso) _TURMAS_CONSULTA = r.turmas || [];
+  }catch(e){ _TURMAS_CONSULTA = null; }
+  return _TURMAS_CONSULTA;
+}
+
+function _semAcentoCli(t){
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+async function filtrarTurmasConsulta(){
+  var termo = _semAcentoCli(document.getElementById('ctBusca').value.trim());
+  var box = document.getElementById('ctResultado');
+
+  if(termo.length < 1){
+    box.innerHTML = '<div class="assess-aviso">Digite o c&oacute;digo da turma, o nome do professor, '
+      + 'o nome de um aluno, o n&iacute;vel, o livro ou o dia da semana.</div>';
+    return;
+  }
+
+  var lista = await carregarTurmasConsulta();
+  if(!lista){ box.innerHTML = '<div class="assess-aviso">Erro ao carregar as turmas.</div>'; return; }
+
+  var achadas = lista.filter(function(t){
+    var alvo = _semAcentoCli([t.turmaId, t.professor, t.nivel, t.livro, t.dias,
+                              t.horario, t.modalidade, (t.alunos || []).join(' ')].join(' '));
+    return alvo.indexOf(termo) >= 0;
+  });
+
+  if(!achadas.length){
+    box.innerHTML = '<div class="assess-aviso">Nenhuma turma encontrada para &ldquo;'
+      + document.getElementById('ctBusca').value.trim() + '&rdquo;.</div>';
+    return;
+  }
+
+  box.innerHTML = achadas.map(function(t){
+    var alunos = (t.alunos || []).map(function(n, i){
+      return '<div class="ct-aluno"><span class="num">' + (i+1) + '</span>' + n + '</div>';
+    }).join('');
+    var vagas = '';
+    if(t.vagas > 0){
+      vagas = '<div class="ct-vaga">' + t.vagas + ' vaga'
+        + (t.vagas > 1 ? 's' : '') + ' em aberto</div>';
+    }
+    var extras = [];
+    if(t.futuros) extras.push(t.futuros + ' aluno(s) com entrada marcada');
+    if(t.afastados) extras.push(t.afastados + ' afastado(s)');
+
+    return '<div class="ct-card">'
+      + '<div class="ct-topo"><span class="ct-cod">Turma ' + t.turmaId + '</span>'
+      + '<span class="badge">' + (t.nivel || '—') + ' &middot; ' + t.tipo + '</span></div>'
+      + '<div class="ct-grade">'
+      + '<div class="ct-item"><span class="ct-rot">Dias</span><b>' + (t.dias || '—') + '</b></div>'
+      + '<div class="ct-item"><span class="ct-rot">Hor&aacute;rio</span><b>' + (t.horario || '—') + '</b></div>'
+      + '<div class="ct-item"><span class="ct-rot">Dura&ccedil;&atilde;o</span><b>' + t.duracao + 'h</b></div>'
+      + '<div class="ct-item"><span class="ct-rot">Professor</span><b>' + (t.professor || '—') + '</b></div>'
+      + '<div class="ct-item"><span class="ct-rot">Livro</span><b>' + (t.livro || '—') + '</b></div>'
+      + '<div class="ct-item"><span class="ct-rot">Modalidade</span><b>' + (t.modalidade || '—') + '</b></div>'
+      + '</div>'
+      + '<div class="ct-alunos"><span class="ct-rot" style="margin-bottom:6px;">Alunos ('
+      + t.totalAlunos + ' de ' + t.capacidade + ')</span>'
+      + (alunos || '<div class="ct-vaga">Turma sem aluno ativo</div>')
+      + vagas
+      + (extras.length ? '<div class="ct-vaga">' + extras.join(' &middot; ') + '</div>' : '')
+      + '</div></div>';
+  }).join('');
+}
+
+(function(){
+  var card = document.getElementById('subcardConsultarTurma');
+  if(card) card.addEventListener('click', mostrarConsultaTurma);
+  var busca = document.getElementById('ctBusca');
+  if(busca){
+    var timer = null;
+    busca.addEventListener('input', function(){
+      clearTimeout(timer);
+      timer = setTimeout(filtrarTurmasConsulta, 220);
+    });
+  }
 })();
 
 document.getElementById('btnTrocarSenha').addEventListener('click', async function(){
@@ -6533,6 +6909,8 @@ function gerarPDFCobranca(rel){
 }
 
 document.getElementById('btnSairRecepcao').addEventListener('click', ()=>{
+  // com historico, volta exatamente de onde veio
+  if(typeof navVoltar === 'function' && navVoltar()) return;
   // quem não tem acesso à recepção nunca fica nos cards dela
   if(PERM && !PERM.recepcao){
     $telaRecepcao.classList.add('hidden');
@@ -6766,7 +7144,8 @@ document.getElementById('subcardExtras').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnVoltarMat').addEventListener('click', ()=>{
-  // se está num subpainel, volta pros subcards; se já nos subcards, volta ao menu
+  if(typeof navVoltar === 'function' && navVoltar()) return;
+  // sem historico: se está num subpainel volta pros subcards, senão volta ao menu
   const nosSubcards = !document.getElementById('matSubcards').classList.contains('hidden');
   if(nosSubcards){
     $telaMateriais.classList.add('hidden');
