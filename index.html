@@ -1748,9 +1748,25 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzfE-xbQXShs1ClnjyazisN
 let TURMAS = [];
 
 var ULTIMO_ERRO_API = null;
+var TOKEN_SESSAO = null;
+
+/** Sessão expirada: derruba para o login em vez de deixar a tela quebrada. */
+function _sessaoExpirou(msg){
+  TOKEN_SESSAO = null;
+  professorLogado = null;
+  PERM = null;
+  try{
+    document.querySelectorAll('#telaMenu, #telaRecepcao, #telaApp, #telaNotas, #telaAssessment, #telaFinanceiro, #telaDashboard, #telaMateriais')
+      .forEach(function(t){ t.classList.add('hidden'); });
+    $telaLogin.classList.remove('hidden');
+    $loginErro.textContent = msg || 'Sua sessão expirou. Entre novamente.';
+  }catch(e){}
+}
 
 async function chamarAPI(payload){
   var acao = (payload && payload.acao) || 'sem-acao';
+  // toda chamada leva o token do login; o servidor confere a permissão
+  if(TOKEN_SESSAO && payload && !payload.token) payload.token = TOKEN_SESSAO;
   var tentativas = [];
 
   // ---- 1a tentativa: POST ----
@@ -1761,7 +1777,7 @@ async function chamarAPI(payload){
       body: JSON.stringify(payload)
     });
     var txt = await res.text();
-    try{ return JSON.parse(txt); }
+    try{ return _checarAcesso(JSON.parse(txt)); }
     catch(e){
       tentativas.push('POST respondeu HTTP ' + res.status + ' mas não era JSON: ' + txt.slice(0,120));
     }
@@ -1777,7 +1793,7 @@ async function chamarAPI(payload){
       var res2 = await fetch(url, { method: 'GET' });
       var txt2 = await res2.text();
       try{
-        var dados = JSON.parse(txt2);
+        var dados = _checarAcesso(JSON.parse(txt2));
         console.info('[AttendancePlus] "' + acao + '" foi pelo caminho alternativo (GET).');
         return dados;
       }catch(e){
@@ -1794,7 +1810,7 @@ async function chamarAPI(payload){
   // Quando extensao, antivirus ou proxy bloqueia o fetch, isso ainda passa,
   // porque o navegador trata como carregar um script comum.
   try{
-    var dados3 = await chamarJSONP(payload);
+    var dados3 = _checarAcesso(await chamarJSONP(payload));
     console.info('[AttendancePlus] "' + acao + '" foi por JSONP.');
     return dados3;
   }catch(e){
@@ -1814,6 +1830,15 @@ async function chamarAPI(payload){
       ? 'Você está sem internet. Reconecte e tente de novo.'
       : 'As duas formas de falar com o servidor falharam.'
   };
+}
+
+/** Recusa do servidor por falta de permissão ou sessão vencida. */
+function _checarAcesso(r){
+  if(r && r.semAcesso){
+    if(r.precisaLogin) _sessaoExpirou(r.erro);
+    else mostrarToast(r.erro || 'Sem permissão para esta função');
+  }
+  return r;
 }
 
 /** Transporte alternativo por tag <script>. Nao passa por CORS nem por fetch. */
@@ -1976,7 +2001,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '2.9.1';
+const APP_VERSAO = '3.0.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -2506,6 +2531,7 @@ $btnEntrar.addEventListener('click', async ()=>{
     }
     professorLogado = nome;
     WHATSAPP_PROF = login.whatsapp || {};
+    TOKEN_SESSAO = login.token || null;
     PERM = login.permissoes || null;
     PERFIL = login.perfil || 'PROFESSOR';
     // sem permissoes vindas do servidor: mantem o comportamento anterior a 2.2.0
@@ -3465,6 +3491,13 @@ document.querySelectorAll('.recep-aba').forEach(aba=>{
 
 // ===== NAVEGAÇÃO EM 2 CARDS DA RECEPÇÃO =====
 function mostrarCardsRecepcao(){
+  // quem não é da recepção não fica nesta tela: volta para o próprio menu
+  if(PERM && !PERM.recepcao){
+    $telaRecepcao.classList.add('hidden');
+    $telaMenu.classList.remove('hidden');
+    return;
+  }
+  aplicarPermissoes();
   document.getElementById('recepCards').classList.remove('hidden');
   document.getElementById('recepAbasPresenca').classList.add('hidden');
   document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
@@ -4088,20 +4121,30 @@ function _periodoDe(idCheck, idDe, idAte){
 // ---------- atalhos no menu do dono ----------
 
 document.getElementById('cardFechamento').addEventListener('click', function(){
+  if(!podeVer('financeiro')){ mostrarToast('Sem acesso'); return; }
   $telaMenu.classList.add('hidden');
   abrirRecepcao();
   document.getElementById('recepCardRelatorio').click();
 });
 
 document.getElementById('cardFaltas').addEventListener('click', function(){
+  if(!(podeVer('dashboard') || podeVer('recepcao'))){ mostrarToast('Sem acesso'); return; }
   $telaMenu.classList.add('hidden');
   abrirRecepcao();
   document.getElementById('recepCardFaltas').click();
 });
 
 document.getElementById('cardConversaProf').addEventListener('click', function(){
+  // vai direto ao painel de conversação, sem exibir a tela da recepção
   $telaMenu.classList.add('hidden');
-  abrirRecepcao();
+  $telaRecepcao.classList.remove('hidden');
+  $dataRecepcao.value = hojeISO();
+  document.getElementById('recepCards').classList.add('hidden');
+  document.getElementById('recepAbasPresenca').classList.add('hidden');
+  document.querySelectorAll('.recep-painel').forEach(function(p){ p.classList.add('hidden'); });
+  document.getElementById('painelConversa').classList.remove('hidden');
+  $recepcaoSub.textContent = 'Conversação';
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
   document.getElementById('recepCardConversa').click();
 });
 
@@ -5482,12 +5525,24 @@ function aplicarPermissoes(){
     ['cardRecepcao', 'recepcao'],
     ['cardConversaProf', 'presenca'],
     ['cardFechamento', 'financeiro'],
-    ['cardFaltas', 'dashboard']
+    ['cardFaltas', 'dashboard'],
   ];
   mapa.forEach(function(par){
     var el = document.getElementById(par[0]);
     if(el) el.classList.toggle('hidden', !podeVer(par[1]));
   });
+  // TODOS os cards da recepção passam a depender de permissão, não só os de gestão
+  var soRecepcao = ['recepCardContratos','recepCardRenovacoes','recepCardTurmas',
+    'recepCardDesligar','recepCardPresenca','recepCardCalendario','recepCardPanorama',
+    'recepCardAfastamento','recepCardBaixa','recepCardFaltas'];
+  soRecepcao.forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.classList.toggle('hidden', !podeVer('recepcao'));
+  });
+  // conversação é a única que o professor alcança
+  var elConv = document.getElementById('recepCardConversa');
+  if(elConv) elConv.classList.toggle('hidden', !(podeVer('recepcao') || podeVer('presenca')));
+
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
   // titulo de secao sem nenhum card visivel some junto
   setTimeout(function(){
@@ -5501,7 +5556,7 @@ function aplicarPermissoes(){
     });
   }, 0);
   ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
-   'recepCardRelatorio','recepCardFaltas'].forEach(function(id){
+   'recepCardRelatorio'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
@@ -6027,6 +6082,13 @@ function gerarPDFCobranca(rel){
 }
 
 document.getElementById('btnSairRecepcao').addEventListener('click', ()=>{
+  // quem não tem acesso à recepção nunca fica nos cards dela
+  if(PERM && !PERM.recepcao){
+    $telaRecepcao.classList.add('hidden');
+    $telaMenu.classList.remove('hidden');
+    document.getElementById('btnSairRecepcao').textContent = 'Sair';
+    return;
+  }
   const nosCards = !document.getElementById('recepCards').classList.contains('hidden');
   if(!nosCards){
     // está dentro de Contratos ou Presença: volta pros 2 cards
