@@ -621,6 +621,41 @@
     #ctResultado{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     #ctResultado > .assess-aviso, #ctResultado > .msg-aviso{ grid-column:1 / -1; }
   }
+  /* ===== 3.4.0: LICOES DO LIVRO ===== */
+  .lic-cab{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .lic-prog{ font-size:11px; font-weight:600; color:var(--verde-escuro);
+    background:var(--perola); border-radius:20px; padding:2px 9px; text-transform:none;
+    letter-spacing:0; white-space:nowrap; }
+  .lic-lista{ max-height:230px; overflow-y:auto; border:1px solid var(--linha);
+    border-radius:12px; background:var(--branco); padding:4px; }
+  .lic-item{ display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:9px;
+    cursor:pointer; font-size:13px; color:var(--carvao); }
+  .lic-item:hover{ background:var(--perola); }
+  .lic-item input{ width:17px; height:17px; accent-color:var(--verde-escuro); flex:none; margin:0; }
+  .lic-cod{ font-size:10.5px; font-weight:700; color:var(--verde-escuro);
+    background:var(--perola); border-radius:5px; padding:2px 6px; flex:none; }
+  .lic-tit{ flex:1; line-height:1.35; }
+  .lic-pag{ font-size:11px; color:#9a9a94; flex:none; }
+  .lic-quando{ font-size:10.5px; color:#9a9a94; flex:none; }
+  .lic-item.feita .lic-tit{ color:#9a9a94; text-decoration:line-through; }
+  .lic-item.proxima{ background:#EEF4EF; box-shadow:inset 0 0 0 1.5px var(--verde-escuro); }
+  .lic-item.proxima .lic-tit{ font-weight:600; }
+  .lic-item.travada{ opacity:.55; cursor:not-allowed; }
+  .lic-vazio{ font-size:12.5px; color:#9a9a94; padding:12px 10px; line-height:1.5; }
+
+  /* cadastro de licoes */
+  .lv-linha{ display:flex; gap:8px; align-items:center; padding:5px 0; }
+  .lv-n{ font-size:11px; font-weight:700; color:var(--verde-escuro); width:34px; flex:none; text-align:center; }
+  .lv-linha input{ font-family:'Poppins',sans-serif; font-size:13px; padding:9px 10px;
+    border-radius:9px; border:1px solid var(--linha); background:var(--perola); color:var(--carvao); }
+  .lv-tit{ flex:1; min-width:0; }
+  .lv-pag{ width:96px; flex:none; }
+  .lv-del{ border:none; background:none; color:var(--excluir); font-size:16px;
+    cursor:pointer; padding:4px 6px; flex:none; }
+  .lv-barra{ display:flex; gap:10px; padding:12px 0 4px; }
+  .lv-cab{ display:flex; gap:8px; font-size:10px; text-transform:uppercase; letter-spacing:.06em;
+    color:#9a9a94; font-weight:600; padding-bottom:2px; }
+  .lv-cab .lv-n{ width:34px; }
 </style>
 </head>
 <body>
@@ -690,6 +725,13 @@
     <div class="lista" id="lista"></div>
 
     <div class="campos-aula">
+      <div class="campo-aula hidden" id="blocoLicoes">
+        <label class="lic-cab">
+          <span id="licTitulo">Li&ccedil;&atilde;o da aula</span>
+          <span class="lic-prog" id="licProgresso"></span>
+        </label>
+        <div class="lic-lista" id="licLista"></div>
+      </div>
       <div class="campo-aula">
         <label for="campoComentario">Comentário da aula (lições e páginas)</label>
         <textarea id="campoComentario" placeholder="Ex: Unit 4, páginas 32 a 35. Revisão de past simple."></textarea>
@@ -967,9 +1009,26 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card hidden" id="subcardLivros">
+        <div class="menu-card-icone">&#9776;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Livros e li&ccedil;&otilde;es</span>
+          <span class="menu-card-sub">Cadastrar as li&ccedil;&otilde;es de cada livro</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
     </div>
     <div class="assess-resultado hidden" id="matResultado"></div>
     <div class="assess-resultado hidden" id="matExtrasResultado"></div>
+    <div class="hidden" id="matLivros">
+      <div class="busca-linha">
+        <div class="campo">
+          <label for="lvSelect">Livro</label>
+          <select id="lvSelect"><option value="">Carregando...</option></select>
+        </div>
+      </div>
+      <div class="assess-resultado" id="lvEditor"></div>
+    </div>
   </div>
 
   <!-- TELA FINANCEIRO (só Felipe) -->
@@ -2270,7 +2329,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.3.0';
+const APP_VERSAO = '3.4.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -2485,6 +2544,7 @@ async function carregarAulaDoDia(){
   const $selo = document.getElementById('seloRegistrado');
   const $dur = document.getElementById('campoDuracao');
   try{
+    carregarLicoes();
     const r = await chamarAPI({ acao:'aulaDoDia', turmaId: t.turmaId, data: $data.value });
     $campoComentario.value = r.comentario || '';
     $campoHomework.value = r.homework || '';
@@ -4773,13 +4833,32 @@ function mostrarConsultaTurma(){
   setTimeout(function(){ document.getElementById('ctBusca').focus(); }, 120);
 }
 
+var _PROGRESSO_TURMAS = null;
+
 async function carregarTurmasConsulta(forcar){
   if(_TURMAS_CONSULTA && !forcar) return _TURMAS_CONSULTA;
   try{
     var r = await chamarAPI({ acao:'listarTurmas' });
     if(r.sucesso) _TURMAS_CONSULTA = r.turmas || [];
   }catch(e){ _TURMAS_CONSULTA = null; }
+  try{
+    var p = await chamarAPI({ acao:'progressoTurmas' });
+    _PROGRESSO_TURMAS = p.sucesso ? (p.progresso || {}) : {};
+  }catch(e){ _PROGRESSO_TURMAS = {}; }
   return _TURMAS_CONSULTA;
+}
+
+/** Linha de progresso do livro, para o card da consulta. */
+function _linhaProgresso(turmaId){
+  var p = _PROGRESSO_TURMAS && _PROGRESSO_TURMAS[turmaId];
+  if(!p || p.semLivro) return '';
+  if(p.semCatalogo) return '<div class="ct-vaga">Li&ccedil;&otilde;es deste livro ainda n&atilde;o cadastradas</div>';
+  if(p.concluido) return '<div class="ct-vaga" style="color:#3E8E5A;font-style:normal;">'
+    + 'Livro conclu&iacute;do: ' + p.total + ' de ' + p.total + ' li&ccedil;&otilde;es</div>';
+  return '<div class="ct-vaga" style="font-style:normal;">Li&ccedil;&atilde;o <b>' + p.feitas
+    + ' de ' + p.total + '</b> (' + p.percentual + '%) &middot; pr&oacute;xima: L'
+    + (p.proxima < 10 ? '0' + p.proxima : p.proxima)
+    + (p.tituloProxima ? ' ' + p.tituloProxima : '') + '</div>';
 }
 
 function _semAcentoCli(t){
@@ -4840,7 +4919,9 @@ async function filtrarTurmasConsulta(){
       + (alunos || '<div class="ct-vaga">Turma sem aluno ativo</div>')
       + vagas
       + (extras.length ? '<div class="ct-vaga">' + extras.join(' &middot; ') + '</div>' : '')
-      + '</div></div>';
+      + '</div>'
+      + _linhaProgresso(t.turmaId)
+      + '</div>';
   }).join('');
 }
 
@@ -4855,6 +4936,252 @@ async function filtrarTurmasConsulta(){
       timer = setTimeout(filtrarTurmasConsulta, 220);
     });
   }
+})();
+
+
+
+/* ============================================================================
+ * 3.4.0 - LICOES DO LIVRO
+ * ========================================================================== */
+
+var _LICOES_TURMA = null;   // resposta de licoesDaTurma da turma aberta agora
+
+/** Carrega e desenha as licoes do livro da turma selecionada. */
+async function carregarLicoes(){
+  var bloco = document.getElementById('blocoLicoes');
+  var lista = document.getElementById('licLista');
+  var prog  = document.getElementById('licProgresso');
+  var tit   = document.getElementById('licTitulo');
+  if(!bloco) return;
+
+  var t = turmaAtual();
+  if(!t){ bloco.classList.add('hidden'); return; }
+
+  bloco.classList.remove('hidden');
+  lista.innerHTML = '<p class="lic-vazio">Carregando as li&ccedil;&otilde;es...</p>';
+  prog.textContent = '';
+
+  try{
+    var r = await chamarAPI({ acao:'licoesDaTurma', turmaId: t.turmaId, data: $data.value });
+    if(!r.sucesso){ bloco.classList.add('hidden'); return; }
+    _LICOES_TURMA = r;
+
+    if(r.semLivro){
+      tit.textContent = 'Lição da aula';
+      lista.innerHTML = '<p class="lic-vazio">Esta turma ainda n&atilde;o tem livro definido na planilha.</p>';
+      return;
+    }
+    if(r.semCatalogo){
+      tit.textContent = r.livro;
+      lista.innerHTML = '<p class="lic-vazio">O livro <b>' + r.livro + '</b> ainda n&atilde;o tem li&ccedil;&otilde;es '
+        + 'cadastradas. A recep&ccedil;&atilde;o cadastra em Materiais &rsaquo; Livros e li&ccedil;&otilde;es.</p>';
+      return;
+    }
+
+    tit.textContent = r.livro;
+    prog.textContent = r.concluido
+      ? 'livro conclu\u00eddo'
+      : (r.feitas + ' de ' + r.total + ' \u00b7 ' + r.percentual + '%');
+
+    desenharLicoes();
+  }catch(e){
+    lista.innerHTML = '<p class="lic-vazio">N&atilde;o consegui carregar as li&ccedil;&otilde;es.</p>';
+  }
+}
+
+function desenharLicoes(){
+  var r = _LICOES_TURMA;
+  var lista = document.getElementById('licLista');
+  if(!r || !r.licoes) return;
+
+  lista.innerHTML = r.licoes.map(function(l){
+    var classes = ['lic-item'];
+    if(l.dada) classes.push('feita');
+    if(!l.dada && l.n === r.proxima) classes.push('proxima');
+    var quando = '';
+    if(l.dada && l.data) quando = l.hoje ? 'hoje' : l.data.substring(0,5);
+    return '<label class="' + classes.join(' ') + '" data-n="' + l.n + '">'
+      + '<input type="checkbox" data-n="' + l.n + '"' + (l.dada ? ' checked' : '') + '>'
+      + '<span class="lic-cod">' + (l.codigo || l.n) + '</span>'
+      + '<span class="lic-tit">' + (l.titulo || 'Li&ccedil;&atilde;o ' + l.n) + '</span>'
+      + (l.paginas ? '<span class="lic-pag">p. ' + l.paginas + '</span>' : '')
+      + (quando ? '<span class="lic-quando">' + quando + '</span>' : '')
+      + '</label>';
+  }).join('');
+
+  lista.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+    cb.addEventListener('change', function(){ alternarLicao(Number(cb.dataset.n), cb); });
+  });
+
+  // deixa a proxima licao visivel sem a pessoa precisar rolar
+  var alvo = lista.querySelector('.lic-item.proxima');
+  if(alvo) lista.scrollTop = Math.max(0, alvo.offsetTop - lista.offsetTop - 60);
+}
+
+async function alternarLicao(n, cb){
+  var r = _LICOES_TURMA;
+  if(!r) return;
+  var atual = null;
+  r.licoes.forEach(function(l){ if(l.n === n) atual = l; });
+  if(!atual) return;
+
+  var marcar = cb.checked;
+  // desmarcar tira o registro da data em que a licao foi dada, nao da data de hoje
+  var dataAlvo = marcar ? _isoParaBr($data.value) : (atual.data || _isoParaBr($data.value));
+  cb.disabled = true;
+
+  var resp = await chamarAPI({
+    acao:'marcarLicao', turmaId: r.turmaId, data: dataAlvo,
+    n: n, marcar: marcar, professor: professorLogado || ''
+  });
+  cb.disabled = false;
+
+  if(!resp.sucesso){
+    cb.checked = !marcar;
+    mostrarToast(resp.erro || 'Nao consegui salvar a licao');
+    return;
+  }
+
+  atual.dada = marcar;
+  atual.data = marcar ? dataAlvo : '';
+  atual.hoje = marcar;
+
+  // recalcula o placar sem ir ao servidor de novo
+  r.feitas = r.licoes.filter(function(l){ return l.dada; }).length;
+  r.percentual = r.total ? Math.round(r.feitas * 100 / r.total) : 0;
+  r.concluido = r.feitas >= r.total;
+  r.proxima = 0;
+  for(var i=0;i<r.licoes.length;i++){
+    if(!r.licoes[i].dada){ r.proxima = r.licoes[i].n; break; }
+  }
+  document.getElementById('licProgresso').textContent = r.concluido
+    ? 'livro concluído'
+    : (r.feitas + ' de ' + r.total + ' · ' + r.percentual + '%');
+
+  desenharLicoes();
+  mostrarToast(marcar ? ('Lição ' + (atual.codigo || n) + ' registrada')
+                      : ('Lição ' + (atual.codigo || n) + ' desmarcada'));
+}
+
+
+/* ---------- cadastro de livros e licoes (recepcao, Felipe e Thais) ---------- */
+
+var _LV_ATUAL = null;
+
+function mostrarPainelLivros(){
+  document.getElementById('matSubcards').classList.add('hidden');
+  document.getElementById('matResultado').classList.add('hidden');
+  document.getElementById('matExtrasResultado').classList.add('hidden');
+  document.getElementById('matLivros').classList.remove('hidden');
+  carregarSelectLivros();
+}
+
+async function carregarSelectLivros(){
+  var sel = document.getElementById('lvSelect');
+  var ed = document.getElementById('lvEditor');
+  ed.innerHTML = '<p class="lic-vazio">Escolha um livro acima.</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarLivros' });
+    if(!r.sucesso){ sel.innerHTML = '<option value="">Erro ao carregar</option>'; return; }
+    sel.innerHTML = '<option value="">Selecione o livro</option>'
+      + r.livros.map(function(l){
+          return '<option value="' + l.livro + '">' + l.livro
+            + ' — ' + l.licoes + ' lição(ões) · ' + l.turmas + ' turma(s)</option>';
+        }).join('');
+  }catch(e){
+    sel.innerHTML = '<option value="">Erro de conexão</option>';
+  }
+}
+
+async function abrirLivroParaEditar(){
+  var livro = document.getElementById('lvSelect').value;
+  var ed = document.getElementById('lvEditor');
+  if(!livro){ ed.innerHTML = '<p class="lic-vazio">Escolha um livro acima.</p>'; return; }
+
+  ed.innerHTML = '<p class="lic-vazio">Carregando...</p>';
+  var r = await chamarAPI({ acao:'licoesDoLivro', livro: livro });
+  if(!r.sucesso){ ed.innerHTML = '<div class="assess-aviso">Erro ao carregar.</div>'; return; }
+
+  _LV_ATUAL = { livro: livro, licoes: r.licoes.slice() };
+  if(!_LV_ATUAL.licoes.length){
+    _LV_ATUAL.licoes = [{ n:1, codigo:'L01', titulo:'', paginas:'' }];
+  }
+  desenharEditorLivro();
+}
+
+function desenharEditorLivro(){
+  var ed = document.getElementById('lvEditor');
+  var d = _LV_ATUAL;
+  ed.innerHTML = '<div class="msg-aviso">As li&ccedil;&otilde;es aparecem para o professor na tela de '
+    + 'presen&ccedil;a, na ordem do n&uacute;mero. Deixe o t&iacute;tulo curto: ele precisa caber na linha.</div>'
+    + '<div class="lv-cab"><span class="lv-n">Nº</span><span class="lv-tit">Título</span>'
+    + '<span class="lv-pag">Páginas</span><span style="width:28px;"></span></div>'
+    + d.licoes.map(function(l, i){
+        return '<div class="lv-linha">'
+          + '<span class="lv-n">' + (l.codigo || ('L' + l.n)) + '</span>'
+          + '<input class="lv-tit" data-i="' + i + '" data-c="titulo" value="'
+          + String(l.titulo || '').replace(/"/g,'&quot;') + '" placeholder="Ex: Bad Habits">'
+          + '<input class="lv-pag" data-i="' + i + '" data-c="paginas" value="'
+          + String(l.paginas || '').replace(/"/g,'&quot;') + '" placeholder="8-12">'
+          + '<button class="lv-del" title="Remover" onclick="removerLinhaLivro(' + i + ')">&times;</button>'
+          + '</div>';
+      }).join('')
+    + '<div class="lv-barra">'
+    + '<button class="busca-btn" style="background:var(--perola);color:var(--verde-escuro);" '
+    + 'onclick="adicionarLinhaLivro()">+ Adicionar lição</button>'
+    + '<button class="busca-btn" id="btnSalvarLivro" onclick="salvarLivroAtual()" '
+    + 'style="flex:1;">Salvar ' + d.licoes.length + ' lição(ões)</button>'
+    + '</div>';
+
+  ed.querySelectorAll('input[data-i]').forEach(function(inp){
+    inp.addEventListener('input', function(){
+      _LV_ATUAL.licoes[Number(inp.dataset.i)][inp.dataset.c] = inp.value;
+    });
+  });
+}
+
+function adicionarLinhaLivro(){
+  var d = _LV_ATUAL; if(!d) return;
+  var prox = d.licoes.reduce(function(m,l){ return Math.max(m, Number(l.n)||0); }, 0) + 1;
+  d.licoes.push({ n: prox, codigo: 'L' + (prox < 10 ? '0' + prox : prox), titulo:'', paginas:'' });
+  desenharEditorLivro();
+  var ed = document.getElementById('lvEditor');
+  var ultimos = ed.querySelectorAll('input.lv-tit');
+  if(ultimos.length) ultimos[ultimos.length-1].focus();
+}
+
+function removerLinhaLivro(i){
+  var d = _LV_ATUAL; if(!d) return;
+  d.licoes.splice(i, 1);
+  // renumera para nao deixar buraco
+  d.licoes.forEach(function(l, idx){
+    l.n = idx + 1;
+    l.codigo = 'L' + (l.n < 10 ? '0' + l.n : l.n);
+  });
+  desenharEditorLivro();
+}
+
+async function salvarLivroAtual(){
+  var d = _LV_ATUAL; if(!d) return;
+  var btn = document.getElementById('btnSalvarLivro');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  var r = await chamarAPI({ acao:'salvarLicoesDoLivro', livro: d.livro, licoes: d.licoes });
+  btn.disabled = false;
+  if(r.sucesso){
+    btn.textContent = 'Salvar ' + d.licoes.length + ' lição(ões)';
+    mostrarToast(r.total + ' lição(ões) salvas em ' + d.livro);
+    carregarSelectLivros();
+  }else{
+    btn.textContent = 'Salvar';
+    mostrarToast(r.erro || 'Erro ao salvar');
+  }
+}
+
+(function(){
+  var card = document.getElementById('subcardLivros');
+  if(card) card.addEventListener('click', mostrarPainelLivros);
+  var sel = document.getElementById('lvSelect');
+  if(sel) sel.addEventListener('change', abrirLivroParaEditar);
 })();
 
 document.getElementById('btnTrocarSenha').addEventListener('click', async function(){
@@ -6369,6 +6696,9 @@ function aplicarPermissoes(){
   // conversação é a única que o professor alcança
   var elConv = document.getElementById('recepCardConversa');
   if(elConv) elConv.classList.toggle('hidden', !(podeVer('recepcao') || podeVer('presenca')));
+  // cadastro de licoes: so recepcao, Felipe e Thais
+  var elLv = document.getElementById('subcardLivros');
+  if(elLv) elLv.classList.toggle('hidden', !podeVer('recepcao'));
 
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
   // titulo de secao sem nenhum card visivel some junto
@@ -7126,6 +7456,8 @@ document.getElementById('cardMateriais').addEventListener('click', ()=>{
 });
 
 function mostrarSubcardsMateriais(){
+  var lv = document.getElementById('matLivros');
+  if(lv) lv.classList.add('hidden');
   document.getElementById('matSubcards').classList.remove('hidden');
   $matResultado.classList.add('hidden');
   document.getElementById('matExtrasResultado').classList.add('hidden');
