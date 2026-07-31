@@ -1815,7 +1815,7 @@
             </div>
             <div class="campo">
               <label for="tmLivro">Livro</label>
-              <input type="text" id="tmLivro" placeholder="Ex: FE2">
+              <select id="tmLivro"><option value="">Selecione</option></select>
             </div>
           </div>
           <div class="par">
@@ -5420,15 +5420,41 @@ var SKILL_CURTO = { Pronunciation:'Pronunc.', Interaction:'Interact.', Vocabular
   var sel = document.getElementById('notaAno');
   if(!sel) return;
   var hoje = new Date(), ano = hoje.getFullYear();
-  for(var a = ano + 1; a >= ano - 4; a--){
+  // 2026 e o primeiro ano do app: nao existe nota antes disso.
+  // A lista comeca ali e vai ate dois anos a frente, entao ela cresce
+  // sozinha com o tempo sem nunca perder um ano ja usado.
+  var ANO_INICIAL = 2026;
+  var ate = Math.max(ano, ANO_INICIAL) + 2;
+  for(var a = Math.min(ano, ANO_INICIAL); a <= ate; a++){
     var o = document.createElement('option');
     o.value = a; o.textContent = a; sel.appendChild(o);
   }
-  sel.value = ano;
+  sel.value = Math.max(ano, ANO_INICIAL);
   var sem = document.getElementById('notaSemestre');
   if(sem) sem.value = (hoje.getMonth() < 6) ? '1' : '2';
 })();
 
+
+/* ---------- lista de livros para o cadastro de turma (3.6.0) ---------- */
+
+var _LIVROS_CADASTRADOS = [];
+
+/** Busca os livros oficiais uma vez e reaproveita. */
+async function carregarLivrosCadastrados(forcar){
+  if(_LIVROS_CADASTRADOS.length && !forcar) return _LIVROS_CADASTRADOS;
+  try{
+    var r = await chamarAPI({ acao:'listarLivros' });
+    if(r.sucesso && r.livros){
+      _LIVROS_CADASTRADOS = r.livros.map(function(l){ return l.livro; });
+      var sel = document.getElementById('tmLivro');
+      if(sel && sel.options.length <= 1){
+        var atual = sel.value;
+        _preencherSelect(sel, _LIVROS_CADASTRADOS, atual);
+      }
+    }
+  }catch(e){ }
+  return _LIVROS_CADASTRADOS;
+}
 
 /* ---------- grafico radar em SVG ---------- */
 function radarSVG(series, tam, comRotulo){
@@ -6912,7 +6938,18 @@ async function abrirFormTurma(t){
     (op && op.modalidades) || ['PRESENCIAL','ONLINE','HIBRIDO'],
     t ? t.modalidade : 'PRESENCIAL');
 
-  document.getElementById('tmLivro').value = t ? t.livro : '';
+  _preencherSelect(document.getElementById('tmLivro'),
+    _LIVROS_CADASTRADOS.length ? _LIVROS_CADASTRADOS : (t && t.livro ? [t.livro] : []),
+    t ? t.livro : '');
+  // o livro da turma que esta sendo editada nao pode sumir da lista,
+  // mesmo que ainda nao esteja cadastrado na aba Materiais
+  if(t && t.livro && _LIVROS_CADASTRADOS.indexOf(t.livro) < 0){
+    var opX = document.createElement('option');
+    opX.value = t.livro; opX.textContent = t.livro + ' (fora da lista)';
+    document.getElementById('tmLivro').appendChild(opX);
+    document.getElementById('tmLivro').value = t.livro;
+  }
+  carregarLivrosCadastrados();
   document.getElementById('tmDias').value = t ? t.dias : '';
   document.getElementById('tmHorario').value = t ? t.horario : '';
   document.getElementById('tmCapacidade').value = t ? String(t.capacidade) : '6';
