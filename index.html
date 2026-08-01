@@ -724,6 +724,8 @@
     .lv-pag{ flex:0 0 68px; width:68px; }
     .lv-n{ width:28px; font-size:10px; }
   }
+  .ren-btn.perigo{ background:#fff; color:#8a3b2d; border:1px solid #d9b3ab; }
+  .ren-btn.perigo:hover{ background:#fbeeec; }
 </style>
 </head>
 <body>
@@ -2464,7 +2466,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.6.5';
+const APP_VERSAO = '3.6.6';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -7118,7 +7120,9 @@ function desenharTurmas(){
       + '</div>'
       + '<div class="ren-acoes">'
       + '<button class="ren-btn" onclick="abrirAlunosTurma(' + i + ')">Alunos</button>'
-      + '<button class="ren-btn sec" onclick="editarTurmaUI(' + i + ')">Editar</button></div>'
+      + '<button class="ren-btn sec" onclick="editarTurmaUI(' + i + ')">Editar</button>'
+      + (t.vazia ? '<button class="ren-btn perigo" onclick="arquivarTurmaUI(' + i + ')">Arquivar</button>' : '')
+      + '</div>'
       + '</div>';
   }).join('');
 }
@@ -7136,6 +7140,29 @@ document.getElementById('turmaBuscaLimpar').addEventListener('click', function()
 
 function editarTurmaUI(i){
   abrirFormTurma(window._TURMAS_LISTA[i]);
+}
+
+/* ---------- 3.6.6: arquivar turma vazia ---------- */
+async function arquivarTurmaUI(i){
+  var t = window._TURMAS_LISTA[i];
+  if(!t) return;
+
+  var ok = confirm('Arquivar a turma ' + t.turmaId + '?\n\n'
+    + t.professor + ' · ' + t.dias + ' · ' + t.horario + '\n\n'
+    + 'Ela deixa de aparecer nas buscas e na consulta de horarios.\n'
+    + 'O historico de presenca e as licoes dadas continuam gravados, '
+    + 'e a linha fica guardada na aba "Turmas Arquivadas".');
+  if(!ok) return;
+
+  try{
+    var r = await chamarAPI({ acao:'arquivarTurma', linha:t.linha, turmaId:t.turmaId,
+                              usuario: (professorLogado || ''), confirmar:true });
+    if(!r.sucesso){ alert(r.erro || 'Nao foi possivel arquivar.'); return; }
+    alert(r.mensagem || 'Turma arquivada.');
+    await carregarTurmas();
+  }catch(e){
+    alert('Falha de conexao ao arquivar.');
+  }
 }
 
 // ===== 2.4.0: ALUNOS PARA DESLIGAR =====
