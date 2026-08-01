@@ -2464,7 +2464,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.6.3';
+const APP_VERSAO = '3.6.5';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5453,6 +5453,22 @@ var SKILL_CURTO = { Pronunciation:'Pronunc.', Interaction:'Interact.', Vocabular
 })();
 
 
+/* ---------- 3.6.5: nome de arquivo nao pode virar link ---------- */
+/* Quando a coluna G da aba Contratos tem so o nome do PDF, o navegador trata
+   como endereco relativo e vai parar na pagina 404 do GitHub. Aqui a gente so
+   monta o link quando o valor comeca com http. */
+function _ehLink(v){ return /^https?:\/\//i.test(String(v || '').trim()); }
+
+function botaoPdf(url, rotulo, classe){
+  rotulo = rotulo || 'Abrir PDF';
+  if(_ehLink(url)){
+    return '<a class="' + (classe || 'doc-link') + '" href="' + url
+      + '" target="_blank" rel="noopener">' + rotulo + '</a>';
+  }
+  return '<span class="doc-link" style="opacity:.5;cursor:default;" '
+    + 'title="Este contrato ainda nao tem PDF vinculado">PDF nao vinculado</span>';
+}
+
 /* ---------- lista de livros para o cadastro de turma (3.6.0) ---------- */
 
 var _LIVROS_CADASTRADOS = [];
@@ -7491,7 +7507,7 @@ async function carregarRenovacoes(){
             '<div class="ren-acoes">'
             + '<button class="ren-btn" onclick="renovarContrato(\'' + x.numeroContrato + '\')">Renovar</button>'
             + (fone ? '<a class="ren-btn sec" style="text-decoration:none;" target="_blank" href="https://wa.me/' + fone + '?text=' + encodeURIComponent(msg) + '">WhatsApp</a>' : '')
-            + (x.pdfUrl ? '<a class="ren-btn sec" style="text-decoration:none;" target="_blank" href="' + x.pdfUrl + '">Contrato atual</a>' : '')
+            + (x.pdfUrl ? botaoPdf(x.pdfUrl, 'Contrato atual', 'ren-btn sec') : '')
             + '</div>')
         + '</div>';
     }).join('');
@@ -8720,7 +8736,7 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
         <div style="background:#E3EFE7;border-radius:12px;padding:16px;color:#3E8E5A;font-weight:600;text-align:center;">
           ✓ Contrato Nº ${r.numeroContrato} gerado!
         </div>
-        <a href="${r.pdfUrl}" target="_blank" style="display:block;margin-top:12px;text-align:center;background:var(--verde-escuro);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:600;">Abrir PDF do contrato</a>
+        ${_ehLink(r.pdfUrl) ? `<a href="${r.pdfUrl}" target="_blank" rel="noopener" style="display:block;margin-top:12px;text-align:center;background:var(--verde-escuro);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:600;">Abrir PDF do contrato</a>` : ''}
       </div>`;
     } else {
       $res.innerHTML = `<div class="assess-aviso">${r.erro || 'Erro ao gerar contrato'}</div>`;
@@ -8763,7 +8779,7 @@ async function carregarBuscaContratos(){
           ${linhaResp}
           ${linhaInicio}
         </div>
-        <a href="${c.pdfUrl}" target="_blank" class="btn-material">PDF</a>
+        ${botaoPdf(c.pdfUrl, 'PDF', 'btn-material')}
       </div>`;
     });
     $res.innerHTML = html;
