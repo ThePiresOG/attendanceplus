@@ -478,18 +478,22 @@
 
 
   /* ===== 3.1.0: HISTORICO E SENHA ===== */
-  .ver-item{ border-left:3px solid var(--linha); padding:0 0 14px 14px; margin-left:6px; position:relative; }
+  .ver-item{ background:var(--branco); border:1px solid var(--linha); border-left:3px solid var(--verde-claro);
+    border-radius:12px; padding:13px 15px; margin-bottom:11px; position:relative; }
+  .ver-item.atual{ border-left-color:var(--salmao); }
   .ver-item::before{ content:''; position:absolute; left:-6px; top:3px; width:9px; height:9px;
     border-radius:50%; background:var(--linha); }
   .ver-item.atual{ border-left-color:var(--verde-claro); }
   .ver-item.atual::before{ background:var(--salmao); box-shadow:0 0 0 3px rgba(219,119,107,.2); }
   .ver-topo{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
   .ver-num{ font-size:13px; font-weight:700; color:var(--verde-escuro); }
-  .ver-data{ font-size:11px; color:var(--verde-medio); }
+  .ver-data{ font-size:11px; color:#8a8a84; }
   .ver-tag{ font-size:9.5px; font-weight:700; background:var(--salmao); color:#fff;
     padding:1px 7px; border-radius:20px; }
   .ver-tit{ font-size:13.5px; color:var(--carvao); font-weight:600; margin:2px 0 4px; }
-  .ver-itens{ margin:0; padding-left:16px; font-size:12.5px; color:var(--verde-escuro); line-height:1.6; }
+  .ver-itens{ margin:6px 0 0; padding-left:17px; font-size:12.5px; color:var(--carvao); line-height:1.62; }
+  .ver-itens li{ margin-bottom:5px; }
+  .ver-itens li::marker{ color:var(--verde-claro); }
   .ver-itens li{ margin-bottom:3px; }
 
   /* ===== VERSÃO COMPUTADOR (telas largas) ===== */
@@ -7159,7 +7163,7 @@ async function arquivarTurmaUI(i){
                               usuario: (professorLogado || ''), confirmar:true });
     if(!r.sucesso){ alert(r.erro || 'Nao foi possivel arquivar.'); return; }
     alert(r.mensagem || 'Turma arquivada.');
-    await carregarTurmas();
+    await carregarListaTurmas();
   }catch(e){
     alert('Falha de conexao ao arquivar.');
   }
