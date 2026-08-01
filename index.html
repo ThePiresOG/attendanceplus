@@ -1103,7 +1103,7 @@
           <h1>Materiais</h1>
           <button class="sair" id="btnVoltarMat">Menu</button>
         </div>
-        <p class="sub">Materiais de apoio</p>
+        <p class="sub" id="matSub">Materiais de apoio</p>
       </div>
           <div class="header-alca" title="Arraste para ajustar a altura"></div>
     </header>
@@ -2444,7 +2444,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.6.0';
+const APP_VERSAO = '3.6.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4760,7 +4760,8 @@ var _NAV_BLOCOS = [
   'afastSubcards','formAfastamento','listaAfastamento',
   'baixaSubcards','formBaixa','listaBaixa',
   'turmaSubcards','formTurma','listaTurmas','consultaTurma',
-  'matSubcards','formCalendario','formUsuario'
+  'matSubcards','matResultado','matExtrasResultado','matLivros',
+  'formCalendario','formUsuario'
 ];
 
 var _NAV_HIST = [];
@@ -5205,10 +5206,7 @@ async function alternarLicao(n, cb){
 var _LV_ATUAL = null;
 
 function mostrarPainelLivros(){
-  document.getElementById('matSubcards').classList.add('hidden');
-  document.getElementById('matResultado').classList.add('hidden');
-  document.getElementById('matExtrasResultado').classList.add('hidden');
-  document.getElementById('matLivros').classList.remove('hidden');
+  _soUmPainelMat('matLivros');
   carregarSelectLivros();
 }
 
@@ -8125,22 +8123,31 @@ document.getElementById('cardMateriais').addEventListener('click', ()=>{
 });
 
 function mostrarSubcardsMateriais(){
-  var lv = document.getElementById('matLivros');
-  if(lv) lv.classList.add('hidden');
-  document.getElementById('matSubcards').classList.remove('hidden');
-  $matResultado.classList.add('hidden');
-  document.getElementById('matExtrasResultado').classList.add('hidden');
+  _soUmPainelMat('matSubcards');
+}
+
+/** Deixa visivel so um painel do Materiais por vez. */
+function _soUmPainelMat(qual){
+  ['matSubcards','matResultado','matExtrasResultado','matLivros'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', id !== qual);
+  });
+  var sub = document.getElementById('matSub');
+  if(sub) sub.textContent = ({
+    matSubcards: 'Materiais de apoio',
+    matResultado: 'Materiais da turma',
+    matExtrasResultado: 'Materiais extras por nível',
+    matLivros: 'Livros e lições'
+  })[qual] || 'Materiais de apoio';
 }
 
 document.getElementById('subcardTurma').addEventListener('click', ()=>{
-  document.getElementById('matSubcards').classList.add('hidden');
-  $matResultado.classList.remove('hidden');
+  _soUmPainelMat('matResultado');
   carregarMateriais();
 });
 
 document.getElementById('subcardExtras').addEventListener('click', ()=>{
-  document.getElementById('matSubcards').classList.add('hidden');
-  document.getElementById('matExtrasResultado').classList.remove('hidden');
+  _soUmPainelMat('matExtrasResultado');
   carregarMateriaisExtras();
 });
 
