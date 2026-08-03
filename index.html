@@ -756,6 +756,21 @@
   .rec-parcela-valor{ padding:12px 14px; border:1px solid var(--linha); border-radius:11px;
     background:var(--perola); font-size:14px; font-weight:600; color:var(--verde-escuro); }
   #recPalco{ position:fixed; left:-10000px; top:0; width:794px; background:#fff; }
+  /* ===== 3.7.1: MESES DA MENSALIDADE ===== */
+  .mn-lista{ padding:4px 20px 0; }
+  .mn-cab{ font-size:11px; color:#8a8a84; text-transform:uppercase; letter-spacing:1px;
+    padding:6px 2px 8px; display:flex; justify-content:space-between; align-items:center; }
+  .mn-cab button{ font-family:'Poppins',sans-serif; font-size:11px; font-weight:600; color:var(--verde-escuro);
+    background:none; border:none; cursor:pointer; text-decoration:underline; letter-spacing:0; text-transform:none; }
+  .mn-mes{ display:flex; align-items:center; gap:11px; background:var(--branco);
+    border:1px solid var(--linha); border-radius:11px; padding:10px 13px; margin-bottom:7px; cursor:pointer; }
+  .mn-mes input{ width:18px; height:18px; accent-color:var(--verde-escuro); flex:none; }
+  .mn-mes-txt{ flex:1; min-width:0; }
+  .mn-mes-txt b{ display:block; font-size:13px; color:var(--carvao); text-transform:capitalize; }
+  .mn-mes-txt span{ display:block; font-size:10.5px; color:#8a8a84; }
+  .mn-mes.pago{ background:#F5F4F0; }
+  .mn-mes.pago .mn-tag{ font-size:9.5px; font-weight:700; color:#8a3b2d; background:#FBE9E5;
+    border-radius:20px; padding:3px 9px; flex:none; }
 </style>
 </head>
 <body>
@@ -1411,6 +1426,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardMensalidade">
+        <div class="menu-card-icone">&#128197;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Recibo de mensalidade</span>
+          <span class="menu-card-sub">Curso, m&ecirc;s a m&ecirc;s</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <div class="sec-titulo" data-sec="Gestão">Gestão</div>
       <button class="menu-card hidden" id="recepCardRelatorio">
         <div class="menu-card-icone">&#128196;</div>
@@ -1912,6 +1935,55 @@
         </div>
         <div id="recListaResultado"></div>
       </div>
+    </div>
+
+    <div class="recep-painel hidden" id="painelMensalidade">
+      <div class="controls">
+        <div class="field">
+          <label for="mnBuscaAluno">Aluno (nome ou matr&iacute;cula)</label>
+          <input type="text" id="mnBuscaAluno" placeholder="Digite para buscar" autocomplete="off">
+        </div>
+      </div>
+      <div class="controls" style="padding-top:0;">
+        <div class="field">
+          <label for="mnContrato">Contrato</label>
+          <select id="mnContrato"><option value="">Busque o aluno primeiro</option></select>
+        </div>
+      </div>
+
+      <div id="mnMeses"></div>
+
+      <div class="controls" style="padding-top:0;">
+        <div class="field">
+          <label for="mnValor">Valor de cada mensalidade</label>
+          <input type="text" id="mnValor" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div class="field">
+          <label for="mnForma">Forma de pagamento</label>
+          <select id="mnForma">
+            <option>PIX</option>
+            <option>Dinheiro</option>
+            <option>Cart&atilde;o de d&eacute;bito</option>
+            <option>Cart&atilde;o de cr&eacute;dito</option>
+            <option>Transfer&ecirc;ncia</option>
+            <option>Boleto</option>
+          </select>
+        </div>
+      </div>
+      <div class="controls hidden" id="mnLinhaParcelas" style="padding-top:0;">
+        <div class="field">
+          <label for="mnParcelas">Parcelas no cart&atilde;o</label>
+          <select id="mnParcelas"></select>
+        </div>
+        <div class="field">
+          <label>Valor de cada parcela</label>
+          <div class="rec-parcela-valor" id="mnParcelaValor">&mdash;</div>
+        </div>
+      </div>
+
+      <div class="rec-total" id="mnTotal"></div>
+      <div id="mnResultado"></div>
+      <button class="pend-acao" id="btnGerarMensalidade" style="width:calc(100% - 40px);margin:12px 20px 0;">Gerar recibo em PDF</button>
     </div>
 
     <div class="recep-painel hidden" id="painelTurmas">
@@ -2601,7 +2673,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.7.0';
+const APP_VERSAO = '3.7.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5700,6 +5772,222 @@ function recAtualizarTotal(){
   recAtualizarParcelas();
 }
 
+
+/* ============================================================================
+ * 3.7.1 - RECIBO DE MENSALIDADE
+ * ========================================================================== */
+
+var _MESES_CONTRATO = [];
+var _CONTRATOS_MENS = [];
+
+document.getElementById('recepCardMensalidade').addEventListener('click', function(){
+  abrirPainelRecep('painelMensalidade','Recibo de mensalidade');
+  document.getElementById('mnResultado').innerHTML = '';
+  mnAtualizarTotal();
+});
+
+(function(){
+  var sel = document.getElementById('mnParcelas');
+  for(var n = 1; n <= 12; n++){
+    var o = document.createElement('option');
+    o.value = n; o.textContent = n + 'x' + (n === 1 ? ' (à vista)' : '');
+    sel.appendChild(o);
+  }
+})();
+
+document.getElementById('mnBuscaAluno').addEventListener('input', function(){
+  clearTimeout(window._mnTimer);
+  window._mnTimer = setTimeout(mnBuscarContratos, 400);
+});
+
+async function mnBuscarContratos(){
+  var termo = document.getElementById('mnBuscaAluno').value.trim();
+  var sel = document.getElementById('mnContrato');
+  document.getElementById('mnMeses').innerHTML = '';
+  _MESES_CONTRATO = [];
+  if(termo.length < 2){ sel.innerHTML = '<option value="">Busque o aluno primeiro</option>'; return; }
+  sel.innerHTML = '<option value="">Buscando...</option>';
+  try{
+    var r = await chamarAPI({ acao:'contratosAtivosAluno', termo: termo });
+    _CONTRATOS_MENS = (r && r.contratos) ? r.contratos : [];
+    if(!_CONTRATOS_MENS.length){
+      sel.innerHTML = '<option value="">Nenhum contrato vigente encontrado</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">Selecione o contrato</option>' + _CONTRATOS_MENS.map(function(c){
+      return '<option value="'+c.numeroContrato+'">Nº '+c.numeroContrato+' — '+c.aluno+'</option>';
+    }).join('');
+    if(_CONTRATOS_MENS.length === 1){
+      sel.value = _CONTRATOS_MENS[0].numeroContrato;
+      mnCarregarMeses();
+    }
+  }catch(e){
+    sel.innerHTML = '<option value="">Erro ao buscar</option>';
+  }
+}
+
+document.getElementById('mnContrato').addEventListener('change', mnCarregarMeses);
+
+async function mnCarregarMeses(){
+  var num = document.getElementById('mnContrato').value;
+  var box = document.getElementById('mnMeses');
+  if(!num){ box.innerHTML = ''; _MESES_CONTRATO = []; mnAtualizarTotal(); return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando os meses...</p>';
+  try{
+    var r = await chamarAPI({ acao:'mesesDoContrato', numContrato: num });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+
+    // marca o que ja foi recebido, para nao emitir o mesmo mes duas vezes sem perceber
+    var pagos = {};
+    try{
+      var j = await chamarAPI({ acao:'mesesJaRecebidos', numContrato: num });
+      (j.meses || []).forEach(function(m){ pagos[m.referencia] = m.numero; });
+    }catch(e){}
+
+    _MESES_CONTRATO = r.meses.map(function(m){
+      m.jaPago = pagos['Mensalidade ' + m.rotulo] || 0;
+      return m;
+    });
+
+    if(r.mensalidade > 0 && !_num(document.getElementById('mnValor').value)){
+      document.getElementById('mnValor').value = r.mensalidadeTexto.replace('R$ ','');
+    }
+    mnDesenharMeses();
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Não consegui carregar os meses.</div>';
+  }
+}
+
+function mnDesenharMeses(){
+  var box = document.getElementById('mnMeses');
+  if(!_MESES_CONTRATO.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="mn-lista">'
+    + '<div class="mn-cab"><span>Meses do contrato</span>'
+    + '<button type="button" id="mnLimpar">limpar sele&ccedil;&atilde;o</button></div>'
+    + _MESES_CONTRATO.map(function(m, i){
+      return '<label class="mn-mes' + (m.jaPago ? ' pago' : '') + '">'
+        + '<input type="checkbox" class="mn-chk" data-i="' + i + '">'
+        + '<span class="mn-mes-txt"><b>' + m.rotulo + '</b>'
+        + '<span>Parcela ' + m.parcela + ' de ' + m.total + ' · vencimento ' + m.vencimento + '</span></span>'
+        + (m.jaPago ? '<span class="mn-tag">recibo nº ' + m.jaPago + '</span>' : '')
+        + '</label>';
+    }).join('') + '</div>';
+
+  Array.prototype.forEach.call(box.querySelectorAll('.mn-chk'), function(c){
+    c.addEventListener('change', mnAtualizarTotal);
+  });
+  document.getElementById('mnLimpar').addEventListener('click', function(){
+    Array.prototype.forEach.call(box.querySelectorAll('.mn-chk'), function(c){ c.checked = false; });
+    mnAtualizarTotal();
+  });
+  mnAtualizarTotal();
+}
+
+function mnSelecionados(){
+  var out = [];
+  Array.prototype.forEach.call(document.querySelectorAll('#mnMeses .mn-chk'), function(c){
+    if(c.checked) out.push(_MESES_CONTRATO[Number(c.dataset.i)]);
+  });
+  return out;
+}
+
+function mnAtualizarTotal(){
+  var meses = mnSelecionados();
+  var v = _num(document.getElementById('mnValor').value);
+  var total = v * meses.length;
+  var box = document.getElementById('mnTotal');
+  box.innerHTML = '<span>' + (meses.length
+      ? (meses.length + (meses.length > 1 ? ' meses' : ' mês') + ' selecionado' + (meses.length > 1 ? 's' : ''))
+      : 'Nenhum mês selecionado') + '</span><b>' + _reais(total) + '</b>';
+
+  var credito = /cr\u00e9dito|credito/i.test(document.getElementById('mnForma').value || '');
+  document.getElementById('mnLinhaParcelas').classList.toggle('hidden', !credito);
+  if(!credito) document.getElementById('mnParcelas').value = '1';
+  var n = Number(document.getElementById('mnParcelas').value) || 1;
+  document.getElementById('mnParcelaValor').textContent =
+    (credito && n > 1 && total > 0) ? (n + 'x de ' + _reais(total / n))
+                                    : (total > 0 ? _reais(total) : '\u2014');
+}
+
+['mnValor','mnForma','mnParcelas'].forEach(function(id){
+  var el = document.getElementById(id);
+  el.addEventListener('input', mnAtualizarTotal);
+  el.addEventListener('change', mnAtualizarTotal);
+});
+
+document.getElementById('btnGerarMensalidade').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget;
+  if(btn.disabled) return;
+  var box = document.getElementById('mnResultado');
+  var num = document.getElementById('mnContrato').value;
+  var meses = mnSelecionados();
+  var valor = _num(document.getElementById('mnValor').value);
+
+  if(!num){ box.innerHTML = '<div class="assess-aviso">Escolha o contrato do aluno.</div>'; return; }
+  if(!meses.length){ box.innerHTML = '<div class="assess-aviso">Marque ao menos um mês.</div>'; return; }
+  if(valor <= 0){ box.innerHTML = '<div class="assess-aviso">Informe o valor da mensalidade.</div>'; return; }
+
+  var repetidos = meses.filter(function(m){ return m.jaPago; });
+  if(repetidos.length){
+    var ok = confirm('Já existe recibo para ' + repetidos.map(function(m){ return m.rotulo; }).join(', ')
+      + '.\n\nEmitir mesmo assim?');
+    if(!ok) return;
+  }
+
+  var rotulo = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Montando o recibo...</p>';
+  var palco = document.getElementById('recPalco');
+
+  try{
+    var d = await chamarAPI({ acao:'dadosReciboMensalidade', numContrato: num,
+      meses: meses, valorMes: valor,
+      formaPagamento: document.getElementById('mnForma').value,
+      parcelasCartao: Number(document.getElementById('mnParcelas').value) || 1 });
+
+    if(!d.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + (d.erro || 'Erro ao gerar.') + '</div>';
+      return;
+    }
+
+    palco.innerHTML = htmlRecibo(d);
+    var arquivo = 'Recibo_' + d.numero + '_Mensalidade_' + String(d.aluno).replace(/\s+/g,'_') + '.pdf';
+    var blob = await html2pdf().set({
+      margin: [14, 14, 14, 14], filename: arquivo,
+      image: { type:'jpeg', quality:0.98 },
+      html2canvas: { scale:2, useCORS:true, backgroundColor:'#ffffff', scrollY:0 },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    }).from(palco.firstElementChild).outputPdf('blob');
+
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = arquivo; document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+
+    var b64 = await new Promise(function(res){
+      var fr = new FileReader();
+      fr.onloadend = function(){ res(String(fr.result).split(',')[1]); };
+      fr.readAsDataURL(blob);
+    });
+    var g = await chamarAPI({ acao:'arquivarRecibo', numero: d.numero,
+      linhaPlanilha: d.linhaPlanilha, base64: b64, nomeArquivo: arquivo });
+
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Recibo n&ordm; ' + d.numero
+      + ' emitido para ' + d.pagador + ' &middot; ' + d.periodo + ' &middot; ' + d.totalTexto + '.'
+      + (g.sucesso ? ' O PDF foi baixado e guardado na pasta Recibos.'
+                   : ' O PDF foi baixado, mas nao consegui guardar no Drive: ' + (g.erro||'')) + '</div>'
+      + (g.sucesso ? '<div style="padding:10px 20px 0;">' + botaoPdf(g.url, 'Abrir no Drive', 'doc-link') + '</div>' : '');
+    palco.innerHTML = '';
+    mnCarregarMeses();
+  }catch(e){
+    palco.innerHTML = '';
+    box.innerHTML = '<div class="assess-aviso">Falha ao gerar o recibo. Tente de novo.</div>';
+  }finally{
+    btn.disabled = false; btn.textContent = rotulo;
+  }
+});
+
 /* ---------- parcelas: so aparecem no cartao de credito ---------- */
 (function(){
   var sel = document.getElementById('recParcelas');
@@ -5744,7 +6032,8 @@ function htmlRecibo(d){
   return '<div class="rc-pag">'
   + '<div class="rc-topo">'
     + '<img class="rc-logo" src="' + LOGO_REL_COR + '">'
-    + '<div class="rc-tt"><h1>RECIBO</h1><p>N&ordm; ' + d.numero + ' &middot; ' + d.dataBr + '</p></div>'
+    + '<div class="rc-tt"><h1>RECIBO</h1><p>N&ordm; ' + d.numero + ' &middot; ' + d.dataBr
+    + (d.periodo ? '<br>Referente a ' + d.periodo : '') + '</p></div>'
   + '</div>'
 
   + '<div class="rc-valor"><span>VALOR RECEBIDO</span><b>' + d.totalTexto + '</b></div>'
@@ -5764,6 +6053,7 @@ function htmlRecibo(d){
     + '<div><span>Aluno(a)</span><b>' + d.aluno + '</b></div>'
     + '<div><span>Matr&iacute;cula</span><b>n&ordm; ' + d.matricula + '</b></div>'
     + '<div><span>Contrato</span><b>n&ordm; ' + d.numContrato + '</b></div>'
+    + (d.periodo ? '<div><span>Per&iacute;odo</span><b>' + d.periodo + '</b></div>' : '')
     + '<div class="larga"><span>Forma de pagamento</span><b>' + d.formaTexto + '</b></div>'
     + (d.ehMenor ? '<div class="larga aviso">Aluno menor de idade. Recibo emitido em nome do respons&aacute;vel financeiro.</div>' : '')
   + '</div>'
@@ -7871,7 +8161,8 @@ function aplicarPermissoes(){
   // TODOS os cards da recepção passam a depender de permissão, não só os de gestão
   var soRecepcao = ['recepCardContratos','recepCardRenovacoes','recepCardTurmas',
     'recepCardDesligar','recepCardPresenca','recepCardCalendario','recepCardPanorama',
-    'recepCardAfastamento','recepCardBaixa','recepCardRecibo','recepCardFaltas'];
+    'recepCardAfastamento','recepCardBaixa','recepCardRecibo','recepCardMensalidade',
+    'recepCardFaltas'];
   soRecepcao.forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !podeVer('recepcao'));
