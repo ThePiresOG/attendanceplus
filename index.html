@@ -46,7 +46,8 @@
   .login-field select option{ color:var(--carvao); }
   .login-field input::placeholder{ color:rgba(255,255,255,0.5); }
   .login-field select:focus, .login-field input:focus{ outline:2px solid var(--salmao-claro); }
-  .btn-entrar{ margin-top:8px; padding:14px; border-radius:12px; border:none; background:var(--salmao); color:var(--branco); font-family:'Poppins',sans-serif; font-weight:600; font-size:15px; cursor:pointer; width:100%; }
+  .btn-entrar{ margin-top:8px; padding:14px; border-radius:12px; border:none; background:var(--salmao); color:var(--branco); font-family:'Poppins',sans-serif; font-weight:600; font-size:15px; cursor:pointer; width:100%; transition:background .15s, opacity .15s; }
+  .btn-entrar:disabled{ background:#EBA79E; color:#FBEEEC; cursor:not-allowed; opacity:.9; }
   .login-erro{ margin-top:10px; font-size:12.5px; color:#FFD6CC; text-align:center; min-height:16px; }
   .login-nota{ margin-top:24px; font-size:11px; text-align:center; color:rgba(255,255,255,0.5); font-style:italic; font-family:'Lora',serif; }
   .login-credito{ margin-top:6px; font-size:10.5px; text-align:center; color:rgba(255,255,255,0.35); font-family:'Poppins',sans-serif; }
@@ -730,6 +731,28 @@
   }
   .ren-btn.perigo{ background:#fff; color:#8a3b2d; border:1px solid #d9b3ab; }
   .ren-btn.perigo:hover{ background:#fbeeec; }
+  /* ===== 3.6.9: RECIBO DE MATRICULA E MATERIAL ===== */
+  .rec-itens{ padding:4px 20px 0; }
+  .rec-item{ display:flex; align-items:center; gap:11px; background:var(--branco);
+    border:1px solid var(--linha); border-radius:12px; padding:12px 14px; margin-bottom:9px; cursor:pointer; }
+  .rec-item input[type=checkbox]{ width:19px; height:19px; accent-color:var(--verde-escuro); flex:none; }
+  .rec-item.off{ opacity:.5; }
+  .rec-item-txt{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .rec-item-txt b{ font-size:13.5px; color:var(--carvao); }
+  .rec-item-txt i{ font-size:11px; color:#8a8a84; font-style:normal; }
+  .rec-valor{ width:104px; flex:none; text-align:right; font-family:'Poppins',sans-serif;
+    font-size:14px; font-weight:600; color:var(--verde-escuro); border:1px solid var(--linha);
+    border-radius:9px; padding:9px 10px; background:var(--perola); }
+  .rec-valor:disabled{ opacity:.4; }
+  .rec-total{ margin:6px 20px 0; padding:13px 15px; background:var(--perola); border-radius:12px;
+    display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:#8a8a84; }
+  .rec-total b{ font-size:19px; color:var(--verde-escuro); }
+  .rec-linha{ background:var(--branco); border:1px solid var(--linha); border-left:3px solid var(--verde-claro);
+    border-radius:12px; padding:12px 15px; margin-bottom:9px; }
+  .rec-linha .rl-topo{ display:flex; justify-content:space-between; align-items:baseline; }
+  .rec-linha .rl-num{ font-size:13px; font-weight:700; color:var(--verde-escuro); }
+  .rec-linha .rl-val{ font-size:14px; font-weight:700; color:var(--carvao); }
+  .rec-linha .rl-meta{ font-size:11.5px; color:#8a8a84; margin-top:3px; }
 </style>
 </head>
 <body>
@@ -1376,6 +1399,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardRecibo">
+        <div class="menu-card-icone">&#128179;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Recibo de matr&iacute;cula e material</span>
+          <span class="menu-card-sub">PDF para o aluno que fecha contrato</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <div class="sec-titulo" data-sec="Gestão">Gestão</div>
       <button class="menu-card hidden" id="recepCardRelatorio">
         <div class="menu-card-icone">&#128196;</div>
@@ -1782,6 +1813,92 @@
       </div>
 
 </div>
+
+    <div class="recep-painel hidden" id="painelRecibo">
+      <div class="menu-opcoes" id="reciboSubcards">
+        <button class="menu-card" id="subcardNovoRecibo">
+          <div class="menu-card-icone">&#43;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Novo recibo</span>
+            <span class="menu-card-sub">Matr&iacute;cula, material, ou os dois</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardBuscarRecibo">
+          <div class="menu-card-icone">&#128269;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Recibos emitidos</span>
+            <span class="menu-card-sub">Consultar e reabrir o PDF</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="formRecibo">
+        <div class="controls">
+          <div class="field">
+            <label for="recBuscaAluno">Aluno (nome ou matr&iacute;cula)</label>
+            <input type="text" id="recBuscaAluno" placeholder="Digite para buscar" autocomplete="off">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="recContrato">Contrato</label>
+            <select id="recContrato"><option value="">Busque o aluno primeiro</option></select>
+          </div>
+        </div>
+
+        <div class="rec-itens">
+          <label class="rec-item" id="recItemMatricula">
+            <input type="checkbox" id="recChkMatricula" checked>
+            <span class="rec-item-txt">
+              <b>Taxa de matr&iacute;cula</b>
+              <i>Cobrada na assinatura do contrato</i>
+            </span>
+            <input type="text" id="recValorMatricula" class="rec-valor" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label class="rec-item" id="recItemMaterial">
+            <input type="checkbox" id="recChkMaterial" checked>
+            <span class="rec-item-txt">
+              <b>Material did&aacute;tico</b>
+              <i>Livro do n&iacute;vel do aluno</i>
+            </span>
+            <input type="text" id="recValorMaterial" class="rec-valor" inputmode="decimal" placeholder="0,00">
+          </label>
+        </div>
+
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="recLivro">Livro adquirido</label>
+            <select id="recLivro"><option value="">Selecione</option></select>
+          </div>
+          <div class="field">
+            <label for="recForma">Forma de pagamento</label>
+            <select id="recForma">
+              <option>PIX</option>
+              <option>Dinheiro</option>
+              <option>Cart&atilde;o de d&eacute;bito</option>
+              <option>Cart&atilde;o de cr&eacute;dito</option>
+              <option>Transfer&ecirc;ncia</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rec-total" id="recTotal"></div>
+        <div id="recResultado"></div>
+        <button class="pend-acao" id="btnGerarRecibo" style="width:calc(100% - 40px);margin:12px 20px 0;">Gerar recibo em PDF</button>
+      </div>
+
+      <div class="hidden" id="listaRecibo">
+        <div class="busca-linha">
+          <div class="campo">
+            <label for="recBusca">Buscar recibo</label>
+            <input type="text" id="recBusca" placeholder="Nome do aluno ou do pagador" autocomplete="off">
+          </div>
+        </div>
+        <div id="recListaResultado"></div>
+      </div>
+    </div>
 
     <div class="recep-painel hidden" id="painelTurmas">
       <div class="menu-opcoes" id="turmaSubcards">
@@ -2470,7 +2587,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.6.8';
+const APP_VERSAO = '3.6.9';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4785,6 +4902,7 @@ var _NAV_BLOCOS = [
   'contratoSubcards','formContrato','buscaContrato',
   'afastSubcards','formAfastamento','listaAfastamento',
   'baixaSubcards','formBaixa','listaBaixa',
+  'painelRecibo','reciboSubcards','formRecibo','listaRecibo',
   'turmaSubcards','formTurma','listaTurmas','consultaTurma',
   'matSubcards','matResultado','matExtrasResultado','matLivros',
   'formCalendario','formUsuario'
@@ -5459,6 +5577,182 @@ var SKILL_CURTO = { Pronunciation:'Pronunc.', Interaction:'Interact.', Vocabular
 })();
 
 
+
+/* ============================================================================
+ * 3.6.9 - RECIBO DE MATRICULA E MATERIAL
+ * ========================================================================== */
+
+var _CONTRATOS_RECIBO = [];
+
+function _num(txt){
+  var t = String(txt || '').replace(/[^0-9,.]/g, '');
+  if(!t) return 0;
+  if(t.indexOf(',') !== -1){
+    // tem virgula: o ponto e separador de milhar (1.250,50)
+    t = t.replace(/\./g, '').replace(',', '.');
+  }else{
+    // sem virgula: ponto com 1 ou 2 casas no fim e decimal (1250.50),
+    // qualquer outro caso e separador de milhar (1.250)
+    t = /\.\d{1,2}$/.test(t) ? t.replace(/\.(?=.*\.)/g, '') : t.replace(/\./g, '');
+  }
+  var n = parseFloat(t);
+  return isNaN(n) ? 0 : n;
+}
+function _reais(v){
+  return 'R$ ' + (Number(v)||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+document.getElementById('recepCardRecibo').addEventListener('click', function(){
+  abrirPainelRecep('painelRecibo','Recibo de matrícula e material');
+  _soUmPainelRecibo('reciboSubcards');
+});
+
+function _soUmPainelRecibo(qual){
+  ['reciboSubcards','formRecibo','listaRecibo'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', id !== qual);
+  });
+}
+
+document.getElementById('subcardNovoRecibo').addEventListener('click', async function(){
+  _navFoto();
+  _soUmPainelRecibo('formRecibo');
+  $recepcaoSub.textContent = 'Novo recibo';
+  document.getElementById('recResultado').innerHTML = '';
+  var livros = await carregarLivrosCadastrados();
+  _preencherSelect(document.getElementById('recLivro'), livros || [], '');
+  recAtualizarTotal();
+});
+
+document.getElementById('subcardBuscarRecibo').addEventListener('click', function(){
+  _navFoto();
+  _soUmPainelRecibo('listaRecibo');
+  $recepcaoSub.textContent = 'Recibos emitidos';
+  carregarRecibos();
+});
+
+document.getElementById('recBuscaAluno').addEventListener('input', function(){
+  clearTimeout(window._recTimer);
+  window._recTimer = setTimeout(buscarContratosRecibo, 400);
+});
+
+async function buscarContratosRecibo(){
+  var termo = document.getElementById('recBuscaAluno').value.trim();
+  var sel = document.getElementById('recContrato');
+  if(termo.length < 2){ sel.innerHTML = '<option value="">Busque o aluno primeiro</option>'; return; }
+  sel.innerHTML = '<option value="">Buscando...</option>';
+  try{
+    var r = await chamarAPI({ acao:'contratosAtivosAluno', termo: termo });
+    _CONTRATOS_RECIBO = (r && r.contratos) ? r.contratos : [];
+    if(!_CONTRATOS_RECIBO.length){
+      sel.innerHTML = '<option value="">Nenhum contrato encontrado</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">Selecione o contrato</option>' + _CONTRATOS_RECIBO.map(function(c){
+      return '<option value="'+c.numeroContrato+'">Nº '+c.numeroContrato+' — '+c.aluno+'</option>';
+    }).join('');
+    if(_CONTRATOS_RECIBO.length === 1) sel.value = _CONTRATOS_RECIBO[0].numeroContrato;
+  }catch(e){
+    sel.innerHTML = '<option value="">Erro ao buscar</option>';
+  }
+}
+
+/* liga as caixas de selecao aos campos de valor */
+[['recChkMatricula','recValorMatricula','recItemMatricula'],
+ ['recChkMaterial','recValorMaterial','recItemMaterial']].forEach(function(par){
+  var chk = document.getElementById(par[0]);
+  chk.addEventListener('change', function(){
+    var campo = document.getElementById(par[1]);
+    campo.disabled = !chk.checked;
+    document.getElementById(par[2]).classList.toggle('off', !chk.checked);
+    if(!chk.checked) campo.value = '';
+    recAtualizarTotal();
+  });
+});
+
+['recValorMatricula','recValorMaterial'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', recAtualizarTotal);
+});
+
+function recAtualizarTotal(){
+  var vM = document.getElementById('recChkMatricula').checked ? _num(document.getElementById('recValorMatricula').value) : 0;
+  var vD = document.getElementById('recChkMaterial').checked ? _num(document.getElementById('recValorMaterial').value) : 0;
+  var box = document.getElementById('recTotal');
+  var partes = [];
+  if(document.getElementById('recChkMatricula').checked) partes.push('matrícula');
+  if(document.getElementById('recChkMaterial').checked) partes.push('material');
+  box.innerHTML = '<span>Total do recibo' + (partes.length ? ' (' + partes.join(' + ') + ')' : '') + '</span>'
+    + '<b>' + _reais(vM + vD) + '</b>';
+}
+
+document.getElementById('btnGerarRecibo').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget;
+  if(btn.disabled) return;
+  var box = document.getElementById('recResultado');
+  var num = document.getElementById('recContrato').value;
+  var comM = document.getElementById('recChkMatricula').checked;
+  var comD = document.getElementById('recChkMaterial').checked;
+  var vM = comM ? _num(document.getElementById('recValorMatricula').value) : 0;
+  var vD = comD ? _num(document.getElementById('recValorMaterial').value) : 0;
+
+  if(!num){ box.innerHTML = '<div class="assess-aviso">Escolha o contrato do aluno.</div>'; return; }
+  if(!comM && !comD){ box.innerHTML = '<div class="assess-aviso">Marque matrícula, material, ou os dois.</div>'; return; }
+  if(comM && vM <= 0){ box.innerHTML = '<div class="assess-aviso">Informe o valor da matrícula.</div>'; return; }
+  if(comD && vD <= 0){ box.innerHTML = '<div class="assess-aviso">Informe o valor do material.</div>'; return; }
+
+  var rotulo = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Montando o PDF...</p>';
+  try{
+    var r = await chamarAPI({ acao:'gerarReciboMatricula', numContrato: num,
+      comMatricula: comM, comMaterial: comD, valorMatricula: vM, valorMaterial: vD,
+      livro: document.getElementById('recLivro').value,
+      formaPagamento: document.getElementById('recForma').value,
+      emitidoPor: professorLogado || '' });
+
+    if(!r.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + (r.erro || 'Erro ao gerar.') + '</div>';
+      return;
+    }
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Recibo nº ' + r.numero
+      + ' emitido para ' + r.pagador + ', no valor de ' + r.totalTexto + '.</div>'
+      + '<div style="padding:10px 20px 0;">' + botaoPdf(r.pdfUrl, 'Abrir recibo em PDF', 'doc-link') + '</div>';
+    document.getElementById('recValorMatricula').value = '';
+    document.getElementById('recValorMaterial').value = '';
+    recAtualizarTotal();
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Falha de conexão ao gerar o recibo.</div>';
+  }finally{
+    btn.disabled = false; btn.textContent = rotulo;
+  }
+});
+
+document.getElementById('recBusca').addEventListener('input', function(){
+  clearTimeout(window._recListaTimer);
+  window._recListaTimer = setTimeout(carregarRecibos, 400);
+});
+
+async function carregarRecibos(){
+  var box = document.getElementById('recListaResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarRecibos', termo: document.getElementById('recBusca').value.trim() });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    if(!r.recibos.length){ box.innerHTML = '<div class="busca-vazia">Nenhum recibo encontrado.</div>'; return; }
+    box.innerHTML = '<div style="padding:0 20px;">' + r.recibos.map(function(x){
+      return '<div class="rec-linha"><div class="rl-topo">'
+        + '<span class="rl-num">Recibo nº ' + x.numero + '</span>'
+        + '<span class="rl-val">' + x.totalTexto + '</span></div>'
+        + '<div class="rl-meta">' + x.aluno + (x.pagador && x.pagador !== x.aluno ? ' · pago por ' + x.pagador : '')
+        + '<br>' + x.data + ' · contrato nº ' + x.numContrato + '</div>'
+        + '<div class="doc-acoes" style="margin-top:8px;">' + botaoPdf(x.pdfUrl, 'Abrir PDF', 'doc-link') + '</div>'
+        + '</div>';
+    }).join('') + '</div>';
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Não consegui carregar.</div>';
+  }
+}
+
 /* ---------- 3.6.5: nome de arquivo nao pode virar link ---------- */
 /* Quando a coluna G da aba Contratos tem so o nome do PDF, o navegador trata
    como endereco relativo e vai parar na pagina 404 do GitHub. Aqui a gente so
@@ -5487,10 +5781,7 @@ async function carregarLivrosCadastrados(forcar){
     if(r.sucesso && r.livros){
       _LIVROS_CADASTRADOS = r.livros.map(function(l){ return l.livro; });
       var sel = document.getElementById('tmLivro');
-      if(sel && sel.options.length <= 1){
-        var atual = sel.value;
-        _preencherSelect(sel, _LIVROS_CADASTRADOS, atual);
-      }
+      if(sel){ _preencherSelect(sel, _LIVROS_CADASTRADOS, sel.value); }
     }
   }catch(e){ }
   return _LIVROS_CADASTRADOS;
@@ -6978,18 +7269,12 @@ async function abrirFormTurma(t){
     (op && op.modalidades) || ['PRESENCIAL','ONLINE','HIBRIDO'],
     t ? t.modalidade : 'PRESENCIAL');
 
-  _preencherSelect(document.getElementById('tmLivro'),
-    _LIVROS_CADASTRADOS.length ? _LIVROS_CADASTRADOS : (t && t.livro ? [t.livro] : []),
-    t ? t.livro : '');
-  // o livro da turma que esta sendo editada nao pode sumir da lista,
-  // mesmo que ainda nao esteja cadastrado na aba Materiais
-  if(t && t.livro && _LIVROS_CADASTRADOS.indexOf(t.livro) < 0){
-    var opX = document.createElement('option');
-    opX.value = t.livro; opX.textContent = t.livro + ' (fora da lista)';
-    document.getElementById('tmLivro').appendChild(opX);
-    document.getElementById('tmLivro').value = t.livro;
-  }
-  carregarLivrosCadastrados();
+  // 3.6.9: esperar a lista chegar ANTES de montar o select.
+  // Antes o campo era montado com a lista vazia, sobrava so o livro da propria
+  // turma, e o recarregamento nao consertava porque so agia com o select vazio.
+  var livros = await carregarLivrosCadastrados();
+  if(!livros || !livros.length) livros = (t && t.livro) ? [t.livro] : [];
+  _preencherSelect(document.getElementById('tmLivro'), livros, t ? t.livro : '');
   document.getElementById('tmDias').value = t ? t.dias : '';
   document.getElementById('tmHorario').value = t ? t.horario : '';
   document.getElementById('tmCapacidade').value = t ? String(t.capacidade) : '6';
@@ -7423,7 +7708,7 @@ function aplicarPermissoes(){
   // TODOS os cards da recepção passam a depender de permissão, não só os de gestão
   var soRecepcao = ['recepCardContratos','recepCardRenovacoes','recepCardTurmas',
     'recepCardDesligar','recepCardPresenca','recepCardCalendario','recepCardPanorama',
-    'recepCardAfastamento','recepCardBaixa','recepCardFaltas'];
+    'recepCardAfastamento','recepCardBaixa','recepCardRecibo','recepCardFaltas'];
   soRecepcao.forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !podeVer('recepcao'));
