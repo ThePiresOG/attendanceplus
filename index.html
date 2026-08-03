@@ -753,6 +753,9 @@
   .rec-linha .rl-num{ font-size:13px; font-weight:700; color:var(--verde-escuro); }
   .rec-linha .rl-val{ font-size:14px; font-weight:700; color:var(--carvao); }
   .rec-linha .rl-meta{ font-size:11.5px; color:#8a8a84; margin-top:3px; }
+  .rec-parcela-valor{ padding:12px 14px; border:1px solid var(--linha); border-radius:11px;
+    background:var(--perola); font-size:14px; font-weight:600; color:var(--verde-escuro); }
+  #recPalco{ position:fixed; left:-10000px; top:0; width:794px; background:#fff; }
 </style>
 </head>
 <body>
@@ -977,6 +980,7 @@
 
   <!-- TELA DE NOTAS -->
   <div id="relPalco" aria-hidden="true"></div>
+  <div id="recPalco" aria-hidden="true"></div>
 
   <div id="telaAula" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow-y:auto;">
     <header>
@@ -1883,6 +1887,16 @@
             </select>
           </div>
         </div>
+        <div class="controls hidden" id="recLinhaParcelas" style="padding-top:0;">
+          <div class="field">
+            <label for="recParcelas">Parcelas no cart&atilde;o</label>
+            <select id="recParcelas"></select>
+          </div>
+          <div class="field">
+            <label>Valor de cada parcela</label>
+            <div class="rec-parcela-valor" id="recParcelaValor">&mdash;</div>
+          </div>
+        </div>
 
         <div class="rec-total" id="recTotal"></div>
         <div id="recResultado"></div>
@@ -2587,7 +2601,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.6.9';
+const APP_VERSAO = '3.7.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5683,6 +5697,125 @@ function recAtualizarTotal(){
   if(document.getElementById('recChkMaterial').checked) partes.push('material');
   box.innerHTML = '<span>Total do recibo' + (partes.length ? ' (' + partes.join(' + ') + ')' : '') + '</span>'
     + '<b>' + _reais(vM + vD) + '</b>';
+  recAtualizarParcelas();
+}
+
+/* ---------- parcelas: so aparecem no cartao de credito ---------- */
+(function(){
+  var sel = document.getElementById('recParcelas');
+  for(var n = 1; n <= 12; n++){
+    var o = document.createElement('option');
+    o.value = n; o.textContent = n + 'x' + (n === 1 ? ' (à vista)' : '');
+    sel.appendChild(o);
+  }
+})();
+
+function recEhCredito(){
+  return /cr\u00e9dito|credito/i.test(document.getElementById('recForma').value || '');
+}
+
+function recAtualizarParcelas(){
+  var linha = document.getElementById('recLinhaParcelas');
+  var credito = recEhCredito();
+  linha.classList.toggle('hidden', !credito);
+  if(!credito){ document.getElementById('recParcelas').value = '1'; }
+  var n = Number(document.getElementById('recParcelas').value) || 1;
+  var total = recTotalAtual();
+  document.getElementById('recParcelaValor').textContent =
+    (credito && n > 1 && total > 0) ? (n + 'x de ' + _reais(total / n)) : (total > 0 ? _reais(total) : '\u2014');
+}
+
+document.getElementById('recForma').addEventListener('change', recAtualizarParcelas);
+document.getElementById('recParcelas').addEventListener('change', recAtualizarParcelas);
+
+function recTotalAtual(){
+  var vM = document.getElementById('recChkMatricula').checked ? _num(document.getElementById('recValorMatricula').value) : 0;
+  var vD = document.getElementById('recChkMaterial').checked ? _num(document.getElementById('recValorMaterial').value) : 0;
+  return vM + vD;
+}
+
+/* ---------- o desenho do recibo, no mesmo padrao do relatorio ---------- */
+function htmlRecibo(d){
+  var linhas = d.itens.map(function(it){
+    return '<tr><td><b>' + it.nome + '</b><span>' + it.detalhe + '</span></td>'
+         + '<td class="v">' + it.valorTexto + '</td></tr>';
+  }).join('');
+
+  return '<div class="rc-pag">'
+  + '<div class="rc-topo">'
+    + '<img class="rc-logo" src="' + LOGO_REL_COR + '">'
+    + '<div class="rc-tt"><h1>RECIBO</h1><p>N&ordm; ' + d.numero + ' &middot; ' + d.dataBr + '</p></div>'
+  + '</div>'
+
+  + '<div class="rc-valor"><span>VALOR RECEBIDO</span><b>' + d.totalTexto + '</b></div>'
+
+  + '<p class="rc-corpo">Recebemos de <b>' + d.pagador + '</b>'
+    + (d.ehMenor ? ', respons&aacute;vel financeiro pelo(a) aluno(a) <b>' + d.aluno + '</b>' : '')
+    + ', inscrito(a) no CPF sob o n&ordm; '
+    + (d.cpf || 'não informado') + ', a import&acirc;ncia de <b>' + d.totalTexto + '</b> ('
+    + d.extenso + '), referente ao(s) item(ns) discriminado(s) abaixo, dando plena e geral '
+    + 'quita&ccedil;&atilde;o do valor recebido.</p>'
+
+  + '<table class="rc-tab"><thead><tr><th>DISCRIMINA&Ccedil;&Atilde;O</th><th class="v">VALOR</th></tr></thead>'
+    + '<tbody>' + linhas + '</tbody>'
+    + '<tfoot><tr><td>TOTAL</td><td class="v">' + d.totalTexto + '</td></tr></tfoot></table>'
+
+  + '<div class="rc-ref">'
+    + '<div><span>Aluno(a)</span><b>' + d.aluno + '</b></div>'
+    + '<div><span>Matr&iacute;cula</span><b>n&ordm; ' + d.matricula + '</b></div>'
+    + '<div><span>Contrato</span><b>n&ordm; ' + d.numContrato + '</b></div>'
+    + '<div class="larga"><span>Forma de pagamento</span><b>' + d.formaTexto + '</b></div>'
+    + (d.ehMenor ? '<div class="larga aviso">Aluno menor de idade. Recibo emitido em nome do respons&aacute;vel financeiro.</div>' : '')
+  + '</div>'
+
+  + '<p class="rc-fecho">Para clareza e validade, firmamos o presente recibo.</p>'
+  + '<p class="rc-data">' + d.cidade + ', ' + d.dataExtenso + '.</p>'
+
+  + '<div class="rc-ass"><div class="rc-linha-ass"></div>'
+    + '<b>' + d.razao + '</b><span>CNPJ ' + d.cnpj + '</span></div>'
+
+  + '<p class="rc-pe">' + d.carimbo + '<br>Documento gerado eletronicamente. '
+    + 'A autenticidade pode ser conferida junto \u00e0 secretaria da escola.</p>'
+  + '</div>'
+  + '<style>'
+  + '.rc-pag{ font-family:Poppins,Arial,sans-serif; color:#2B2E2C; padding:6px 4px; }'
+  + '.rc-topo{ display:flex; justify-content:space-between; align-items:flex-start;'
+  + '  border-bottom:2.5px solid #5A7568; padding-bottom:12px; margin-bottom:20px; }'
+  + '.rc-logo{ width:132px; }'
+  + '.rc-tt{ text-align:right; }'
+  + '.rc-tt h1{ margin:0; font-size:31px; letter-spacing:5px; color:#5A7568; font-weight:700; }'
+  + '.rc-tt p{ margin:3px 0 0; font-size:12px; color:#8a8a84; letter-spacing:.4px; }'
+  + '.rc-valor{ background:#5A7568; color:#fff; border-radius:11px; padding:15px 20px;'
+  + '  display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }'
+  + '.rc-valor span{ font-size:10px; letter-spacing:2px; opacity:.85; }'
+  + '.rc-valor b{ font-size:27px; font-weight:700; }'
+  + '.rc-corpo{ font-size:12.5px; line-height:1.75; margin:0 0 18px; text-align:justify; }'
+  + '.rc-tab{ width:100%; border-collapse:collapse; margin-bottom:18px; }'
+  + '.rc-tab th{ background:#5A7568; color:#fff; text-align:left; padding:8px 12px;'
+  + '  font-size:9px; letter-spacing:1.4px; font-weight:600; }'
+  + '.rc-tab th.v, .rc-tab td.v{ text-align:right; width:130px; white-space:nowrap; }'
+  + '.rc-tab tbody td{ padding:11px 12px; border-bottom:1px solid #E4E1DA; font-size:12.5px; vertical-align:top; }'
+  + '.rc-tab tbody b{ display:block; font-weight:600; }'
+  + '.rc-tab tbody span{ display:block; font-size:10.5px; color:#8a8a84; margin-top:2px; }'
+  + '.rc-tab td.v{ font-weight:600; }'
+  + '.rc-tab tfoot td{ padding:11px 12px; background:#F5F4F0; font-weight:700; font-size:13.5px;'
+  + '  color:#5A7568; border-top:2px solid #5A7568; }'
+  + '.rc-ref{ display:flex; flex-wrap:wrap; gap:13px 0; background:#F5F4F0; border-radius:11px;'
+  + '  padding:15px 18px; margin-bottom:22px; }'
+  + '.rc-ref > div{ width:33.33%; }'
+  + '.rc-ref > div.larga{ width:100%; }'
+  + '.rc-ref span{ display:block; font-size:9px; letter-spacing:1.2px; color:#8a8a84; text-transform:uppercase; }'
+  + '.rc-ref b{ display:block; font-size:12.5px; margin-top:3px; font-weight:600; }'
+  + '.rc-ref .aviso{ font-size:10.5px; color:#8a3b2d; font-style:italic; }'
+  + '.rc-fecho{ font-size:12.5px; margin:0 0 4px; }'
+  + '.rc-data{ font-size:12.5px; text-align:right; margin:0 0 74px; }'
+  + '.rc-ass{ text-align:center; }'
+  + '.rc-linha-ass{ width:290px; margin:0 auto 7px; border-top:1px solid #2B2E2C; }'
+  + '.rc-ass b{ display:block; font-size:11px; font-weight:600; }'
+  + '.rc-ass span{ display:block; font-size:10px; color:#8a8a84; margin-top:2px; }'
+  + '.rc-pe{ margin-top:60px; padding-top:9px; border-top:1px solid #E4E1DA; text-align:center;'
+  + '  font-size:8px; color:#a5a09a; font-style:italic; }'
+  + '</style>';
 }
 
 document.getElementById('btnGerarRecibo').addEventListener('click', async function(ev){
@@ -5702,26 +5835,56 @@ document.getElementById('btnGerarRecibo').addEventListener('click', async functi
 
   var rotulo = btn.textContent;
   btn.disabled = true; btn.textContent = 'Gerando...';
-  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Montando o PDF...</p>';
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Montando o recibo...</p>';
+  var palco = document.getElementById('recPalco');
+
   try{
-    var r = await chamarAPI({ acao:'gerarReciboMatricula', numContrato: num,
+    var d = await chamarAPI({ acao:'dadosRecibo', numContrato: num,
       comMatricula: comM, comMaterial: comD, valorMatricula: vM, valorMaterial: vD,
       livro: document.getElementById('recLivro').value,
       formaPagamento: document.getElementById('recForma').value,
-      emitidoPor: professorLogado || '' });
+      parcelas: Number(document.getElementById('recParcelas').value) || 1 });
 
-    if(!r.sucesso){
-      box.innerHTML = '<div class="assess-aviso">' + (r.erro || 'Erro ao gerar.') + '</div>';
+    if(!d.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + (d.erro || 'Erro ao gerar.') + '</div>';
       return;
     }
-    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Recibo nº ' + r.numero
-      + ' emitido para ' + r.pagador + ', no valor de ' + r.totalTexto + '.</div>'
-      + '<div style="padding:10px 20px 0;">' + botaoPdf(r.pdfUrl, 'Abrir recibo em PDF', 'doc-link') + '</div>';
-    document.getElementById('recValorMatricula').value = '';
-    document.getElementById('recValorMaterial').value = '';
-    recAtualizarTotal();
+
+    palco.innerHTML = htmlRecibo(d);
+    var arquivo = 'Recibo_' + d.numero + '_' + String(d.pagador).replace(/\s+/g,'_') + '.pdf';
+    var opt = {
+      margin: [14, 14, 14, 14],
+      filename: arquivo,
+      image: { type:'jpeg', quality:0.98 },
+      html2canvas: { scale:2, useCORS:true, backgroundColor:'#ffffff', scrollY:0 },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    };
+    var blob = await html2pdf().set(opt).from(palco.firstElementChild).outputPdf('blob');
+
+    // baixa na hora para quem esta atendendo
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = arquivo; document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+
+    var b64 = await new Promise(function(res){
+      var fr = new FileReader();
+      fr.onloadend = function(){ res(String(fr.result).split(',')[1]); };
+      fr.readAsDataURL(blob);
+    });
+    var g = await chamarAPI({ acao:'arquivarRecibo', numero: d.numero,
+      linhaPlanilha: d.linhaPlanilha, base64: b64, nomeArquivo: arquivo });
+
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Recibo n&ordm; ' + d.numero
+      + ' emitido para ' + d.pagador + ', no valor de ' + d.totalTexto + '.'
+      + (g.sucesso ? ' O PDF foi baixado e guardado na pasta Recibos.'
+                   : ' O PDF foi baixado, mas nao consegui guardar no Drive: ' + (g.erro||'')) + '</div>'
+      + (g.sucesso ? '<div style="padding:10px 20px 0;">' + botaoPdf(g.url, 'Abrir no Drive', 'doc-link') + '</div>' : '');
+    palco.innerHTML = '';
   }catch(e){
-    box.innerHTML = '<div class="assess-aviso">Falha de conexão ao gerar o recibo.</div>';
+    palco.innerHTML = '';
+    box.innerHTML = '<div class="assess-aviso">Falha ao gerar o recibo. Tente de novo.</div>';
   }finally{
     btn.disabled = false; btn.textContent = rotulo;
   }
