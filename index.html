@@ -2470,7 +2470,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.6.6';
+const APP_VERSAO = '3.6.8';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -7294,16 +7294,20 @@ async function carregarPendencias(nome){
     if(!r.sucesso || !r.total){ box.classList.add('hidden'); return; }
     PENDENCIAS = r;
 
-    var critico = r.semanaPassada > 0;
+    // 3.6.8: o aviso passou a cobrir o mes inteiro
+    var doMesAnterior = (r.mesAnterior !== undefined) ? r.mesAnterior : r.semanaPassada;
+    var doMesAtual    = (r.mesAtual    !== undefined) ? r.mesAtual    : r.semanaAtual;
+    var critico = doMesAnterior > 0;
     box.className = 'pend-box' + (critico ? ' critico' : '');
 
     var partes = [];
-    if(r.semanaPassada) partes.push(r.semanaPassada + ' da semana passada');
-    if(r.semanaAtual) partes.push(r.semanaAtual + ' desta semana');
+    if(doMesAnterior) partes.push(doMesAnterior + ' de ' + (r.nomeMesAnterior || 'mês passado'));
+    if(doMesAtual) partes.push(doMesAtual + ' de ' + (r.nomeMesAtual || 'este mês'));
 
     var titulo = (PERM && PERM.presenca)
       ? ('Falta lançar presença de ' + r.total + (r.total > 1 ? ' aulas' : ' aula') + ': ' + partes.join(' e ') + '.')
       : ('A escola tem ' + r.total + ' presença(s) sem lançar: ' + partes.join(' e ') + '.');
+    if(critico) titulo += ' Feche o mês passado antes.';
 
     box.innerHTML = '<div class="pend-topo">'
       + '<span class="pend-titulo">' + titulo + '</span>'
