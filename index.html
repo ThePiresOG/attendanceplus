@@ -2673,7 +2673,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.7.1';
+const APP_VERSAO = '3.7.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4993,6 +4993,42 @@ var _NAV_BLOCOS = [
   'matSubcards','matResultado','matExtrasResultado','matLivros',
   'formCalendario','formUsuario'
 ];
+
+/**
+ * 3.7.2: a lista acima passou a ser um piso, nao a verdade.
+ * Toda vez que eu criava um painel novo e esquecia de registrar aqui, o botao
+ * Voltar deixava ele aberto por baixo dos cards. Aconteceu com Materiais e de
+ * novo com o Recibo de mensalidade. Agora o proprio HTML diz quem existe.
+ */
+(function _navDescobrirBlocos(){
+  function juntar(lista){
+    lista.forEach(function(e){
+      if(e && e.id && _NAV_BLOCOS.indexOf(e.id) === -1) _NAV_BLOCOS.push(e.id);
+    });
+  }
+  var q = function(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+
+  // telas inteiras, menos a de login, que nunca faz parte da navegacao
+  juntar(q('[id^="tela"]').filter(function(e){ return e.id !== 'telaLogin'; }));
+  // todo painel da recepcao
+  juntar(q('.recep-painel[id]'));
+  // grupos de subcards dentro de um painel
+  juntar(q('.recep-painel .menu-opcoes[id]'));
+  // formularios e listas que sao filhos diretos de um painel
+  q('.recep-painel').forEach(function(p){
+    juntar(Array.prototype.filter.call(p.children, function(c){
+      return /^(form|lista|consulta)/.test(c.id || '');
+    }));
+  });
+
+  // rede de seguranca: avisa no console se algum painel escapar das regras
+  var faltando = q('.recep-painel[id]').filter(function(e){
+    return _NAV_BLOCOS.indexOf(e.id) === -1;
+  }).map(function(e){ return e.id; });
+  if(faltando.length){
+    console.warn('[AttendancePlus] painel fora do controle do Voltar:', faltando.join(', '));
+  }
+})();
 
 var _NAV_HIST = [];
 
