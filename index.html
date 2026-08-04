@@ -2673,7 +2673,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.7.2';
+const APP_VERSAO = '3.7.3';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5049,12 +5049,33 @@ function _navFoto(){
   };
 }
 
+/**
+ * 3.7.3: regra de sanidade da recepcao.
+ * Nunca pode existir os cards e um painel abertos ao mesmo tempo, nem dois
+ * paineis juntos. Era isso que dava aquela tela embolada ao voltar. Em vez de
+ * cacar handler por handler, o app passa a consertar o estado sozinho.
+ */
+function _navSanear(){
+  var q = function(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+  var abertos = q('.recep-painel').filter(function(p){ return !p.classList.contains('hidden'); });
+
+  // dois ou mais paineis: fica o primeiro
+  abertos.slice(1).forEach(function(p){ p.classList.add('hidden'); });
+
+  var cards = document.getElementById('recepCards');
+  if(cards && !cards.classList.contains('hidden') && abertos.length){
+    // cards visiveis mandam: quem voltou quer o menu, nao o painel
+    abertos.forEach(function(p){ p.classList.add('hidden'); });
+  }
+}
+
 /** Volta a tela para o estado fotografado. */
 function _navAplicar(f){
   _NAV_BLOCOS.forEach(function(id){
     var e = document.getElementById(id);
     if(e) e.classList.toggle('hidden', f.abertos.indexOf(id) < 0);
   });
+  _navSanear();
   var sub = document.getElementById('recepcaoSub');
   if(sub && f.sub) sub.textContent = f.sub;
   var btn = document.getElementById('btnSairRecepcao');
@@ -5063,6 +5084,7 @@ function _navAplicar(f){
 
 /** Guarda o passo atual. Chamado antes de qualquer card abrir outra tela. */
 function _navGuardar(){
+  _navSanear();          // nunca guarda uma tela ja embolada
   var f = _navFoto();
   if(!f) return;
   _NAV_HIST.push(f);
@@ -5278,15 +5300,22 @@ async function filtrarTurmasConsulta(){
   var lista = await carregarTurmasConsulta();
   if(!lista){ box.innerHTML = '<div class="assess-aviso">Erro ao carregar as turmas.</div>'; return; }
 
+  // 3.7.3: cada palavra digitada vale por si.
+  // Antes o sistema procurava a frase inteira, entao "lidia sab online" nao
+  // achava nada, porque esse texto exato nao existe em lugar nenhum.
+  var palavras = termo.split(/\s+/).filter(function(x){ return x; });
   var achadas = lista.filter(function(t){
     var alvo = _semAcentoCli([t.turmaId, t.professor, t.nivel, t.livro, t.dias,
-                              t.horario, t.modalidade, (t.alunos || []).join(' ')].join(' '));
-    return alvo.indexOf(termo) >= 0;
+                              t.horario, t.modalidade, t.tipo,
+                              (t.alunos || []).join(' ')].join(' '));
+    return palavras.every(function(p){ return alvo.indexOf(p) !== -1; });
   });
 
   if(!achadas.length){
     box.innerHTML = '<div class="assess-aviso">Nenhuma turma encontrada para &ldquo;'
-      + document.getElementById('ctBusca').value.trim() + '&rdquo;.</div>';
+      + document.getElementById('ctBusca').value.trim() + '&rdquo;.<br>'
+      + 'D&aacute; para combinar termos, como <b>lidia sabado online</b>. '
+      + 'Cada palavra precisa bater em algum campo da turma.</div>';
     return;
   }
 
@@ -5737,7 +5766,6 @@ function _soUmPainelRecibo(qual){
 }
 
 document.getElementById('subcardNovoRecibo').addEventListener('click', async function(){
-  _navFoto();
   _soUmPainelRecibo('formRecibo');
   $recepcaoSub.textContent = 'Novo recibo';
   document.getElementById('recResultado').innerHTML = '';
@@ -5747,7 +5775,6 @@ document.getElementById('subcardNovoRecibo').addEventListener('click', async fun
 });
 
 document.getElementById('subcardBuscarRecibo').addEventListener('click', function(){
-  _navFoto();
   _soUmPainelRecibo('listaRecibo');
   $recepcaoSub.textContent = 'Recibos emitidos';
   carregarRecibos();
