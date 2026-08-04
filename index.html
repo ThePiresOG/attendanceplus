@@ -796,6 +796,25 @@
   .nr1-idx{ font-size:12px; font-weight:700; }
   .nr1-idx.alto{ color:#8a3b2d; } .nr1-idx.medio{ color:#a8790f; } .nr1-idx.baixo{ color:#3E8E5A; }
   .nr1-meta{ font-size:11.5px; color:#8a8a84; margin-top:3px; line-height:1.5; }
+  .nr1-pessoa{ background:var(--branco); border:1px solid var(--linha); border-radius:12px;
+    padding:11px 13px; margin-bottom:9px; }
+  .nr1-pessoa .lin{ display:flex; gap:8px; align-items:center; }
+  .nr1-pessoa input[type=text]{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-size:13px;
+    border:1px solid var(--linha); border-radius:9px; padding:9px 10px; background:var(--perola); }
+  .nr1-pessoa select{ flex:none; width:96px; font-family:'Poppins',sans-serif; font-size:12px;
+    border:1px solid var(--linha); border-radius:9px; padding:9px 6px; background:var(--perola); }
+  .nr1-pessoa .tirar{ flex:none; background:none; border:none; color:#8a3b2d; font-size:17px; cursor:pointer; padding:0 4px; }
+  .nr1-ass{ margin-top:9px; }
+  .nr1-ass canvas{ width:100%; height:96px; border:1px dashed var(--linha); border-radius:9px;
+    background:#fff; touch-action:none; display:block; }
+  .nr1-ass .rod{ display:flex; justify-content:space-between; align-items:center; margin-top:5px; }
+  .nr1-ass .rod span{ font-size:10.5px; color:#8a8a84; }
+  .nr1-ass .rod button{ font-family:'Poppins',sans-serif; font-size:11px; background:none; border:none;
+    color:var(--verde-escuro); text-decoration:underline; cursor:pointer; }
+  .nr1-doc{ background:var(--branco); border:1px solid var(--linha); border-radius:11px;
+    padding:11px 14px; margin-bottom:8px; }
+  .nr1-doc b{ font-size:13px; display:block; }
+  .nr1-doc span{ font-size:11px; color:#8a8a84; }
 </style>
 </head>
 <body>
@@ -2021,11 +2040,19 @@
 
     <div class="recep-painel hidden" id="painelNR1">
       <div class="menu-opcoes" id="nr1Subcards">
+        <button class="menu-card" id="subcardNR1Riscos">
+          <div class="menu-card-icone">&#9888;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Passo 1 &middot; Invent&aacute;rio de riscos</span>
+            <span class="menu-card-sub">Por setor, fun&ccedil;&atilde;o e v&iacute;nculo</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
         <button class="menu-card" id="subcardNR1Conversa">
           <div class="menu-card-icone">&#128172;</div>
           <div class="menu-card-txt">
-            <span class="menu-card-titulo">Nova conversa individual</span>
-            <span class="menu-card-sub">Passo 2 &middot; roteiro com dia e hora</span>
+            <span class="menu-card-titulo">Passo 2 &middot; Conversa individual</span>
+            <span class="menu-card-sub">Roteiro com dia, hora e sigilo</span>
           </div>
           <span class="menu-card-seta">&rarr;</span>
         </button>
@@ -2037,11 +2064,43 @@
           </div>
           <span class="menu-card-seta">&rarr;</span>
         </button>
-        <button class="menu-card" id="subcardNR1Riscos">
-          <div class="menu-card-icone">&#9888;</div>
+        <button class="menu-card" id="subcardNR1Acoes">
+          <div class="menu-card-icone">&#128736;</div>
           <div class="menu-card-txt">
-            <span class="menu-card-titulo">Invent&aacute;rio de riscos</span>
-            <span class="menu-card-sub">Passo 1 &middot; por fun&ccedil;&atilde;o e v&iacute;nculo</span>
+            <span class="menu-card-titulo">Passo 3 &middot; Plano de a&ccedil;&atilde;o</span>
+            <span class="menu-card-sub">O que fazer, quem faz e at&eacute; quando</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardNR1Politica">
+          <div class="menu-card-icone">&#128220;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Passo 4 &middot; Pol&iacute;tica interna</span>
+            <span class="menu-card-sub">Texto curto, revisado e datado</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardNR1Treino">
+          <div class="menu-card-icone">&#128101;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Passo 5 &middot; Treinamento e ata</span>
+            <span class="menu-card-sub">Reuni&atilde;o com lista e assinatura</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardNR1Dossie">
+          <div class="menu-card-icone">&#128196;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Relat&oacute;rio do colaborador</span>
+            <span class="menu-card-sub">Tudo que existe sobre uma pessoa</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardNR1Docs">
+          <div class="menu-card-icone">&#128206;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Documentos assinados</span>
+            <span class="menu-card-sub">Subir papel assinado e consultar</span>
           </div>
           <span class="menu-card-seta">&rarr;</span>
         </button>
@@ -2102,6 +2161,139 @@
       </div>
 
       <div class="hidden" id="listaNR1Feitas"><div id="nr1FeitasResultado"></div></div>
+
+
+      <div class="hidden" id="formNR1Acoes">
+        <div class="controls">
+          <div class="field" style="width:100%;">
+            <label for="nr1aTratado">Risco ou ponto que est&aacute; sendo tratado</label>
+            <input type="text" id="nr1aTratado" placeholder="Ex: sobrecarga da recep&ccedil;&atilde;o no hor&aacute;rio de pico">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1aAcao">O que ser&aacute; feito</label>
+            <textarea id="nr1aAcao" rows="2" placeholder="Ex: escalar a Thais para o caixa entre 18h e 19h30"></textarea>
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="nr1aResp">Respons&aacute;vel</label>
+            <input type="text" id="nr1aResp" placeholder="Quem vai tocar">
+          </div>
+          <div class="field">
+            <label for="nr1aPrazo">Prazo</label>
+            <input type="date" id="nr1aPrazo">
+          </div>
+        </div>
+        <div id="nr1aResultado"></div>
+        <button class="pend-acao" id="btnNR1Acao" style="width:calc(100% - 40px);margin:12px 20px 0;">Adicionar ao plano</button>
+        <div id="nr1aLista"></div>
+      </div>
+
+      <div class="hidden" id="formNR1Politica">
+        <div class="nr1-aviso" id="nr1pStatus"></div>
+        <div class="controls">
+          <div class="field" style="width:100%;">
+            <label for="nr1pTexto">Texto da pol&iacute;tica</label>
+            <textarea id="nr1pTexto" rows="18" style="font-size:12.5px;line-height:1.6;"></textarea>
+          </div>
+        </div>
+        <div id="nr1pResultado"></div>
+        <div style="display:flex;gap:9px;padding:12px 20px 0;">
+          <button class="pend-acao" id="btnNR1Politica" style="flex:1;">Aprovar esta vers&atilde;o</button>
+          <button class="ren-btn sec" id="btnNR1PoliticaPdf" style="flex:none;">Gerar PDF</button>
+        </div>
+      </div>
+
+      <div class="hidden" id="formNR1Treino">
+        <div class="controls">
+          <div class="field" style="width:100%;">
+            <label for="nr1tTema">Tema do treinamento</label>
+            <input type="text" id="nr1tTema" placeholder="Ex: Pol&iacute;tica interna e canal de den&uacute;ncia">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="nr1tData">Data</label>
+            <input type="date" id="nr1tData">
+          </div>
+          <div class="field">
+            <label for="nr1tIni">In&iacute;cio</label>
+            <input type="time" id="nr1tIni">
+          </div>
+          <div class="field">
+            <label for="nr1tFim">Fim</label>
+            <input type="time" id="nr1tFim">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1tPauta">Pauta do que foi tratado</label>
+            <textarea id="nr1tPauta" rows="3" placeholder="Os t&oacute;picos abordados. Isso vira a ata."></textarea>
+          </div>
+        </div>
+
+        <div class="nr1-bloco">
+          <div class="mn-cab"><span>Lista de presen&ccedil;a</span>
+            <button type="button" id="nr1tAddPessoa">adicionar pessoa</button></div>
+          <div id="nr1tPessoas"></div>
+        </div>
+
+        <div id="nr1tResultado"></div>
+        <button class="pend-acao" id="btnNR1Treino" style="width:calc(100% - 40px);margin:12px 20px 0;">Registrar treinamento e gerar ata</button>
+        <div id="nr1tLista"></div>
+      </div>
+
+      <div class="hidden" id="formNR1Dossie">
+        <div class="busca-linha">
+          <div class="campo">
+            <label for="nr1dBusca">Colaborador</label>
+            <input type="text" id="nr1dBusca" list="nr1dNomes" placeholder="Digite o nome" autocomplete="off">
+            <datalist id="nr1dNomes"></datalist>
+          </div>
+          <button class="busca-btn" id="btnNR1Dossie">Buscar</button>
+        </div>
+        <div id="nr1dResultado"></div>
+      </div>
+
+      <div class="hidden" id="formNR1Docs">
+        <div class="nr1-aviso">
+          Imprima o documento, colha a assinatura a caneta, fotografe ou escaneie e suba aqui.
+          O sistema cria uma pasta com o nome da pessoa e guarda tudo dela junto.
+        </div>
+        <div class="controls">
+          <div class="field">
+            <label for="nr1docNome">Colaborador</label>
+            <input type="text" id="nr1docNome" list="nr1dNomes" placeholder="Nome" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="nr1docTipo">Tipo de documento</label>
+            <select id="nr1docTipo">
+              <option>Lista de presen&ccedil;a assinada</option>
+              <option>Ci&ecirc;ncia da pol&iacute;tica interna</option>
+              <option>Ata de treinamento assinada</option>
+              <option>Termo de conversa individual</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1docRef">Refer&ecirc;ncia (opcional)</label>
+            <input type="text" id="nr1docRef" placeholder="Ex: treinamento n&ordm; 3, de 12/08/2026">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1docArq">Arquivo (PDF ou foto)</label>
+            <input type="file" id="nr1docArq" accept=".pdf,image/*">
+          </div>
+        </div>
+        <div id="nr1docResultado"></div>
+        <button class="pend-acao" id="btnNR1Doc" style="width:calc(100% - 40px);margin:12px 20px 0;">Guardar na pasta dele</button>
+        <div id="nr1docLista"></div>
+      </div>
 
       <div class="hidden" id="formNR1Risco">
         <div class="controls">
@@ -2853,7 +3045,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.8.2';
+const APP_VERSAO = '3.9.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -6031,7 +6223,7 @@ document.getElementById('cardNR1').addEventListener('click', function(){
   $telaMenu.classList.add('hidden');
   $telaRecepcao.classList.remove('hidden');
   abrirPainelRecep('painelNR1','NR-1 · riscos e escuta da equipe');
-  _soUmNR1('nr1Subcards');
+  _soUmNR1b('nr1Subcards');
 });
 
 function _soUmNR1(qual){
@@ -6042,7 +6234,7 @@ function _soUmNR1(qual){
 }
 
 document.getElementById('subcardNR1Conversa').addEventListener('click', async function(){
-  _soUmNR1('formNR1Conversa');
+  _soUmNR1b('formNR1Conversa');
   $recepcaoSub.textContent = 'Conversa individual';
   document.getElementById('nr1Resultado').innerHTML = '';
   var hoje = new Date();
@@ -6053,13 +6245,13 @@ document.getElementById('subcardNR1Conversa').addEventListener('click', async fu
 });
 
 document.getElementById('subcardNR1Feitas').addEventListener('click', function(){
-  _soUmNR1('listaNR1Feitas');
+  _soUmNR1b('listaNR1Feitas');
   $recepcaoSub.textContent = 'Conversas registradas';
   nr1CarregarFeitas();
 });
 
 document.getElementById('subcardNR1Riscos').addEventListener('click', function(){
-  _soUmNR1('formNR1Risco');
+  _soUmNR1b('formNR1Risco');
   $recepcaoSub.textContent = 'Inventário de riscos';
   nr1MontarEscalasRisco();
   nr1CarregarRiscos();
@@ -6520,6 +6712,531 @@ document.getElementById('btnGerarMensalidade').addEventListener('click', async f
     btn.disabled = false; btn.textContent = rotulo;
   }
 });
+
+
+
+/* ---------- 3.9.0: os PDFs da NR-1, no padrao da casa ---------- */
+
+function nr1Cabecalho(titulo, sub){
+  return '<div class="rc-topo"><img class="rc-logo" src="' + LOGO_REL_COR + '">'
+    + '<div class="rc-tt"><h1 style="font-size:20px;letter-spacing:2px;">' + titulo + '</h1>'
+    + '<p>' + sub + '</p></div></div>';
+}
+
+function nr1Assinaturas(itens){
+  return '<div class="nr1-assbloco">' + itens.map(function(x){
+    var nome = (typeof x === 'string') ? x : x.nome;
+    var sub  = (typeof x === 'string') ? 'Espresso English' : x.sub;
+    return '<div><div class="lin"></div><b>' + nome + '</b><span>' + sub + '</span></div>';
+  }).join('') + '</div>';
+}
+
+function nr1CssPdf(){
+  return '<style>'
+  + '.rc-pag{ font-family:Poppins,Arial,sans-serif; color:#2B2E2C; padding:6px 4px; }'
+  + '.rc-topo{ display:flex; justify-content:space-between; align-items:flex-start;'
+  + '  border-bottom:2.5px solid #5A7568; padding-bottom:12px; margin-bottom:18px; }'
+  + '.rc-logo{ width:118px; } .rc-tt{ text-align:right; }'
+  + '.rc-tt h1{ margin:0; color:#5A7568; font-weight:700; }'
+  + '.rc-tt p{ margin:3px 0 0; font-size:11px; color:#8a8a84; }'
+  + '.nr1p p{ font-size:11.5px; line-height:1.7; margin:0 0 9px; text-align:justify; }'
+  + '.nr1p h3{ font-size:11px; color:#5A7568; margin:15px 0 6px; letter-spacing:.6px; }'
+  + '.nr1sec{ font-size:10px; letter-spacing:1.6px; color:#5A7568; font-weight:700;'
+  + '  text-transform:uppercase; border-bottom:1px solid #E4E1DA; padding-bottom:5px; margin:20px 0 10px; }'
+  + '.nr1ident{ background:#F5F4F0; border-radius:9px; padding:12px 15px; display:flex;'
+  + '  flex-wrap:wrap; gap:11px 0; margin-bottom:6px; }'
+  + '.nr1ident > div{ width:33.33%; } .nr1ident > div.larga{ width:100%; }'
+  + '.nr1ident span{ display:block; font-size:8.5px; letter-spacing:1px; color:#8a8a84; text-transform:uppercase; }'
+  + '.nr1ident b{ display:block; font-size:11.5px; margin-top:2px; }'
+  + 'table.nr1t{ width:100%; border-collapse:collapse; margin-bottom:12px; }'
+  + 'table.nr1t th{ background:#5A7568; color:#fff; text-align:left; padding:6px 9px;'
+  + '  font-size:8px; letter-spacing:1.1px; }'
+  + 'table.nr1t td{ padding:7px 9px; border-bottom:1px solid #E4E1DA; font-size:10.5px; vertical-align:top; }'
+  + 'table.nr1t td.c{ text-align:center; width:70px; }'
+  + '.nr1cx{ border:1px solid #E4E1DA; border-left:3px solid #5A7568; border-radius:7px;'
+  + '  padding:9px 12px; margin-bottom:8px; }'
+  + '.nr1cx.crit{ border-left-color:#8a3b2d; background:#FBE9E5; }'
+  + '.nr1cx b{ font-size:11px; display:block; } .nr1cx span{ font-size:10px; color:#6b6b64; }'
+  + '.nr1-assbloco{ display:flex; gap:34px; margin-top:38px; }'
+  + '.nr1-assbloco > div{ flex:1; text-align:center; }'
+  + '.nr1-assbloco .lin{ border-top:1px solid #2B2E2C; margin-bottom:6px; }'
+  + '.nr1-assbloco b{ font-size:10.5px; display:block; }'
+  + '.nr1-assbloco span{ font-size:9px; color:#8a8a84; }'
+  + '.nr1-assimg{ height:44px; } '
+  + '.nr1pe{ margin-top:26px; padding-top:8px; border-top:1px solid #E4E1DA; text-align:center;'
+  + '  font-size:7.5px; color:#a5a09a; font-style:italic; }'
+  + '.quebra{ page-break-before:always; }'
+  + '</style>';
+}
+
+function nr1Rodape(d){
+  return '<p class="nr1pe">' + (d && d.carimbo ? d.carimbo : '')
+    + '<br>Documento interno de gest\u00e3o de riscos, conforme NR-1. Conte\u00fado sigiloso.</p>';
+}
+
+/* ---------- ata de treinamento com a lista assinada ---------- */
+function nr1HtmlAta(d, gente, r){
+  var linhas = gente.map(function(p){
+    return '<tr><td><b>' + p.nome + '</b></td><td>' + (p.funcao||'—') + '</td>'
+      + '<td class="c">' + p.vinculo + '</td>'
+      + '<td style="width:190px;">' + (p.assinatura
+          ? '<img class="nr1-assimg" src="' + p.assinatura + '">'
+          : '<div style="border-bottom:1px solid #2B2E2C;height:34px;"></div>') + '</td></tr>';
+  }).join('');
+
+  return '<div class="rc-pag">'
+  + nr1Cabecalho('ATA DE TREINAMENTO', 'NR-1 · n&ordm; ' + r.numero + ' · ' + d.data)
+  + '<div class="nr1ident">'
+    + '<div class="larga"><span>Tema</span><b>' + d.tema + '</b></div>'
+    + '<div><span>Data</span><b>' + d.data + '</b></div>'
+    + '<div><span>Hor&aacute;rio</span><b>' + (d.horaInicio||'—') + ' às ' + (d.horaFim||'—') + '</b></div>'
+    + '<div><span>Dura&ccedil;&atilde;o</span><b>' + (r.duracao ? r.duracao + ' min' : '—') + '</b></div>'
+    + '<div class="larga"><span>Conduzido por</span><b>' + (d.conduzidoPor||'—') + '</b></div>'
+  + '</div>'
+  + (d.pauta ? '<div class="nr1sec">Pauta</div><div class="nr1p"><p>'
+      + d.pauta.replace(/\n/g,'<br>') + '</p></div>' : '')
+  + '<div class="nr1sec">Lista de presen&ccedil;a</div>'
+  + '<table class="nr1t"><thead><tr><th>NOME</th><th>FUN&Ccedil;&Atilde;O</th>'
+  + '<th class="c">V&Iacute;NCULO</th><th>ASSINATURA</th></tr></thead><tbody>'
+  + linhas + '</tbody></table>'
+  + '<div class="nr1p"><p>Os participantes acima declaram ter recebido as orienta&ccedil;&otilde;es '
+  + 'sobre o tema tratado, incluindo os canais dispon&iacute;veis para relato de situa&ccedil;&otilde;es '
+  + 'que afetem a seguran&ccedil;a e a sa&uacute;de no trabalho.</p></div>'
+  + nr1Assinaturas([{ nome: d.conduzidoPor || 'Responsável', sub: 'Conduziu o treinamento' }])
+  + '<p class="nr1pe">Ata gerada pelo software AttendancePlus. '
+  + 'Assinaturas coletadas eletronicamente na data e hora do registro.</p>'
+  + '</div>' + nr1CssPdf();
+}
+
+/* ---------- dossie: tudo sobre um colaborador ---------- */
+function nr1HtmlDossie(d){
+  var partes = ['<div class="rc-pag">'
+    + nr1Cabecalho('RELAT&Oacute;RIO NR-1', 'Hist&oacute;rico individual · emitido em ' + d.dataBr)
+    + '<div class="nr1ident">'
+      + '<div class="larga"><span>Colaborador</span><b>' + d.colaborador + '</b></div>'
+      + '<div><span>Fun&ccedil;&atilde;o</span><b>' + (d.funcao||'—') + '</b></div>'
+      + '<div><span>V&iacute;nculo</span><b>' + (d.vinculo||'—') + '</b></div>'
+      + '<div><span>Registros</span><b>' + d.totalConversas + ' conversa(s)</b></div>'
+    + '</div>'];
+
+  if(d.conversas.length){
+    partes.push('<div class="nr1sec">Conversas individuais</div>');
+    d.conversas.forEach(function(c){
+      partes.push('<div class="nr1cx' + (c.critico ? ' crit' : '') + '">'
+        + '<b>Conversa n&ordm; ' + c.numero + ' · ' + c.data + '</b>'
+        + '<span>' + (c.horaInicio||'—') + ' às ' + (c.horaFim||'—')
+        + ' · conduzida por ' + (c.conduzidaPor||'—')
+        + ' · &iacute;ndice ' + c.indice
+        + (c.atencao ? '<br>' + c.atencao : '')
+        + (c.observacoes ? '<br>Observa&ccedil;&otilde;es: ' + c.observacoes : '')
+        + '</span></div>');
+      if(c.respostas.length){
+        partes.push('<table class="nr1t"><thead><tr><th>PERGUNTA</th>'
+          + '<th class="c">RESPOSTA</th><th>COMENT&Aacute;RIO</th></tr></thead><tbody>'
+          + c.respostas.map(function(r){
+              return '<tr><td>' + r.pergunta + '</td><td class="c">' + (r.resposta||'—')
+                + '</td><td>' + (r.comentario||'—') + '</td></tr>';
+            }).join('') + '</tbody></table>');
+      }
+    });
+  }
+
+  if(d.treinamentos.length){
+    partes.push('<div class="nr1sec">Treinamentos</div>'
+      + '<table class="nr1t"><thead><tr><th>TEMA</th><th class="c">DATA</th>'
+      + '<th class="c">PRESEN&Ccedil;A</th></tr></thead><tbody>'
+      + d.treinamentos.map(function(t){
+          return '<tr><td>' + t.tema + '</td><td class="c">' + t.data + '</td>'
+            + '<td class="c">' + (t.presente ? 'Presente' : 'Ausente') + '</td></tr>';
+        }).join('') + '</tbody></table>');
+  }
+
+  if(d.acoes.length){
+    partes.push('<div class="nr1sec">A&ccedil;&otilde;es relacionadas</div>'
+      + '<table class="nr1t"><thead><tr><th>A&Ccedil;&Atilde;O</th><th>RESPONS&Aacute;VEL</th>'
+      + '<th class="c">PRAZO</th><th class="c">STATUS</th></tr></thead><tbody>'
+      + d.acoes.map(function(a){
+          return '<tr><td>' + a.acao + (a.comoResolveu ? '<br><i>' + a.comoResolveu + '</i>' : '')
+            + '</td><td>' + a.responsavel + '</td><td class="c">' + (a.prazo||'—')
+            + '</td><td class="c">' + a.status + '</td></tr>';
+        }).join('') + '</tbody></table>');
+  }
+
+  partes.push('<div class="nr1p"><p>Este relat&oacute;rio re&uacute;ne os registros de gest&atilde;o '
+    + 'de riscos psicossociais referentes ao colaborador acima, mantidos pela Espresso English '
+    + 'em cumprimento &agrave; NR-1.</p></div>');
+  partes.push(nr1Assinaturas([
+    { nome: d.colaborador, sub: 'Colaborador(a) · ciente do conteúdo' },
+    { nome: 'Espresso English', sub: 'Pela empresa' }
+  ]));
+  partes.push(nr1Rodape(d));
+  partes.push('</div>');
+  return partes.join('') + nr1CssPdf();
+}
+
+/* ---------- gerador comum ---------- */
+async function nr1GerarPdf(nomeArquivo, html){
+  var palco = document.getElementById('recPalco');
+  palco.innerHTML = html;
+  try{
+    await html2pdf().set({
+      margin: [13,13,13,13], filename: nomeArquivo + '.pdf',
+      image: { type:'jpeg', quality:0.98 },
+      html2canvas: { scale:2, useCORS:true, backgroundColor:'#ffffff', scrollY:0 },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' },
+      pagebreak: { mode:['css','legacy'], before:'.quebra', avoid:'tr' }
+    }).from(palco.firstElementChild).save();
+  }catch(e){
+    mostrarToast('Não consegui gerar o PDF');
+  }
+  setTimeout(function(){ palco.innerHTML = ''; }, 1500);
+}
+
+/* ---------- 3.9.0: passos 3, 4 e 5, dossie e assinatura ---------- */
+
+function _soUmNR1b(qual){
+  ['nr1Subcards','formNR1Conversa','listaNR1Feitas','formNR1Risco',
+   'formNR1Acoes','formNR1Politica','formNR1Treino','formNR1Dossie','formNR1Docs']
+  .forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', id !== qual);
+  });
+}
+
+/* ===== PASSO 3: plano de acao ===== */
+document.getElementById('subcardNR1Acoes').addEventListener('click', function(){
+  _soUmNR1b('formNR1Acoes');
+  $recepcaoSub.textContent = 'Passo 3 · Plano de ação';
+  document.getElementById('nr1aResultado').innerHTML = '';
+  nr1CarregarAcoes();
+});
+
+document.getElementById('btnNR1Acao').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget; if(btn.disabled) return;
+  var box = document.getElementById('nr1aResultado');
+  var acao = document.getElementById('nr1aAcao').value.trim();
+  var resp = document.getElementById('nr1aResp').value.trim();
+  if(!acao){ box.innerHTML = '<div class="assess-aviso">Descreva o que será feito.</div>'; return; }
+  if(!resp){ box.innerHTML = '<div class="assess-aviso">Defina o responsável. Ação sem dono não sai do papel.</div>'; return; }
+  var rot = btn.textContent; btn.disabled = true; btn.textContent = 'Salvando...';
+  try{
+    var r = await chamarAPI({ acao:'nr1SalvarAcao',
+      tratado: document.getElementById('nr1aTratado').value.trim(),
+      acao: acao, responsavel: resp,
+      prazo: (document.getElementById('nr1aPrazo').value||'').split('-').reverse().join('/'),
+      origem: 'Inventário e conversas' });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Ação nº ' + r.numero + ' adicionada.</div>';
+    ['nr1aTratado','nr1aAcao','nr1aResp'].forEach(function(id){ document.getElementById(id).value=''; });
+    nr1CarregarAcoes();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha de conexão.</div>'; }
+  finally{ btn.disabled=false; btn.textContent=rot; }
+});
+
+async function nr1CarregarAcoes(){
+  var box = document.getElementById('nr1aLista');
+  try{
+    var r = await chamarAPI({ acao:'nr1ListarAcoes' });
+    if(!r.sucesso || !r.total){ box.innerHTML=''; return; }
+    box.innerHTML = '<div style="padding:16px 20px 0;">'
+      + '<div class="mn-cab"><span>' + r.pendentes + ' pendente(s)'
+      + (r.atrasadas ? ' · ' + r.atrasadas + ' atrasada(s)' : '') + '</span></div>'
+      + r.acoes.map(function(a){
+        var faixa = a.status==='Concluída' ? 'baixo' : (a.atrasada ? 'alto' : 'medio');
+        return '<div class="nr1-linha ' + faixa + '"><div class="nr1-topo">'
+          + '<span class="nr1-nome">' + a.acao + '</span>'
+          + '<span class="nr1-idx ' + faixa + '">' + (a.status==='Concluída'?'feita':(a.atrasada?'atrasada':'pendente')) + '</span></div>'
+          + '<div class="nr1-meta">' + (a.tratado ? a.tratado + '<br>' : '')
+          + 'Responsável: ' + a.responsavel + (a.prazo ? ' · prazo ' + a.prazo : '')
+          + (a.comoResolveu ? '<br>Resolvido: ' + a.comoResolveu : '') + '</div>'
+          + (a.status!=='Concluída'
+             ? '<div class="ren-acoes" style="margin-top:8px;"><button class="ren-btn sec" onclick="nr1Concluir(' + a.linha + ')">Marcar como feita</button></div>'
+             : '') + '</div>';
+      }).join('') + '</div>';
+  }catch(e){ box.innerHTML=''; }
+}
+
+async function nr1Concluir(linha){
+  var como = prompt('Como foi resolvido?\n\nEssa frase é a evidência que a fiscalização lê.');
+  if(!como || !como.trim()) return;
+  var r = await chamarAPI({ acao:'nr1ConcluirAcao', linha: linha, comoResolveu: como.trim() });
+  if(!r.sucesso){ alert(r.erro || 'Não consegui concluir.'); return; }
+  nr1CarregarAcoes();
+}
+
+/* ===== PASSO 4: politica ===== */
+document.getElementById('subcardNR1Politica').addEventListener('click', async function(){
+  _soUmNR1b('formNR1Politica');
+  $recepcaoSub.textContent = 'Passo 4 · Política interna';
+  document.getElementById('nr1pResultado').innerHTML = '';
+  var r = await chamarAPI({ acao:'nr1LerPolitica' });
+  if(!r.sucesso) return;
+  document.getElementById('nr1pTexto').value = r.texto || '';
+  document.getElementById('nr1pStatus').innerHTML = r.rascunho
+    ? 'Este é um rascunho que eu preparei com os quatro pontos que você pediu. <b>Leia, ajuste para a realidade da Espresso e aprove.</b> Nada vale antes disso.'
+    : 'Versão ' + r.versao + ', aprovada em ' + r.aprovadaEm + ' por ' + (r.aprovadaPor||'—')
+      + '. Se alterar o texto e aprovar de novo, nasce uma nova versão e a anterior fica no histórico.';
+});
+
+document.getElementById('btnNR1Politica').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget; if(btn.disabled) return;
+  var box = document.getElementById('nr1pResultado');
+  var rot = btn.textContent; btn.disabled=true; btn.textContent='Aprovando...';
+  try{
+    var r = await chamarAPI({ acao:'nr1SalvarPolitica',
+      texto: document.getElementById('nr1pTexto').value,
+      aprovadaPor: professorLogado || '' });
+    box.innerHTML = r.sucesso
+      ? '<div class="msg-ok" style="margin:10px 20px 0;">Versão ' + r.versao + ' aprovada e datada.</div>'
+      : '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>';
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha de conexão.</div>'; }
+  finally{ btn.disabled=false; btn.textContent=rot; }
+});
+
+document.getElementById('btnNR1PoliticaPdf').addEventListener('click', function(){
+  var txt = document.getElementById('nr1pTexto').value;
+  nr1GerarPdf('Politica_Interna_Espresso',
+    '<div class="rc-pag">' + nr1Cabecalho('POLÍTICA INTERNA', 'Ambiente de trabalho e saúde mental')
+    + '<div class="nr1p">' + txt.split('\n').map(function(l){
+        if(!l.trim()) return '';
+        return /^\d\./.test(l.trim()) ? '<h3>' + l + '</h3>' : '<p>' + l + '</p>';
+      }).join('') + '</div>'
+    + nr1Assinaturas(['Felipe Sanches', 'Thaís']) + '</div>' + nr1CssPdf());
+});
+
+/* ===== PASSO 5: treinamento, ata e assinatura ===== */
+var NR1_ASS = {};
+
+document.getElementById('subcardNR1Treino').addEventListener('click', function(){
+  _soUmNR1b('formNR1Treino');
+  $recepcaoSub.textContent = 'Passo 5 · Treinamento e ata';
+  document.getElementById('nr1tResultado').innerHTML = '';
+  var h = new Date();
+  document.getElementById('nr1tData').value = h.toISOString().slice(0,10);
+  document.getElementById('nr1tIni').value = ('0'+h.getHours()).slice(-2)+':'+('0'+h.getMinutes()).slice(-2);
+  if(!document.querySelectorAll('#nr1tPessoas .nr1-pessoa').length) nr1AddPessoa();
+  nr1CarregarTreinos();
+});
+
+document.getElementById('nr1tAddPessoa').addEventListener('click', function(){ nr1AddPessoa(); });
+
+function nr1AddPessoa(){
+  var box = document.getElementById('nr1tPessoas');
+  var id = 'p' + Date.now() + Math.floor(Math.random()*999);
+  var div = document.createElement('div');
+  div.className = 'nr1-pessoa'; div.dataset.id = id;
+  div.innerHTML = '<div class="lin">'
+    + '<input type="text" class="pn" placeholder="Nome" list="nr1dNomes">'
+    + '<input type="text" class="pf" placeholder="Função" style="max-width:120px;">'
+    + '<select class="pv"><option>CLT</option><option>PJ</option><option>Gestão</option></select>'
+    + '<button type="button" class="tirar" title="Remover">&times;</button></div>'
+    + '<div class="nr1-ass"><canvas></canvas><div class="rod">'
+    + '<span>Assine com o dedo ou o mouse</span><button type="button" class="limpar">limpar</button>'
+    + '</div></div>';
+  box.appendChild(div);
+  div.querySelector('.tirar').addEventListener('click', function(){
+    delete NR1_ASS[id]; div.remove();
+  });
+  nr1LigarCanvas(div.querySelector('canvas'), id, div.querySelector('.limpar'));
+}
+
+function nr1LigarCanvas(cv, id, btnLimpar){
+  var ctx, desenhando = false, temTraco = false;
+  function preparar(){
+    var r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width * 2));
+    cv.height = Math.max(1, Math.round(r.height * 2));
+    ctx = cv.getContext('2d');
+    ctx.scale(2,2);
+    ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#2B2E2C';
+  }
+  setTimeout(preparar, 60);
+  function pos(e){
+    var r = cv.getBoundingClientRect();
+    var t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+  function ini(e){ e.preventDefault(); if(!ctx) preparar();
+    desenhando = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function mov(e){ if(!desenhando) return; e.preventDefault();
+    var p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); temTraco = true; }
+  function fim(){ if(!desenhando) return; desenhando = false;
+    if(temTraco) NR1_ASS[id] = cv.toDataURL('image/png'); }
+  ['mousedown','touchstart'].forEach(function(t){ cv.addEventListener(t, ini, {passive:false}); });
+  ['mousemove','touchmove'].forEach(function(t){ cv.addEventListener(t, mov, {passive:false}); });
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(function(t){ cv.addEventListener(t, fim); });
+  btnLimpar.addEventListener('click', function(){
+    if(!ctx) return; ctx.clearRect(0,0,cv.width,cv.height);
+    temTraco = false; delete NR1_ASS[id];
+  });
+}
+
+function nr1Participantes(){
+  return Array.prototype.map.call(document.querySelectorAll('#nr1tPessoas .nr1-pessoa'), function(d){
+    return { id: d.dataset.id,
+      nome: (d.querySelector('.pn')||{}).value.trim(),
+      funcao: (d.querySelector('.pf')||{}).value.trim(),
+      vinculo: (d.querySelector('.pv')||{}).value,
+      presente: true,
+      assinatura: NR1_ASS[d.dataset.id] || '' };
+  }).filter(function(p){ return p.nome; });
+}
+
+document.getElementById('btnNR1Treino').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget; if(btn.disabled) return;
+  var box = document.getElementById('nr1tResultado');
+  var tema = document.getElementById('nr1tTema').value.trim();
+  var gente = nr1Participantes();
+  if(!tema){ box.innerHTML = '<div class="assess-aviso">Informe o tema.</div>'; return; }
+  if(!gente.length){ box.innerHTML = '<div class="assess-aviso">Adicione ao menos uma pessoa à lista.</div>'; return; }
+  var semAss = gente.filter(function(p){ return !p.assinatura; });
+  if(semAss.length){
+    var ok = confirm(semAss.length + ' pessoa(s) sem assinatura na tela: '
+      + semAss.map(function(p){return p.nome;}).join(', ')
+      + '.\n\nVocê pode registrar assim e depois subir a lista assinada no papel. Continuar?');
+    if(!ok) return;
+  }
+  var rot = btn.textContent; btn.disabled=true; btn.textContent='Registrando...';
+  try{
+    var d = { tema: tema,
+      data: (document.getElementById('nr1tData').value||'').split('-').reverse().join('/'),
+      horaInicio: document.getElementById('nr1tIni').value,
+      horaFim: document.getElementById('nr1tFim').value,
+      pauta: document.getElementById('nr1tPauta').value.trim(),
+      conduzidoPor: professorLogado || '' };
+    var r = await chamarAPI(Object.assign({ acao:'nr1SalvarTreinamento',
+      participantes: gente.map(function(p){
+        return { nome:p.nome, funcao:p.funcao, vinculo:p.vinculo, presente:true };
+      }) }, d));
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+
+    nr1GerarPdf('Ata_Treinamento_' + r.numero, nr1HtmlAta(d, gente, r));
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Treinamento nº ' + r.numero
+      + ' registrado com ' + r.presentes + ' presente(s)'
+      + (r.duracao ? ', ' + r.duracao + ' minutos' : '') + '. A ata foi baixada.</div>';
+    nr1CarregarTreinos();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao registrar.</div>'; }
+  finally{ btn.disabled=false; btn.textContent=rot; }
+});
+
+async function nr1CarregarTreinos(){
+  var box = document.getElementById('nr1tLista');
+  try{
+    var r = await chamarAPI({ acao:'nr1ListarTreinamentos' });
+    if(!r.sucesso || !r.total){ box.innerHTML=''; return; }
+    box.innerHTML = '<div style="padding:16px 20px 0;">'
+      + '<div class="mn-cab"><span>' + r.total + ' treinamento(s) registrado(s)</span></div>'
+      + r.treinamentos.map(function(t){
+        return '<div class="nr1-linha"><div class="nr1-topo">'
+          + '<span class="nr1-nome">' + t.tema + '</span>'
+          + '<span class="nr1-idx baixo">' + t.presentes + ' pessoa(s)</span></div>'
+          + '<div class="nr1-meta">' + t.data + ' · ' + (t.horaInicio||'—') + ' às ' + (t.horaFim||'—')
+          + (t.duracao ? ' · ' + t.duracao + ' min' : '') + ' · por ' + (t.conduzidoPor||'—') + '</div></div>';
+      }).join('') + '</div>';
+  }catch(e){ box.innerHTML=''; }
+}
+
+/* ===== DOSSIE ===== */
+document.getElementById('subcardNR1Dossie').addEventListener('click', async function(){
+  _soUmNR1b('formNR1Dossie');
+  $recepcaoSub.textContent = 'Relatório do colaborador';
+  document.getElementById('nr1dResultado').innerHTML = '';
+  nr1CarregarNomes();
+});
+
+async function nr1CarregarNomes(){
+  try{
+    var r = await chamarAPI({ acao:'nr1Colaboradores' });
+    if(!r.sucesso) return;
+    document.getElementById('nr1dNomes').innerHTML =
+      (r.nomes||[]).map(function(n){ return '<option value="'+n+'">'; }).join('');
+  }catch(e){}
+}
+
+document.getElementById('btnNR1Dossie').addEventListener('click', async function(){
+  var nome = document.getElementById('nr1dBusca').value.trim();
+  var box = document.getElementById('nr1dResultado');
+  if(!nome){ box.innerHTML = '<div class="assess-aviso">Digite o nome.</div>'; return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Reunindo tudo...</p>';
+  try{
+    var d = await chamarAPI({ acao:'nr1Dossie', colaborador: nome });
+    if(!d.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (d.erro||'Erro') + '</div>'; return; }
+    if(!d.totalConversas && !d.totalTreinos && !d.totalAcoes){
+      box.innerHTML = '<div class="busca-vazia">Nenhum registro de NR-1 para "' + nome + '".</div>';
+      return;
+    }
+    window._NR1_DOSSIE = d;
+    box.innerHTML = '<div style="padding:0 20px;">'
+      + '<div class="nr1-linha"><div class="nr1-topo"><span class="nr1-nome">' + d.colaborador + '</span></div>'
+      + '<div class="nr1-meta">' + (d.funcao||'—') + ' · ' + (d.vinculo||'—') + '<br>'
+      + d.totalConversas + ' conversa(s) · ' + d.totalTreinos + ' treinamento(s) · '
+      + d.totalAcoes + ' ação(ões) ligada(s)</div></div>'
+      + '<button class="pend-acao" style="width:100%;margin-top:10px;" onclick="nr1PdfDossie()">Gerar relatório unificado em PDF</button>'
+      + '</div>';
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar.</div>'; }
+});
+
+function nr1PdfDossie(){
+  var d = window._NR1_DOSSIE; if(!d) return;
+  nr1GerarPdf('NR1_' + String(d.colaborador).replace(/\s+/g,'_'), nr1HtmlDossie(d));
+}
+
+/* ===== DOCUMENTOS ASSINADOS ===== */
+document.getElementById('subcardNR1Docs').addEventListener('click', function(){
+  _soUmNR1b('formNR1Docs');
+  $recepcaoSub.textContent = 'Documentos assinados';
+  document.getElementById('nr1docResultado').innerHTML = '';
+  nr1CarregarNomes();
+  nr1CarregarDocs();
+});
+
+document.getElementById('btnNR1Doc').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget; if(btn.disabled) return;
+  var box = document.getElementById('nr1docResultado');
+  var nome = document.getElementById('nr1docNome').value.trim();
+  var arq = document.getElementById('nr1docArq').files[0];
+  if(!nome){ box.innerHTML = '<div class="assess-aviso">Informe de quem é o documento.</div>'; return; }
+  if(!arq){ box.innerHTML = '<div class="assess-aviso">Escolha o arquivo.</div>'; return; }
+  if(arq.size > 18*1024*1024){ box.innerHTML = '<div class="assess-aviso">Arquivo acima de 18 MB. Reduza a foto.</div>'; return; }
+
+  var rot = btn.textContent; btn.disabled=true; btn.textContent='Enviando...';
+  try{
+    var b64 = await new Promise(function(res){
+      var fr = new FileReader();
+      fr.onloadend = function(){ res(String(fr.result).split(',')[1]); };
+      fr.readAsDataURL(arq);
+    });
+    var r = await chamarAPI({ acao:'nr1SubirAssinado', colaborador: nome,
+      tipo: document.getElementById('nr1docTipo').value,
+      referencia: document.getElementById('nr1docRef').value.trim(),
+      base64: b64, nomeArquivo: arq.name, mime: arq.type || 'application/pdf' });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Guardado na pasta <b>'
+      + r.pasta + '</b>.</div><div style="padding:10px 20px 0;">'
+      + botaoPdf(r.url,'Abrir o documento','doc-link') + ' '
+      + botaoPdf(r.pastaUrl,'Abrir a pasta','doc-link') + '</div>';
+    document.getElementById('nr1docArq').value = '';
+    nr1CarregarDocs();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao enviar.</div>'; }
+  finally{ btn.disabled=false; btn.textContent=rot; }
+});
+
+async function nr1CarregarDocs(){
+  var box = document.getElementById('nr1docLista');
+  try{
+    var r = await chamarAPI({ acao:'nr1ListarDocs' });
+    if(!r.sucesso || !r.total){ box.innerHTML=''; return; }
+    box.innerHTML = '<div style="padding:16px 20px 0;">'
+      + '<div class="mn-cab"><span>' + r.total + ' documento(s) guardado(s)</span></div>'
+      + r.docs.map(function(x){
+        return '<div class="nr1-doc"><b>' + x.colaborador + '</b>'
+          + '<span>' + x.tipo + (x.referencia ? ' · ' + x.referencia : '')
+          + '<br>' + x.enviadoEm + ' por ' + (x.enviadoPor||'—') + '</span>'
+          + '<div style="margin-top:6px;">' + botaoPdf(x.url,'Abrir','doc-link') + '</div></div>';
+      }).join('') + '</div>';
+  }catch(e){ box.innerHTML=''; }
+}
 
 /* ---------- parcelas: so aparecem no cartao de credito ---------- */
 (function(){
