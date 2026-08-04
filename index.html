@@ -771,6 +771,31 @@
   .mn-mes.pago{ background:#F5F4F0; }
   .mn-mes.pago .mn-tag{ font-size:9.5px; font-weight:700; color:#8a3b2d; background:#FBE9E5;
     border-radius:20px; padding:3px 9px; flex:none; }
+  /* ===== 3.8.0: NR-1 ===== */
+  .nr1-aviso{ margin:4px 20px 10px; background:#FBE9E5; border-left:3px solid var(--salmao);
+    border-radius:11px; padding:12px 14px; font-size:12.5px; color:#8a3b2d; line-height:1.55; }
+  .nr1-bloco{ padding:4px 20px 0; }
+  .nr1-q{ background:var(--branco); border:1px solid var(--linha); border-radius:12px;
+    padding:13px 15px; margin-bottom:10px; }
+  .nr1-q-tag{ font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; color:#8a8a84; }
+  .nr1-q-txt{ font-size:13.5px; color:var(--carvao); margin:4px 0 10px; line-height:1.5; }
+  .nr1-op{ display:flex; flex-wrap:wrap; gap:6px; }
+  .nr1-op button{ font-family:'Poppins',sans-serif; font-size:12px; padding:7px 12px;
+    border:1px solid var(--linha); background:var(--perola); color:var(--carvao);
+    border-radius:20px; cursor:pointer; }
+  .nr1-op button.on{ background:var(--verde-escuro); color:#fff; border-color:var(--verde-escuro); }
+  .nr1-q textarea{ width:100%; margin-top:9px; font-family:'Poppins',sans-serif; font-size:12.5px;
+    border:1px solid var(--linha); border-radius:9px; padding:9px; resize:vertical; background:var(--perola); }
+  .nr1-q.aberta .nr1-op{ display:none; }
+  .nr1-linha{ background:var(--branco); border:1px solid var(--linha); border-radius:12px;
+    padding:12px 15px; margin-bottom:9px; border-left:3px solid var(--verde-claro); }
+  .nr1-linha.alto{ border-left-color:#8a3b2d; }
+  .nr1-linha.medio{ border-left-color:#D9A441; }
+  .nr1-topo{ display:flex; justify-content:space-between; align-items:baseline; }
+  .nr1-nome{ font-size:13.5px; font-weight:600; color:var(--carvao); }
+  .nr1-idx{ font-size:12px; font-weight:700; }
+  .nr1-idx.alto{ color:#8a3b2d; } .nr1-idx.medio{ color:#a8790f; } .nr1-idx.baixo{ color:#3E8E5A; }
+  .nr1-meta{ font-size:11.5px; color:#8a8a84; margin-top:3px; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -1435,6 +1460,14 @@
         <span class="menu-card-seta">&rarr;</span>
       </button>
       <div class="sec-titulo" data-sec="Gestão">Gestão</div>
+      <button class="menu-card hidden" id="recepCardNR1">
+        <div class="menu-card-icone">&#9878;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">NR-1</span>
+          <span class="menu-card-sub">Riscos e conversa individual da equipe</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card hidden" id="recepCardRelatorio">
         <div class="menu-card-icone">&#128196;</div>
         <div class="menu-card-txt">
@@ -1984,6 +2017,153 @@
       <div class="rec-total" id="mnTotal"></div>
       <div id="mnResultado"></div>
       <button class="pend-acao" id="btnGerarMensalidade" style="width:calc(100% - 40px);margin:12px 20px 0;">Gerar recibo em PDF</button>
+    </div>
+
+    <div class="recep-painel hidden" id="painelNR1">
+      <div class="menu-opcoes" id="nr1Subcards">
+        <button class="menu-card" id="subcardNR1Conversa">
+          <div class="menu-card-icone">&#128172;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Nova conversa individual</span>
+            <span class="menu-card-sub">Passo 2 &middot; roteiro com dia e hora</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardNR1Feitas">
+          <div class="menu-card-icone">&#128203;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Conversas registradas</span>
+            <span class="menu-card-sub">Quem j&aacute; passou e quem falta</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="subcardNR1Riscos">
+          <div class="menu-card-icone">&#9888;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Invent&aacute;rio de riscos</span>
+            <span class="menu-card-sub">Passo 1 &middot; por fun&ccedil;&atilde;o e v&iacute;nculo</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="formNR1Conversa">
+        <div class="nr1-aviso">
+          Conte&uacute;do sigiloso. Guarde a conversa num lugar reservado e
+          deixe claro para a pessoa que ela pode falar &agrave; vontade.
+        </div>
+        <div class="controls">
+          <div class="field">
+            <label for="nr1Colab">Colaborador</label>
+            <input type="text" id="nr1Colab" placeholder="Nome completo" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="nr1Funcao">Fun&ccedil;&atilde;o</label>
+            <input type="text" id="nr1Funcao" placeholder="Ex: Recepcionista" autocomplete="off">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="nr1Vinculo">V&iacute;nculo</label>
+            <select id="nr1Vinculo">
+              <option>CLT</option>
+              <option>PJ</option>
+              <option>Gest&atilde;o / S&oacute;cio</option>
+              <option>Est&aacute;gio</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="nr1Unidade">Unidade</label>
+            <select id="nr1Unidade"><option>Sorocaba</option></select>
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="nr1Data">Data</label>
+            <input type="date" id="nr1Data">
+          </div>
+          <div class="field">
+            <label for="nr1HoraIni">Hora de in&iacute;cio</label>
+            <input type="time" id="nr1HoraIni">
+          </div>
+        </div>
+
+        <div id="nr1Perguntas"></div>
+
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1Obs">Observa&ccedil;&otilde;es de quem conduziu</label>
+            <textarea id="nr1Obs" rows="3" placeholder="Contexto, combinados, encaminhamentos"></textarea>
+          </div>
+        </div>
+        <div class="rec-total" id="nr1Placar"></div>
+        <div id="nr1Resultado"></div>
+        <button class="pend-acao" id="btnNR1Salvar" style="width:calc(100% - 40px);margin:12px 20px 0;">Encerrar e registrar a conversa</button>
+      </div>
+
+      <div class="hidden" id="listaNR1Feitas"><div id="nr1FeitasResultado"></div></div>
+
+      <div class="hidden" id="formNR1Risco">
+        <div class="controls">
+          <div class="field">
+            <label for="nr1rSetor">Setor</label>
+            <input type="text" id="nr1rSetor" placeholder="Ex: Recep&ccedil;&atilde;o, Cafeteria, Salas">
+          </div>
+          <div class="field">
+            <label for="nr1rFuncao">Fun&ccedil;&atilde;o exposta</label>
+            <input type="text" id="nr1rFuncao" placeholder="Ex: Recepcionista">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="nr1rVinculo">V&iacute;nculo</label>
+            <select id="nr1rVinculo">
+              <option>CLT</option><option>PJ</option>
+              <option>Gest&atilde;o / S&oacute;cio</option><option>Todos</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="nr1rCategoria">Categoria do risco</label>
+            <select id="nr1rCategoria">
+              <option>Psicossocial</option><option>Ergon&ocirc;mico</option>
+              <option>Acidente / Mec&acirc;nico</option><option>F&iacute;sico</option>
+              <option>Qu&iacute;mico</option><option>Biol&oacute;gico</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1rPerigo">Perigo identificado</label>
+            <input type="text" id="nr1rPerigo" placeholder="Ex: atendimento simult&acirc;neo de caf&eacute; e matr&iacute;cula em hor&aacute;rio de pico">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1rEfeito">Como pode afetar a pessoa</label>
+            <input type="text" id="nr1rEfeito" placeholder="Ex: sobrecarga, estresse, erro de cadastro">
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field">
+            <label for="nr1rProb">Probabilidade (1 a 5)</label>
+            <select id="nr1rProb"></select>
+          </div>
+          <div class="field">
+            <label for="nr1rSev">Severidade (1 a 5)</label>
+            <select id="nr1rSev"></select>
+          </div>
+        </div>
+        <div class="controls" style="padding-top:0;">
+          <div class="field" style="width:100%;">
+            <label for="nr1rControle">O que j&aacute; existe hoje para reduzir</label>
+            <input type="text" id="nr1rControle" placeholder="Deixe em branco se ainda n&atilde;o h&aacute; nada">
+          </div>
+        </div>
+        <div class="rec-total" id="nr1rNivel"></div>
+        <div id="nr1rResultado"></div>
+        <button class="pend-acao" id="btnNR1Risco" style="width:calc(100% - 40px);margin:12px 20px 0;">Adicionar ao invent&aacute;rio</button>
+        <div id="nr1rLista"></div>
+      </div>
     </div>
 
     <div class="recep-painel hidden" id="painelTurmas">
@@ -2673,7 +2853,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.7.3';
+const APP_VERSAO = '3.8.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5836,6 +6016,292 @@ function recAtualizarTotal(){
 }
 
 
+
+/* ============================================================================
+ * 3.8.0 - NR-1
+ * ========================================================================== */
+
+var NR1_Q = null, NR1_ESC = [], NR1_INV = {}, NR1_RESP = {};
+// mesmas perguntas que o servidor trata como gatilho: relato nunca vira media
+var NR1_CRIT = { P08:1, P09:1, P12:1 };
+
+document.getElementById('recepCardNR1').addEventListener('click', function(){
+  abrirPainelRecep('painelNR1','NR-1 · riscos e escuta da equipe');
+  _soUmNR1('nr1Subcards');
+});
+
+function _soUmNR1(qual){
+  ['nr1Subcards','formNR1Conversa','listaNR1Feitas','formNR1Risco'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', id !== qual);
+  });
+}
+
+document.getElementById('subcardNR1Conversa').addEventListener('click', async function(){
+  _soUmNR1('formNR1Conversa');
+  $recepcaoSub.textContent = 'Conversa individual';
+  document.getElementById('nr1Resultado').innerHTML = '';
+  var hoje = new Date();
+  document.getElementById('nr1Data').value = hoje.toISOString().slice(0,10);
+  document.getElementById('nr1HoraIni').value =
+    ('0'+hoje.getHours()).slice(-2) + ':' + ('0'+hoje.getMinutes()).slice(-2);
+  await nr1CarregarPerguntas();
+});
+
+document.getElementById('subcardNR1Feitas').addEventListener('click', function(){
+  _soUmNR1('listaNR1Feitas');
+  $recepcaoSub.textContent = 'Conversas registradas';
+  nr1CarregarFeitas();
+});
+
+document.getElementById('subcardNR1Riscos').addEventListener('click', function(){
+  _soUmNR1('formNR1Risco');
+  $recepcaoSub.textContent = 'Inventário de riscos';
+  nr1MontarEscalasRisco();
+  nr1CarregarRiscos();
+});
+
+async function nr1CarregarPerguntas(){
+  var box = document.getElementById('nr1Perguntas');
+  if(NR1_Q){ nr1DesenharPerguntas(); return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando o roteiro...</p>';
+  try{
+    var r = await chamarAPI({ acao:'nr1Questionario' });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    NR1_Q = r.perguntas; NR1_ESC = r.escala; NR1_INV = r.invertidas || {};
+    nr1DesenharPerguntas();
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Não consegui carregar o roteiro.</div>';
+  }
+}
+
+function nr1DesenharPerguntas(){
+  NR1_RESP = {};
+  var box = document.getElementById('nr1Perguntas');
+  box.innerHTML = '<div class="nr1-bloco">' + NR1_Q.map(function(p){
+    var aberta = (p.bloco === 'Aberta');
+    return '<div class="nr1-q' + (aberta ? ' aberta' : '') + '" data-id="' + p.id + '">'
+      + '<div class="nr1-q-tag">' + p.bloco + '</div>'
+      + '<div class="nr1-q-txt">' + p.texto + '</div>'
+      + '<div class="nr1-op">' + NR1_ESC.map(function(e){
+          return '<button type="button" data-v="' + e.valor + '" data-r="' + e.rotulo + '">' + e.rotulo + '</button>';
+        }).join('') + '</div>'
+      + '<textarea rows="2" placeholder="' + (aberta ? 'Registre a resposta' : 'Comentário (opcional)') + '"></textarea>'
+      + '</div>';
+  }).join('') + '</div>';
+
+  Array.prototype.forEach.call(box.querySelectorAll('.nr1-q'), function(q){
+    Array.prototype.forEach.call(q.querySelectorAll('.nr1-op button'), function(b){
+      b.addEventListener('click', function(){
+        Array.prototype.forEach.call(q.querySelectorAll('.nr1-op button'), function(o){ o.classList.remove('on'); });
+        b.classList.add('on');
+        NR1_RESP[q.dataset.id] = { valor: Number(b.dataset.v), rotulo: b.dataset.r };
+        nr1Placar();
+      });
+    });
+  });
+  nr1Placar();
+}
+
+function nr1Placar(){
+  var total = NR1_Q.filter(function(p){ return p.bloco !== 'Aberta'; }).length;
+  var feitas = Object.keys(NR1_RESP).length;
+  var soma = 0, cont = 0;
+  NR1_Q.forEach(function(p){
+    var r = NR1_RESP[p.id];
+    if(!r) return;
+    soma += NR1_INV[p.id] ? r.valor : (4 - r.valor);
+    cont++;
+  });
+  var idx = cont ? Math.round((soma / (cont*4)) * 100) : 0;
+  var temCritico = Object.keys(NR1_RESP).some(function(id){
+    return NR1_CRIT[id] && NR1_RESP[id].valor > 0;
+  });
+  var faixa = temCritico ? 'alto' : (idx >= 60 ? 'alto' : (idx >= 35 ? 'medio' : 'baixo'));
+  var nome = temCritico ? 'atenção alta'
+           : { alto:'atenção alta', medio:'atenção média', baixo:'sem alerta' }[faixa];
+  document.getElementById('nr1Placar').innerHTML =
+    '<span>' + feitas + ' de ' + total + ' respondidas</span>'
+    + '<b class="nr1-idx ' + faixa + '">' + (cont ? idx + ' · ' + nome : '—') + '</b>';
+}
+
+document.getElementById('btnNR1Salvar').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget;
+  if(btn.disabled) return;
+  var box = document.getElementById('nr1Resultado');
+  var nome = document.getElementById('nr1Colab').value.trim();
+  if(!nome){ box.innerHTML = '<div class="assess-aviso">Informe o nome do colaborador.</div>'; return; }
+  if(!Object.keys(NR1_RESP).length){
+    box.innerHTML = '<div class="assess-aviso">Responda ao menos uma pergunta.</div>'; return;
+  }
+
+  var caixas = document.querySelectorAll('#nr1Perguntas .nr1-q');
+  var respostas = [];
+  Array.prototype.forEach.call(caixas, function(q){
+    var id = q.dataset.id;
+    var r = NR1_RESP[id] || {};
+    var txt = (q.querySelector('textarea') || {}).value || '';
+    if(r.valor === undefined && !txt.trim()) return;
+    respostas.push({ id:id, valor: (r.valor === undefined ? '' : r.valor),
+                     rotulo: r.rotulo || '', comentario: txt.trim() });
+  });
+
+  var agora = new Date();
+  var rotulo = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Registrando...';
+  try{
+    var g = await chamarAPI({ acao:'nr1SalvarAvaliacao',
+      unidade: document.getElementById('nr1Unidade').value,
+      colaborador: nome,
+      funcao: document.getElementById('nr1Funcao').value.trim(),
+      vinculo: document.getElementById('nr1Vinculo').value,
+      data: (document.getElementById('nr1Data').value || '').split('-').reverse().join('/'),
+      horaInicio: document.getElementById('nr1HoraIni').value,
+      horaFim: ('0'+agora.getHours()).slice(-2) + ':' + ('0'+agora.getMinutes()).slice(-2),
+      conduzidaPor: professorLogado || '',
+      respostas: respostas,
+      observacoes: document.getElementById('nr1Obs').value.trim() });
+
+    if(!g.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (g.erro||'Erro') + '</div>'; return; }
+
+    var txtFaixa = { alto:'atenção alta', medio:'atenção média', baixo:'sem alerta' }[g.faixa];
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Conversa nº ' + g.numero
+      + ' registrada com ' + nome + '. Índice ' + g.indice + ', ' + txtFaixa + '.'
+      + (g.criticos && g.criticos.length
+          ? '</div><div class="assess-aviso" style="margin:10px 20px 0;text-align:left;">'
+            + '<b>Exige providência imediata:</b><br>' + g.criticos.join('<br>')
+            + '<br><br>Isso entra no plano de ação com prazo curto, e o registro '
+            + 'da tratativa é o que protege a escola.</div><div style="display:none;">'
+          : '')
+      + (g.pontosDeAtencao && g.pontosDeAtencao.length
+          ? '<br><b>Levar para o plano de ação:</b> ' + g.pontosDeAtencao.join('; ')
+          : '') + '</div>';
+    document.getElementById('nr1Colab').value = '';
+    document.getElementById('nr1Funcao').value = '';
+    document.getElementById('nr1Obs').value = '';
+    nr1DesenharPerguntas();
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Falha de conexão ao registrar.</div>';
+  }finally{
+    btn.disabled = false; btn.textContent = rotulo;
+  }
+});
+
+async function nr1CarregarFeitas(){
+  var box = document.getElementById('nr1FeitasResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'nr1ListarAvaliacoes' });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    if(!r.total){
+      box.innerHTML = '<div class="busca-vazia">Nenhuma conversa registrada ainda.<br>'
+        + 'Comece pelo card de conversa individual.</div>';
+      return;
+    }
+    box.innerHTML = '<div style="padding:0 20px;">' + r.avaliacoes.map(function(a){
+      return '<div class="nr1-linha ' + a.faixa + '"><div class="nr1-topo">'
+        + '<span class="nr1-nome">' + a.colaborador + '</span>'
+        + '<span class="nr1-idx ' + a.faixa + '">' + a.indice + '</span></div>'
+        + '<div class="nr1-meta">' + (a.funcao || '—') + ' · ' + (a.vinculo || '—')
+        + ' · ' + a.unidade + '<br>' + a.data + ' das ' + (a.horaInicio||'—')
+        + ' às ' + (a.horaFim||'—') + ' · conduzida por ' + (a.conduzidaPor || '—')
+        + (a.atencao ? '<br><b>' + (a.critico ? 'Providência' : 'Atenção') + ':</b> '
+                       + a.atencao : '') + '</div></div>';
+    }).join('') + '</div>';
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Não consegui carregar.</div>';
+  }
+}
+
+function nr1MontarEscalasRisco(){
+  ['nr1rProb','nr1rSev'].forEach(function(id){
+    var sel = document.getElementById(id);
+    if(sel.options.length) return;
+    var rot = (id === 'nr1rProb')
+      ? ['1 · muito improvável','2 · pouco provável','3 · possível','4 · provável','5 · quase certo']
+      : ['1 · sem dano','2 · leve','3 · moderado','4 · grave','5 · muito grave'];
+    rot.forEach(function(t, i){
+      var o = document.createElement('option');
+      o.value = i+1; o.textContent = t; sel.appendChild(o);
+    });
+    sel.value = '3';
+    sel.addEventListener('change', nr1NivelRisco);
+  });
+  nr1NivelRisco();
+}
+
+function nr1NivelRisco(){
+  var p = Number(document.getElementById('nr1rProb').value) || 1;
+  var s = Number(document.getElementById('nr1rSev').value) || 1;
+  var n = p * s;
+  var nivel = n >= 15 ? 'Crítico' : (n >= 8 ? 'Alto' : (n >= 4 ? 'Médio' : 'Baixo'));
+  var faixa = n >= 15 ? 'alto' : (n >= 8 ? 'alto' : (n >= 4 ? 'medio' : 'baixo'));
+  document.getElementById('nr1rNivel').innerHTML =
+    '<span>Probabilidade ' + p + ' × severidade ' + s + '</span>'
+    + '<b class="nr1-idx ' + faixa + '">' + nivel + ' (' + n + ')</b>';
+}
+
+document.getElementById('btnNR1Risco').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget;
+  if(btn.disabled) return;
+  var box = document.getElementById('nr1rResultado');
+  var perigo = document.getElementById('nr1rPerigo').value.trim();
+  if(!perigo){ box.innerHTML = '<div class="assess-aviso">Descreva o perigo identificado.</div>'; return; }
+  var rot = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try{
+    var r = await chamarAPI({ acao:'nr1SalvarRisco',
+      unidade: 'Sorocaba',
+      setor: document.getElementById('nr1rSetor').value.trim(),
+      funcao: document.getElementById('nr1rFuncao').value.trim(),
+      vinculo: document.getElementById('nr1rVinculo').value,
+      categoria: document.getElementById('nr1rCategoria').value,
+      perigo: perigo,
+      efeito: document.getElementById('nr1rEfeito').value.trim(),
+      probabilidade: document.getElementById('nr1rProb').value,
+      severidade: document.getElementById('nr1rSev').value,
+      controle: document.getElementById('nr1rControle').value.trim(),
+      registradoPor: professorLogado || '' });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Risco adicionado como <b>'
+      + r.nivel + '</b>.</div>';
+    ['nr1rPerigo','nr1rEfeito','nr1rControle'].forEach(function(id){
+      document.getElementById(id).value = '';
+    });
+    nr1CarregarRiscos();
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Falha de conexão ao salvar.</div>';
+  }finally{
+    btn.disabled = false; btn.textContent = rot;
+  }
+});
+
+async function nr1CarregarRiscos(){
+  var box = document.getElementById('nr1rLista');
+  try{
+    var r = await chamarAPI({ acao:'nr1ListarRiscos' });
+    if(!r.sucesso || !r.total){ box.innerHTML = ''; return; }
+    var ordem = { 'Crítico':0, 'Alto':1, 'Médio':2, 'Baixo':3 };
+    var lista = r.riscos.slice().sort(function(a,b){
+      return (ordem[a.nivel]||9) - (ordem[b.nivel]||9);
+    });
+    box.innerHTML = '<div style="padding:16px 20px 0;">'
+      + '<div class="mn-cab"><span>' + r.total + ' risco(s) no inventário</span></div>'
+      + lista.map(function(x){
+        var faixa = (x.nivel === 'Crítico' || x.nivel === 'Alto') ? 'alto'
+                  : (x.nivel === 'Médio' ? 'medio' : 'baixo');
+        return '<div class="nr1-linha ' + faixa + '"><div class="nr1-topo">'
+          + '<span class="nr1-nome">' + x.perigo + '</span>'
+          + '<span class="nr1-idx ' + faixa + '">' + x.nivel + '</span></div>'
+          + '<div class="nr1-meta">' + x.categoria + ' · ' + (x.setor||'—')
+          + ' · ' + (x.funcao||'—') + ' (' + (x.vinculo||'—') + ')'
+          + (x.efeito ? '<br>Efeito: ' + x.efeito : '')
+          + (x.controle ? '<br>Já existe: ' + x.controle : '<br><i>Sem controle registrado</i>')
+          + '</div></div>';
+      }).join('') + '</div>';
+  }catch(e){ box.innerHTML = ''; }
+}
+
 /* ============================================================================
  * 3.7.1 - RECIBO DE MENSALIDADE
  * ========================================================================== */
@@ -8241,6 +8707,17 @@ function aplicarPermissoes(){
   if(elLv) elLv.classList.toggle('hidden', !podeVer('recepcao'));
 
   var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
+
+  // 3.8.0: a NR-1 guarda relato de assedio e de saude mental.
+  // O acesso e nominal, nao por perfil, e quem decide e o servidor.
+  (function(){
+    var card = document.getElementById('recepCardNR1');
+    if(!card) return;
+    card.classList.add('hidden');
+    chamarAPI({ acao:'podeVerNR1' }).then(function(r){
+      if(r && r.sucesso && r.pode) card.classList.remove('hidden');
+    }).catch(function(){});
+  })();
   // titulo de secao sem nenhum card visivel some junto
   setTimeout(function(){
     document.querySelectorAll('#recepCards .sec-titulo, #menuCards .sec-titulo').forEach(function(t){
