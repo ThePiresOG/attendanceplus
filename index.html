@@ -982,6 +982,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card hidden" id="cardNR1">
+        <div class="menu-card-icone">&#9878;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">NR-1</span>
+          <span class="menu-card-sub">Riscos e conversa individual da equipe</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card hidden" id="cardFaltas">
         <div class="menu-card-icone">&#9888;</div>
         <div class="menu-card-txt">
@@ -1460,14 +1468,6 @@
         <span class="menu-card-seta">&rarr;</span>
       </button>
       <div class="sec-titulo" data-sec="Gestão">Gestão</div>
-      <button class="menu-card hidden" id="recepCardNR1">
-        <div class="menu-card-icone">&#9878;</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">NR-1</span>
-          <span class="menu-card-sub">Riscos e conversa individual da equipe</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
       <button class="menu-card hidden" id="recepCardRelatorio">
         <div class="menu-card-icone">&#128196;</div>
         <div class="menu-card-txt">
@@ -2853,7 +2853,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.8.0';
+const APP_VERSAO = '3.8.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -6025,7 +6025,11 @@ var NR1_Q = null, NR1_ESC = [], NR1_INV = {}, NR1_RESP = {};
 // mesmas perguntas que o servidor trata como gatilho: relato nunca vira media
 var NR1_CRIT = { P08:1, P09:1, P12:1 };
 
-document.getElementById('recepCardNR1').addEventListener('click', function(){
+document.getElementById('cardNR1').addEventListener('click', function(){
+  // a NR-1 mora no menu da gestao, nao dentro da Recepcao.
+  // Ela trata da propria recepcionista, entao nao faz sentido morar na tela dela.
+  $telaMenu.classList.add('hidden');
+  $telaRecepcao.classList.remove('hidden');
   abrirPainelRecep('painelNR1','NR-1 · riscos e escuta da equipe');
   _soUmNR1('nr1Subcards');
 });
@@ -8670,6 +8674,18 @@ var PERFIL = 'PROFESSOR';
 function podeVer(o){ return !!(PERM && PERM[o]); }
 
 /** Mostra ou esconde os cards conforme o perfil de quem entrou. */
+/** Esconde o titulo de uma secao que ficou sem nenhum card visivel. */
+function _ajustarTitulosDeSecao(){
+  document.querySelectorAll('#recepCards .sec-titulo, #menuCards .sec-titulo').forEach(function(t){
+    var visivel = false, el = t.nextElementSibling;
+    while(el && !el.classList.contains('sec-titulo')){
+      if(el.classList.contains('menu-card') && !el.classList.contains('hidden')) visivel = true;
+      el = el.nextElementSibling;
+    }
+    t.classList.toggle('hidden', !visivel);
+  });
+}
+
 function aplicarPermissoes(){
   var mapa = [
     ['cardPresenca', 'presenca'],
@@ -8710,24 +8726,23 @@ function aplicarPermissoes(){
 
   // 3.8.0: a NR-1 guarda relato de assedio e de saude mental.
   // O acesso e nominal, nao por perfil, e quem decide e o servidor.
+  // 3.8.1: a resposta chega depois da limpeza dos titulos, entao a secao
+  // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
+  // e Admin via o card da NR-1 solto, sem o titulo em cima.
   (function(){
-    var card = document.getElementById('recepCardNR1');
+    var card = document.getElementById('cardNR1');
     if(!card) return;
     card.classList.add('hidden');
     chamarAPI({ acao:'podeVerNR1' }).then(function(r){
-      if(r && r.sucesso && r.pode) card.classList.remove('hidden');
+      if(r && r.sucesso && r.pode){
+        card.classList.remove('hidden');
+        _ajustarTitulosDeSecao();
+      }
     }).catch(function(){});
   })();
   // titulo de secao sem nenhum card visivel some junto
   setTimeout(function(){
-    document.querySelectorAll('#recepCards .sec-titulo, #menuCards .sec-titulo').forEach(function(t){
-      var visivel = false, el = t.nextElementSibling;
-      while(el && !el.classList.contains('sec-titulo')){
-        if(el.classList.contains('menu-card') && !el.classList.contains('hidden')) visivel = true;
-        el = el.nextElementSibling;
-      }
-      t.classList.toggle('hidden', !visivel);
-    });
+    _ajustarTitulosDeSecao();
   }, 0);
   ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
    'recepCardRelatorio'].forEach(function(id){
