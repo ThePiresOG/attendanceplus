@@ -5,6 +5,8 @@ App de controle de presença dos alunos, feito para o professor usar direto do c
 Não precisa instalar nada da loja de aplicativos. É só abrir o link, entrar com seu nome e senha, e usar.
 
 ---
+## Novidades
+- Logo iremos listar todas as atualizações aqui.
 
 ## O que dá pra fazer
 
