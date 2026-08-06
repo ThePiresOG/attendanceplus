@@ -815,6 +815,39 @@
     padding:11px 14px; margin-bottom:8px; }
   .nr1-doc b{ font-size:13px; display:block; }
   .nr1-doc span{ font-size:11px; color:#8a8a84; }
+  /* ===== 3.9.1: pop-up de aprovacao ===== */
+  .ap-fundo{ position:fixed; inset:0; background:rgba(43,46,44,.55); z-index:9000;
+    display:flex; align-items:center; justify-content:center; padding:18px; }
+  .ap-cx{ background:var(--branco); border-radius:16px; width:100%; max-width:560px;
+    max-height:86vh; display:flex; flex-direction:column; overflow:hidden; }
+  .ap-topo{ padding:16px 18px 12px; border-bottom:1px solid var(--linha); }
+  .ap-topo b{ display:block; font-size:15px; color:var(--carvao); }
+  .ap-topo span{ display:block; font-size:12px; color:#8a8a84; margin-top:3px; }
+  .ap-lista{ flex:1; overflow-y:auto; padding:12px 18px; }
+  .ap-item{ display:flex; gap:10px; align-items:flex-start; padding:10px 12px;
+    border:1px solid var(--linha); border-radius:11px; margin-bottom:8px; cursor:pointer; }
+  .ap-item input{ width:18px; height:18px; accent-color:var(--verde-escuro); flex:none; margin-top:1px; }
+  .ap-item span{ flex:1; min-width:0; }
+  .ap-item b{ display:block; font-size:12.5px; color:var(--carvao); }
+  .ap-item i{ display:block; font-size:11px; color:#8a8a84; font-style:normal; margin-top:2px; }
+  .ap-rod{ display:flex; gap:8px; align-items:center; padding:12px 18px;
+    border-top:1px solid var(--linha); flex-wrap:wrap; }
+  .sai-cx{ padding:24px 22px 20px; text-align:center; }
+  .sai-tit{ font-size:17px; font-weight:600; color:var(--carvao); line-height:1.35; }
+  .sai-sub{ font-size:12px; color:#8a8a84; margin-top:7px; }
+  .sai-btns{ display:flex; gap:9px; margin-top:20px; }
+  .sai-btns button{ flex:1; }
+  .fr-dia{ display:flex; align-items:center; gap:10px; background:var(--branco);
+    border:1px solid var(--linha); border-left:3px solid var(--verde-claro);
+    border-radius:11px; padding:10px 13px; margin-bottom:8px; }
+  .fr-dia .d{ flex:1; min-width:0; }
+  .fr-dia b{ display:block; font-size:13px; color:var(--carvao); }
+  .fr-dia span{ display:block; font-size:11px; color:#8a8a84; }
+  .fr-dia .x{ background:none; border:none; color:#8a3b2d; font-size:17px; cursor:pointer; padding:0 4px; }
+  .rel-achado{ background:var(--branco); border:1px solid var(--linha); border-radius:11px;
+    padding:11px 14px; margin-bottom:8px; }
+  .rel-achado b{ display:block; font-size:12.5px; color:var(--carvao); word-break:break-word; }
+  .rel-achado span{ display:block; font-size:11px; color:#8a8a84; margin-top:3px; }
 </style>
 </head>
 <body>
@@ -998,6 +1031,14 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Fechamento dos professores</span>
           <span class="menu-card-sub">Relat&oacute;rio mensal de aulas em PDF</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="cardFreela">
+        <div class="menu-card-icone">&#128198;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Check-in de freelancer</span>
+          <span class="menu-card-sub">Dias trabalhados e comprovante em PDF</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -2038,6 +2079,65 @@
       <button class="pend-acao" id="btnGerarMensalidade" style="width:calc(100% - 40px);margin:12px 20px 0;">Gerar recibo em PDF</button>
     </div>
 
+    <div class="recep-painel hidden" id="painelFreela">
+      <div class="controls">
+        <div class="field">
+          <label for="frNome">Quem trabalhou</label>
+          <input type="text" id="frNome" list="frNomes" placeholder="Nome" autocomplete="off" value="Juliana">
+          <datalist id="frNomes"></datalist>
+        </div>
+        <div class="field">
+          <label for="frData">Dia</label>
+          <input type="date" id="frData">
+        </div>
+      </div>
+      <div class="controls" style="padding-top:0;">
+        <div class="field">
+          <label for="frEntrada">Entrada</label>
+          <input type="time" id="frEntrada">
+        </div>
+        <div class="field">
+          <label for="frSaida">Sa&iacute;da</label>
+          <input type="time" id="frSaida">
+        </div>
+        <div class="field">
+          <label for="frValor">Valor (deixe vazio para calcular)</label>
+          <input type="text" id="frValor" inputmode="decimal" placeholder="calculado">
+        </div>
+      </div>
+      <div class="rec-itens" style="padding-top:0;">
+        <label class="rec-item" id="frItemAlmoco" style="margin-bottom:0;">
+          <input type="checkbox" id="frAlmoco">
+          <span class="rec-item-txt">
+            <b>Descontar 1h de almo&ccedil;o</b>
+            <i>Marcado sozinho quando ela passa mais de 6h aqui</i>
+          </span>
+        </label>
+      </div>
+      <div class="controls" style="padding-top:0;">
+        <div class="field" style="width:100%;">
+          <label for="frObs">Observa&ccedil;&atilde;o (opcional)</label>
+          <input type="text" id="frObs" placeholder="Ex: cobriu a recep&ccedil;&atilde;o pela manh&atilde;">
+        </div>
+      </div>
+      <div class="rec-total" id="frPreview"></div>
+      <div id="frResultado"></div>
+      <button class="pend-acao" id="btnFrCheckin" style="width:calc(100% - 40px);margin:12px 20px 0;">Marcar este dia</button>
+
+      <div class="controls" style="padding-top:18px;">
+        <div class="field">
+          <label for="frMes">M&ecirc;s do comprovante</label>
+          <select id="frMes"></select>
+        </div>
+        <div class="field">
+          <label for="frAno">Ano</label>
+          <select id="frAno"></select>
+        </div>
+      </div>
+      <div id="frLista"></div>
+      <button class="pend-acao" id="btnFrPdf" style="width:calc(100% - 40px);margin:12px 20px 20px;">Gerar comprovante em PDF</button>
+    </div>
+
     <div class="recep-painel hidden" id="painelNR1">
       <div class="menu-opcoes" id="nr1Subcards">
         <button class="menu-card" id="subcardNR1Riscos">
@@ -2650,6 +2750,14 @@
     </div>
 
     <div class="recep-painel hidden" id="painelRelAulas">
+      <div class="busca-linha" style="padding-bottom:4px;">
+        <div class="campo">
+          <label for="relBusca">Procurar relat&oacute;rio j&aacute; emitido</label>
+          <input type="text" id="relBusca" placeholder="Nome do professor ou m&ecirc;s" autocomplete="off">
+        </div>
+        <button class="busca-btn" id="btnRelBuscar">Buscar</button>
+      </div>
+      <div id="relBuscaResultado"></div>
       <div class="controls">
         <div class="field">
           <label for="relAulasMes">M&ecirc;s</label>
@@ -3045,7 +3153,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.9.0';
+const APP_VERSAO = '3.9.7';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3529,6 +3637,23 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
     abrirAulaDeHoje();
     return;
   }
+  // 3.9.2: lançamento retroativo confirma a data antes de gravar.
+  // Aula lançada no dia errado bagunça a folha e some da conferência.
+  var _dv = (document.getElementById('data') || {}).value || '';
+  if(_dv){
+    var _hojeISO = new Date().toISOString().slice(0,10);
+    var _diff = Math.round((new Date(_hojeISO) - new Date(_dv)) / 86400000);
+    if(_diff >= 1){
+      var _br = _dv.split('-').reverse().join('/');
+      var _quando = _diff === 1 ? 'ontem' : ('há ' + _diff + ' dias');
+      if(!confirm('Atenção: você está lançando presença de ' + _br + ', ' + _quando + '.\n\n'
+        + 'A data está correta?')) return;
+    }else if(_diff < 0){
+      if(!confirm('A data ' + _dv.split('-').reverse().join('/')
+        + ' ainda não chegou.\n\nLançar mesmo assim?')) return;
+    }
+  }
+
   // trava o botao no primeiro toque: o lag levava o professor a clicar varias vezes
   btnS.disabled = true;
   const rotuloSalvar = btnS.textContent;
@@ -3689,7 +3814,38 @@ document.getElementById('cardBoletim').addEventListener('click', ()=>{
   mostrarToast('Boletim chega na próxima etapa 😉');
 });
 
-document.getElementById('btnSairMenu').addEventListener('click', ()=>{
+/* 3.9.2: sair sem querer no meio de um lançamento dá retrabalho.
+   A pergunta muda a cada vez, para não virar clique automático. */
+var _DESPEDIDAS = [
+  { titulo: 'Você já fez tudo que tinha que fazer?', sim: 'Acho que sim',  nao: 'Não tenho certeza' },
+  { titulo: 'Tem certeza que vai sair?',             sim: 'Tenho, sim',    nao: 'Peraí, deixa eu ver' },
+  { titulo: 'Lançou tudo antes de fechar?',          sim: 'Lancei tudo',   nao: 'Melhor conferir' },
+  { titulo: 'Bora fechar por hoje?',                 sim: 'Bora',          nao: 'Ainda não' },
+  { titulo: 'Nada ficou pela metade?',               sim: 'Nada, pode ir', nao: 'Deixa eu olhar' },
+  { titulo: 'Tudo certo por aí?',                    sim: 'Tudo certo',    nao: 'Quase' }
+];
+
+function confirmarSaida(){
+  return new Promise(function(resolve){
+    var d = _DESPEDIDAS[Math.floor(Math.random() * _DESPEDIDAS.length)];
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.innerHTML = '<div class="ap-cx" style="max-width:380px;">'
+      + '<div class="sai-cx">'
+      + '<div class="sai-tit">' + d.titulo + '</div>'
+      + '<div class="sai-sub">Se sair agora, o que não foi salvo se perde.</div>'
+      + '<div class="sai-btns">'
+      + '<button class="ren-btn sec" id="saiNao">' + d.nao + '</button>'
+      + '<button class="pend-acao" id="saiSim">' + d.sim + '</button>'
+      + '</div></div></div>';
+    document.body.appendChild(fundo);
+    document.getElementById('saiNao').onclick = function(){ fundo.remove(); resolve(false); };
+    document.getElementById('saiSim').onclick = function(){ fundo.remove(); resolve(true); };
+  });
+}
+
+document.getElementById('btnSairMenu').addEventListener('click', async ()=>{
+  if(!await confirmarSaida()) return;
   _navLimpar();
   professorLogado = null;
   $loginSenha.value = '';
@@ -6892,6 +7048,269 @@ async function nr1GerarPdf(nomeArquivo, html){
   setTimeout(function(){ palco.innerHTML = ''; }, 1500);
 }
 
+
+/* ============================================================================
+ * 3.9.6 - CHECK-IN DE FREELANCER E BUSCA DE RELATORIOS
+ * ========================================================================== */
+
+var _FR_DADOS = null;
+
+document.getElementById('cardFreela').addEventListener('click', function(){
+  $telaMenu.classList.add('hidden');
+  $telaRecepcao.classList.remove('hidden');
+  abrirPainelRecep('painelFreela','Check-in de freelancer');
+  var h = new Date();
+  document.getElementById('frData').value = h.toISOString().slice(0,10);
+  frMontarPeriodo();
+  frCarregarNomes();
+  frCarregarLista();
+});
+
+function frMontarPeriodo(){
+  var mSel = document.getElementById('frMes'), aSel = document.getElementById('frAno');
+  if(mSel.options.length) return;
+  var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho',
+               'agosto','setembro','outubro','novembro','dezembro'];
+  meses.forEach(function(nome, i){
+    var o = document.createElement('option');
+    o.value = i+1; o.textContent = nome; mSel.appendChild(o);
+  });
+  var hoje = new Date();
+  mSel.value = hoje.getMonth()+1;
+  for(var a = hoje.getFullYear()+1; a >= hoje.getFullYear()-2; a--){
+    var o2 = document.createElement('option');
+    o2.value = a; o2.textContent = a; aSel.appendChild(o2);
+  }
+  aSel.value = hoje.getFullYear();
+  [mSel, aSel].forEach(function(el){ el.addEventListener('change', frCarregarLista); });
+}
+
+async function frCarregarNomes(){
+  try{
+    var r = await chamarAPI({ acao:'freelaNomes' });
+    if(r.sucesso){
+      document.getElementById('frNomes').innerHTML =
+        (r.nomes||[]).map(function(n){ return '<option value="'+n+'">'; }).join('');
+    }
+  }catch(e){}
+}
+
+/* A conta da freelancer.
+   R$ 150 por 8h efetivas dá R$ 18,75 a hora. O intervalo de almoço só é
+   descontado quando ela passa mais de 6h aqui, que é quando ele existe.
+   Mesma regra do servidor, para a tela nunca mostrar número diferente. */
+var VALOR_HORA_FREELA = 18.75, HORAS_PARA_ALMOCO = 6;
+var _frMexeuNoAlmoco = false;
+
+function _frHoras(hi, hf){
+  if(!/^\d{1,2}:\d{2}$/.test(hi) || !/^\d{1,2}:\d{2}$/.test(hf)) return 0;
+  var a = hi.split(':'), b = hf.split(':');
+  var m = (Number(b[0])*60+Number(b[1])) - (Number(a[0])*60+Number(a[1]));
+  if(m < 0) m += 1440;
+  return Math.round(m/60*100)/100;
+}
+
+function frPreview(){
+  var ent = document.getElementById('frEntrada').value;
+  var sai = document.getElementById('frSaida').value;
+  var chk = document.getElementById('frAlmoco');
+  var bruto = _frHoras(ent, sai);
+
+  // sugere sozinho, mas para de sugerir depois que você mexer
+  if(!_frMexeuNoAlmoco) chk.checked = bruto > HORAS_PARA_ALMOCO;
+  document.getElementById('frItemAlmoco').classList.toggle('off', !chk.checked);
+
+  var pagas = Math.max(0, bruto - (chk.checked ? 1 : 0));
+  var digitado = _num(document.getElementById('frValor').value);
+  var valor = digitado > 0 ? digitado : Math.round(pagas * VALOR_HORA_FREELA * 100) / 100;
+
+  var txt = bruto
+    ? (_hBR(bruto) + ' aqui' + (chk.checked ? ' − 1h de almoço = ' + _hBR(pagas) + ' pagas' : ''))
+    : 'Informe entrada e saída';
+  document.getElementById('frPreview').innerHTML =
+    '<span>' + txt + (digitado > 0 && bruto ? ' · valor digitado à mão' : '') + '</span>'
+    + '<b>' + (valor ? _reais(valor) : '—') + '</b>';
+}
+
+['frEntrada','frSaida','frValor'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', frPreview);
+  document.getElementById(id).addEventListener('change', frPreview);
+});
+document.getElementById('frAlmoco').addEventListener('change', function(){
+  _frMexeuNoAlmoco = true;
+  frPreview();
+});
+
+document.getElementById('btnFrCheckin').addEventListener('click', async function(ev){
+  var btn = ev.currentTarget; if(btn.disabled) return;
+  var box = document.getElementById('frResultado');
+  var nome = document.getElementById('frNome').value.trim();
+  var data = document.getElementById('frData').value;
+  if(!nome){ box.innerHTML = '<div class="assess-aviso">Informe o nome.</div>'; return; }
+  if(!data){ box.innerHTML = '<div class="assess-aviso">Escolha o dia.</div>'; return; }
+
+  var payload = { acao:'freelaCheckin', nome: nome,
+    data: data.split('-').reverse().join('/'),
+    entrada: document.getElementById('frEntrada').value,
+    saida: document.getElementById('frSaida').value,
+    valor: _num(document.getElementById('frValor').value),
+    descontarAlmoco: document.getElementById('frAlmoco').checked,
+    observacao: document.getElementById('frObs').value.trim() };
+
+  var rot = btn.textContent; btn.disabled = true; btn.textContent = 'Marcando...';
+  try{
+    var r = await chamarAPI(payload);
+    if(!r.sucesso && r.repetido){
+      if(confirm(r.erro)){
+        payload.confirmarRepetido = true;
+        r = await chamarAPI(payload);
+      }else{ return; }
+    }
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    box.innerHTML = '<div class="msg-ok" style="margin:10px 20px 0;">Dia marcado'
+      + (r.horas ? ' · ' + r.horas + 'h' : '') + '.</div>';
+    document.getElementById('frObs').value = '';
+    document.getElementById('frValor').value = '';
+    _frMexeuNoAlmoco = false;
+    frPreview();
+    frCarregarNomes();
+    frCarregarLista();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha de conexão.</div>'; }
+  finally{ btn.disabled = false; btn.textContent = rot; }
+});
+
+async function frCarregarLista(){
+  var box = document.getElementById('frLista');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'freelaPeriodo',
+      nome: document.getElementById('frNome').value.trim(),
+      mes: Number(document.getElementById('frMes').value),
+      ano: Number(document.getElementById('frAno').value) });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    _FR_DADOS = r;
+    if(!r.total){
+      box.innerHTML = '<div class="busca-vazia" style="margin:0 20px;">Nenhum dia marcado neste mês.</div>';
+      return;
+    }
+    box.innerHTML = '<div style="padding:0 20px;">'
+      + '<div class="mn-cab"><span>' + r.total + ' dia(s) · ' + _hBR(r.totalHoras) + ' · '
+      + r.totalValorTexto + '</span></div>'
+      + r.dias.map(function(d){
+        return '<div class="fr-dia"><div class="d">'
+          + '<b>' + d.diaSemana + ' · ' + d.data + '</b>'
+          + '<span>' + (d.entrada
+              ? d.entrada + ' às ' + d.saida + ' · ' + _hBR(d.horas) + ' pagas'
+                + (d.descontoAlmoco ? ' (' + _hBR(d.horasNoLocal) + ' − 1h almoço)' : '')
+              : 'sem horário')
+          + (d.valorTexto ? ' · ' + d.valorTexto : '')
+          + (d.observacao ? '<br>' + d.observacao : '') + '</span></div>'
+          + '<button class="x" onclick="frRemover(' + d.linha + ')" title="Remover">&times;</button>'
+          + '</div>';
+      }).join('') + '</div>';
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Não consegui carregar.</div>'; }
+}
+
+async function frRemover(linha){
+  if(!confirm('Remover este dia da lista?')) return;
+  var r = await chamarAPI({ acao:'freelaRemover', linha: linha });
+  if(!r.sucesso){ alert(r.erro || 'Não consegui remover.'); return; }
+  frCarregarLista();
+}
+
+document.getElementById('btnFrPdf').addEventListener('click', function(){
+  var d = _FR_DADOS;
+  if(!d || !d.total){ mostrarToast('Nenhum dia marcado neste mês'); return; }
+  nr1GerarPdf('Comprovante_' + String(d.nome).replace(/\s+/g,'_') + '_'
+    + ('0'+d.mes).slice(-2) + '-' + d.ano, frHtmlComprovante(d));
+});
+
+function _hBR(h){ return String(h).replace('.', ',') + 'h'; }
+
+function frHtmlComprovante(d){
+  var temDesconto = d.dias.some(function(x){ return x.descontoAlmoco; });
+  var linhas = d.dias.map(function(x){
+    return '<tr><td><b>' + x.data + '</b></td><td>' + x.diaSemana + '</td>'
+      + '<td>' + (x.entrada ? x.entrada + ' às ' + x.saida : '—') + '</td>'
+      + (temDesconto ? '<td class="c">' + (x.horasNoLocal ? _hBR(x.horasNoLocal) : '—') + '</td>'
+                     + '<td class="c">' + (x.descontoAlmoco ? '−' + _hBR(x.descontoAlmoco) : '—') + '</td>'
+                     : '')
+      + '<td class="c">' + (x.horas ? _hBR(x.horas) : '—') + '</td>'
+      + '<td class="c">' + (x.valorTexto || '—') + '</td>'
+      + '<td>' + (x.observacao || '') + '</td></tr>';
+  }).join('');
+
+  return '<div class="rc-pag">'
+  + nr1Cabecalho('COMPROVANTE DE DIAS TRABALHADOS',
+      (d.mesNome ? d.mesNome.charAt(0).toUpperCase() + d.mesNome.slice(1) + ' de ' + d.ano : '')
+      + ' · emitido em ' + d.dataBr)
+  + '<div class="nr1ident">'
+    + '<div class="larga"><span>Prestador(a)</span><b>' + d.nome + '</b></div>'
+    + '<div><span>Dias trabalhados</span><b>' + d.total + '</b></div>'
+    + '<div><span>Horas pagas</span><b>' + _hBR(d.totalHoras) + '</b></div>'
+    + '<div><span>Total a receber</span><b>' + d.totalValorTexto + '</b></div>'
+  + '</div>'
+  + '<table class="nr1t"><thead><tr><th>DATA</th><th>DIA</th><th>HORÁRIO</th>'
+  + (temDesconto ? '<th class="c">NO LOCAL</th><th class="c">ALMOÇO</th>' : '')
+  + '<th class="c">HORAS PAGAS</th><th class="c">VALOR</th><th>OBSERVAÇÃO</th></tr></thead>'
+  + '<tbody>' + linhas + '</tbody>'
+  + '<tfoot><tr><td colspan="3"><b>TOTAL</b></td>'
+  + (temDesconto ? '<td class="c"><b>' + _hBR(d.totalNoLocal || 0) + '</b></td>'
+                 + '<td class="c"><b>−' + _hBR(d.totalDesconto || 0) + '</b></td>' : '')
+  + '<td class="c"><b>' + _hBR(d.totalHoras) + '</b></td>'
+  + '<td class="c"><b>' + d.totalValorTexto + '</b></td><td></td></tr></tfoot></table>'
+  + (temDesconto
+      ? '<div class="nr1p"><p style="font-size:10.5px;color:#6b6b64;">'
+        + 'O intervalo de almoço não é remunerado e por isso aparece descontado. '
+        + 'As horas pagas são o tempo efetivo de trabalho.</p></div>' : '')
+  + (d.extenso
+      ? '<div class="nr1p"><p>Valor total de <b>' + d.totalValorTexto + '</b> ('
+        + d.extenso + '), referente aos dias discriminados acima'
+        + (d.valorHora ? ', calculado a ' + _reais(d.valorHora) + ' por hora trabalhada' : '')
+        + '.</p></div>' : '')
+  + '<p class="rc-data" style="text-align:right;font-size:11.5px;margin:14px 0 40px;">'
+  + d.cidade + ', ' + d.dataExtenso + '.</p>'
+  + nr1Assinaturas([{ nome: d.nome, sub: 'Prestador(a) de serviço' },
+                    { nome: d.razao, sub: 'CNPJ ' + d.cnpj }])
+  + '<p class="nr1pe">' + d.carimbo + '</p>'
+  + '</div>' + nr1CssPdf()
+  + '<style>table.nr1t tfoot td{ background:#F5F4F0; border-top:2px solid #5A7568; }</style>';
+}
+
+/* ---------- busca de relatorios ja emitidos ---------- */
+document.getElementById('btnRelBuscar').addEventListener('click', relBuscarEmitidos);
+document.getElementById('relBusca').addEventListener('input', function(){
+  clearTimeout(window._relBuscaTimer);
+  window._relBuscaTimer = setTimeout(relBuscarEmitidos, 450);
+});
+
+async function relBuscarEmitidos(){
+  var termo = document.getElementById('relBusca').value.trim();
+  var box = document.getElementById('relBuscaResultado');
+  if(!termo){ box.innerHTML = ''; return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Procurando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'buscarRelatoriosEmitidos', professor: termo });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    if(!r.total){
+      box.innerHTML = '<div class="busca-vazia" style="margin:0 20px;">Nenhum relatório encontrado para "'
+        + termo + '". Se nunca foi gerado, use o botão abaixo.</div>';
+      return;
+    }
+    box.innerHTML = '<div style="padding:0 20px 8px;">'
+      + '<div class="mn-cab"><span>' + r.total + ' relatório(s) encontrado(s)</span></div>'
+      + r.relatorios.map(function(x){
+        return '<div class="rel-achado"><b>' + x.arquivo + '</b>'
+          + '<span>' + (x.emitidoEm ? 'emitido em ' + x.emitidoEm : '')
+          + (x.emitidoPor ? ' por ' + x.emitidoPor : '')
+          + (x.reemissoes ? ' · gerado de novo ' + x.reemissoes + 'x' : '')
+          + (x.semRegistro ? ' · anterior ao histórico' : '') + '</span>'
+          + '<div class="doc-acoes" style="margin-top:7px;">'
+          + botaoPdf(x.url, 'Abrir', 'doc-link') + '</div></div>';
+      }).join('') + '</div>';
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha na busca.</div>'; }
+}
+
 /* ---------- 3.9.0: passos 3, 4 e 5, dossie e assinatura ---------- */
 
 function _soUmNR1b(qual){
@@ -8150,14 +8569,15 @@ async function verResumoMensal(){
       + '<span class="rel-valor">R$ ' + _brl(s.valor) + '</span></div>'
       + '<div class="rel-num">'
       + '<span>' + s.lancadas + ' lançadas</span>'
-      + '<span>' + s.horasLancadas + 'h</span>'
-      + (s.faltando ? '<span class="ruim">' + s.faltando + ' não lançadas</span>' : '')
       + (s.extras ? '<span class="aviso">' + s.extras + ' fora do previsto</span>' : '')
       + (s.conversas ? '<span>' + s.conversas + ' conversação</span>' : '')
+      + '<span><b>' + (s.totalAulas !== undefined ? s.totalAulas : s.lancadas) + ' no total</b></span>'
+      + '<span>' + s.horasLancadas + 'h</span>'
+      + (s.faltando ? '<span class="ruim">' + s.faltando + ' não lançadas</span>' : '')
       + '</div>'
       + (s.faltando
-          ? '<div class="doc-meta" style="color:#8a3b2d;">Faltam ' + s.horasFaltando
-            + 'h, equivalente a R$ ' + _brl(s.valorEmRisco) + '</div>'
+          ? '<div class="doc-meta" style="color:#8a3b2d;">' + s.faltando
+            + ' aula(s) prevista(s) sem lançamento. Confira antes de fechar.</div>'
           : '<div class="doc-meta" style="color:#3E8E5A;">Todas as aulas previstas foram lançadas</div>')
       + '<div class="ren-acoes">'
       + '<button class="ren-btn" onclick="gerarPdfProfessor(\'' + r.professor.replace(/'/g,"\\'") + '\')">Gerar PDF</button>'
@@ -8173,15 +8593,79 @@ async function verResumoMensal(){
   box.innerHTML = html;
 }
 
+/**
+ * Abre o pop-up de aprovacao. Devolve:
+ *   null            -> a pessoa cancelou, nao gera nada
+ *   {}              -> nao havia aula fora do previsto
+ *   {aprovacoes...} -> o que foi marcado
+ */
+async function aprovarForaDoPrevisto(nome, base){
+  var r;
+  try{
+    r = await chamarAPI(Object.assign({ acao:'relatorioMensal' }, base));
+  }catch(e){ return {}; }
+  if(!r || !r.sucesso || !r.extras || !r.extras.length) return {};
+
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.innerHTML = '<div class="ap-cx">'
+      + '<div class="ap-topo"><b>Aulas fora do previsto · ' + nome + '</b>'
+      + '<span>' + r.extras.length + ' aula(s) para você aprovar antes de fechar a folha</span></div>'
+      + '<div class="ap-lista">' + r.extras.map(function(x, i){
+          return '<label class="ap-item"><input type="checkbox" data-i="' + i + '" checked>'
+            + '<span><b>' + x.dataBr + ' · ' + x.diaSemana + ' · turma ' + x.turmaId + ' · ' + x.horas + 'h</b>'
+            + '<i>' + (x.motivo || 'sem motivo registrado')
+            + (x.comentario ? ' — ' + String(x.comentario).slice(0,70) : '') + '</i></span></label>';
+        }).join('') + '</div>'
+      + '<div class="ap-rod">'
+      + '<button class="ren-btn sec" id="apTodas">marcar todas</button>'
+      + '<button class="ren-btn sec" id="apNenhuma">desmarcar todas</button>'
+      + '<div style="flex:1;"></div>'
+      + '<button class="ren-btn sec" id="apCancelar">Cancelar</button>'
+      + '<button class="pend-acao" id="apOk">Aprovar e gerar</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+
+    var chks = fundo.querySelectorAll('.ap-item input');
+    document.getElementById('apTodas').onclick = function(){
+      Array.prototype.forEach.call(chks, function(c){ c.checked = true; });
+    };
+    document.getElementById('apNenhuma').onclick = function(){
+      Array.prototype.forEach.call(chks, function(c){ c.checked = false; });
+    };
+    document.getElementById('apCancelar').onclick = function(){
+      fundo.remove(); resolve(null);
+    };
+    document.getElementById('apOk').onclick = function(){
+      var mapa = {};
+      Array.prototype.forEach.call(chks, function(c){
+        var x = r.extras[Number(c.dataset.i)];
+        mapa[x.turmaId + '|' + x.data] = c.checked;
+      });
+      fundo.remove();
+      resolve({ aprovacoes: mapa, aprovadoPor: professorLogado || '',
+                aprovadoEm: new Date().toLocaleString('pt-BR') });
+    };
+  });
+}
+
 async function gerarPdfProfessor(nome){
-  mostrarToast('Gerando o PDF de ' + nome + '...');
   var pLivre = _periodoDe('relAulasLivre','relAulasDe','relAulasAte');
   if(pLivre === 'incompleto'){ mostrarToast('Preencha as duas datas'); return; }
-  var r = await chamarAPI(pLivre
-    ? { acao:'pdfRelatorioMensal', professor: nome, de: pLivre.de, ate: pLivre.ate }
-    : { acao:'pdfRelatorioMensal', professor: nome,
+  var base = pLivre
+    ? { professor: nome, de: pLivre.de, ate: pLivre.ate }
+    : { professor: nome,
         mes: Number(document.getElementById('relAulasMes').value),
-        ano: Number(document.getElementById('relAulasAno').value) });
+        ano: Number(document.getElementById('relAulasAno').value) };
+
+  // 3.9.1: antes de gerar, a gestao aprova uma a uma as aulas fora do previsto.
+  // Se cancelar, nada e gerado e nada e gravado.
+  var aprov = await aprovarForaDoPrevisto(nome, base);
+  if(aprov === null) return;
+
+  mostrarToast('Gerando o PDF de ' + nome + '...');
+  var r = await chamarAPI(Object.assign({ acao:'pdfRelatorioMensal' }, base, aprov));
   if(!r.sucesso){
     mostrarToast(r.erro || 'Erro ao gerar');
     document.getElementById('relResultado').insertAdjacentHTML('afterbegin',
@@ -9462,7 +9946,7 @@ function aplicarPermissoes(){
     _ajustarTitulosDeSecao();
   }, 0);
   ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
-   'recepCardRelatorio'].forEach(function(id){
+   'recepCardRelatorio','cardFreela'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
@@ -9485,7 +9969,9 @@ async function mostrarNovidades(nome){
     box.classList.remove('hidden');
 
     // marca como vista assim que aparece, para nao repetir no proximo login
-    chamarAPI({ acao:'marcarNovidadesVistas', nome: nome, versao: r.versaoAtual });
+    // 3.9.2: espera de verdade. Solto, o registro as vezes nao chegava a
+    // gravar e o aviso voltava no proximo login.
+    await chamarAPI({ acao:'marcarNovidadesVistas', nome: nome, versao: r.versaoAtual });
 
     document.getElementById('novFechar').addEventListener('click', function(){
       box.classList.add('hidden');
