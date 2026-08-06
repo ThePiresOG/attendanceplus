@@ -7,6 +7,7 @@ Não precisa instalar nada da loja de aplicativos. É só abrir o link, entrar c
 ---
 ## Novidades
 - Logo iremos listar todas as atualizações aqui.
+- Versão atualizada para 3.9.7
 
 ## O que dá pra fazer
 
