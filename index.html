@@ -3153,7 +3153,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '3.9.7';
+const APP_VERSAO = '4.0.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3222,6 +3222,9 @@ setInterval(checarVersao, 30*60*1000); // rechecagem a cada 30 min
 const $telaLogin = document.getElementById('telaLogin');
 const $telaApp = document.getElementById('telaApp');
 const $btnSair = document.getElementById('btnSair');
+// 3.9.9: fica true enquanto a presenca esta sendo gravada, para ninguem
+// sair da tela no meio e perder o lancamento
+var _SALVANDO_PRESENCA = false;
 
 const $turma = document.getElementById('turma');
 const $data = document.getElementById('data');
@@ -3626,7 +3629,15 @@ function mostrarToast(msg){
 
 document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
   const btnS = ev.currentTarget;
-  if(btnS.disabled) return;
+  // se por algum motivo o botao ficou preso, o proximo toque destrava
+  if(btnS.disabled){
+    if(btnS.textContent === 'Salvando...'){
+      btnS.disabled = false;
+      btnS.textContent = 'Salvar presença';
+      mostrarToast('Destravei o botão. Pode tentar de novo.');
+    }
+    return;
+  }
   const t = turmaAtual();
   const marcados = chaveSessao();
   const nomes = Object.keys(marcados);
@@ -3647,23 +3658,55 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
       var _br = _dv.split('-').reverse().join('/');
       var _quando = _diff === 1 ? 'ontem' : ('há ' + _diff + ' dias');
       if(!confirm('Atenção: você está lançando presença de ' + _br + ', ' + _quando + '.\n\n'
-        + 'A data está correta?')) return;
+        + 'A data está correta?')){
+        mostrarToast('Nada foi salvo. Corrija a data e tente de novo.');
+        return;
+      }
     }else if(_diff < 0){
       if(!confirm('A data ' + _dv.split('-').reverse().join('/')
-        + ' ainda não chegou.\n\nLançar mesmo assim?')) return;
+        + ' ainda não chegou.\n\nLançar mesmo assim?')){
+        mostrarToast('Nada foi salvo. Corrija a data e tente de novo.');
+        return;
+      }
     }
+  }
+
+  // 3.9.8: esta pergunta vinha DEPOIS de travar o botao, e o "return" saia sem
+  // destravar. Quem cancelava ficava com o botao preso em "Salvando..." e nada
+  // acontecia, sem nenhuma explicacao na tela. Agora ela vem antes, e toda
+  // saida avisa o motivo.
+  const semMarcacao = t.alunos.length - nomes.length;
+  if(semMarcacao > 0){
+    const ok = confirm(semMarcacao + ' aluno(s) sem marcação de presença ou falta.\n\n'
+      + 'Salvar mesmo assim?');
+    if(!ok){ mostrarToast('Nada foi salvo. Marque os alunos que faltam.'); return; }
   }
 
   // trava o botao no primeiro toque: o lag levava o professor a clicar varias vezes
   btnS.disabled = true;
   const rotuloSalvar = btnS.textContent;
   btnS.textContent = 'Salvando...';
-  const destravar = ()=>{ btnS.disabled = false; btnS.textContent = rotuloSalvar; };
-  const semMarcacao = t.alunos.length - nomes.length;
-  if(semMarcacao > 0){
-    const ok = confirm(semMarcacao + ' aluno(s) sem marcação de presença ou falta. Salvar mesmo assim?');
-    if(!ok) return;
+
+  // 3.9.9: e a saida tambem. Sair da tela no meio do salvamento cancelava a
+  // gravacao e o professor achava que tinha lancado. Enquanto salva, o unico
+  // caminho e esperar. Sao 2 ou 3 segundos.
+  _SALVANDO_PRESENCA = true;
+  if($btnSair){
+    $btnSair.disabled = true;
+    $btnSair.dataset.rotulo = $btnSair.textContent;
+    $btnSair.textContent = 'aguarde';
+    $btnSair.style.opacity = '.45';
   }
+
+  const destravar = ()=>{
+    btnS.disabled = false; btnS.textContent = rotuloSalvar;
+    _SALVANDO_PRESENCA = false;
+    if($btnSair){
+      $btnSair.disabled = false;
+      $btnSair.textContent = $btnSair.dataset.rotulo || 'Menu';
+      $btnSair.style.opacity = '';
+    }
+  };
   const registros = nomes.map(nome => ({
     turmaId: t.turmaId, nivel: t.nivel, professor: t.professor, data: $data.value, aluno: nome, status: marcados[nome]
   }));
@@ -3786,6 +3829,10 @@ $btnEntrar.addEventListener('click', async ()=>{
 });
 
 $btnSair.addEventListener('click', ()=>{
+  if(_SALVANDO_PRESENCA){
+    mostrarToast('Aguarde terminar de salvar, é rapidinho');
+    return;
+  }
   $telaApp.classList.add('hidden');
   $telaMenu.classList.remove('hidden');
 });
@@ -3825,7 +3872,12 @@ var _DESPEDIDAS = [
   { titulo: 'Tudo certo por aí?',                    sim: 'Tudo certo',    nao: 'Quase' }
 ];
 
-function confirmarSaida(){
+/**
+ * 4.0.0: esta funcao se chamava confirmarSaida e existia OUTRA com o mesmo nome
+ * na tela de desligamento de aluno. A segunda apagava a primeira, e clicar em
+ * Sair chamava a funcao errada, que quebrava. Por isso o botao nao respondia.
+ */
+function perguntarAntesDeSair(){
   return new Promise(function(resolve){
     var d = _DESPEDIDAS[Math.floor(Math.random() * _DESPEDIDAS.length)];
     var fundo = document.createElement('div');
@@ -3845,7 +3897,7 @@ function confirmarSaida(){
 }
 
 document.getElementById('btnSairMenu').addEventListener('click', async ()=>{
-  if(!await confirmarSaida()) return;
+  if(!await perguntarAntesDeSair()) return;
   _navLimpar();
   professorLogado = null;
   $loginSenha.value = '';
@@ -4776,12 +4828,6 @@ document.getElementById('recepCardPanorama').addEventListener('click', ()=>{
 
 function _brl(n){
   return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-function _num(v){
-  if(v===null||v===undefined) return 0;
-  var s = String(v).trim().replace(/\./g,'').replace(',','.');
-  var n = parseFloat(s);
-  return isNaN(n) ? 0 : n;
 }
 function _isoParaBr(iso){
   if(!iso) return '';
