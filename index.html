@@ -836,7 +836,14 @@
   .sai-tit{ font-size:17px; font-weight:600; color:var(--carvao); line-height:1.35; }
   .sai-sub{ font-size:12px; color:#8a8a84; margin-top:7px; }
   .sai-btns{ display:flex; gap:9px; margin-top:20px; }
-  .sai-btns button{ flex:1; }
+  /* 4.0.1: mesmo formato nos dois. A cor e que diz o que cada um faz:
+     verde segue em frente, salmao volta atras. */
+  .sai-btn{ flex:1; font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:600;
+    padding:13px 8px; border-radius:11px; border:none; color:#fff; cursor:pointer;
+    line-height:1.25; transition:filter .15s; }
+  .sai-btn:hover{ filter:brightness(1.07); }
+  .sai-btn.vai{ background:var(--verde-escuro); }
+  .sai-btn.fica{ background:var(--salmao); }
   .fr-dia{ display:flex; align-items:center; gap:10px; background:var(--branco);
     border:1px solid var(--linha); border-left:3px solid var(--verde-claro);
     border-radius:11px; padding:10px 13px; margin-bottom:8px; }
@@ -848,6 +855,39 @@
     padding:11px 14px; margin-bottom:8px; }
   .rel-achado b{ display:block; font-size:12.5px; color:var(--carvao); word-break:break-word; }
   .rel-achado span{ display:block; font-size:11px; color:#8a8a84; margin-top:3px; }
+  /* ===== 4.1.0: ficha do aluno e aniversariantes ===== */
+  .fa-bloco{ background:var(--branco); border:1px solid var(--linha); border-radius:13px;
+    padding:14px 16px; margin-bottom:10px; }
+  .fa-bloco h4{ margin:0 0 9px; font-size:10px; letter-spacing:1.3px; text-transform:uppercase;
+    color:var(--verde-escuro); font-weight:700; }
+  .fa-nome{ font-size:18px; font-weight:700; color:var(--carvao); }
+  .fa-sub{ font-size:12px; color:#8a8a84; margin-top:3px; }
+  .fa-grade{ display:flex; flex-wrap:wrap; gap:11px 0; }
+  .fa-grade > div{ width:50%; }
+  .fa-grade > div.larga{ width:100%; }
+  .fa-grade span{ display:block; font-size:9.5px; letter-spacing:.9px; color:#8a8a84; text-transform:uppercase; }
+  .fa-grade b{ display:block; font-size:13px; margin-top:2px; color:var(--carvao); font-weight:600; }
+  .fa-linha{ border-left:3px solid var(--verde-claro); background:var(--perola);
+    border-radius:9px; padding:9px 12px; margin-bottom:7px; }
+  .fa-linha.off{ border-left-color:var(--linha); opacity:.6; }
+  .fa-linha b{ display:block; font-size:12.5px; }
+  .fa-linha span{ display:block; font-size:11px; color:#8a8a84; }
+  .fa-tag{ display:inline-block; font-size:9.5px; font-weight:700; padding:2px 8px;
+    border-radius:20px; margin-left:6px; }
+  .fa-tag.ok{ background:#E3EFE7; color:#2f6b45; }
+  .fa-tag.no{ background:#F5D3CC; color:#8a3b2d; }
+  .fa-tag.av{ background:#FDF3D4; color:#8a6d1a; }
+  .nv-item{ display:flex; align-items:center; gap:11px; background:var(--branco);
+    border:1px solid var(--linha); border-radius:12px; padding:11px 14px; margin-bottom:8px; }
+  .nv-item.hoje{ border-left:3px solid var(--salmao); }
+  .nv-item.feito{ background:var(--perola); opacity:.72; }
+  .nv-dia{ flex:none; width:52px; text-align:center; }
+  .nv-dia b{ display:block; font-size:15px; font-weight:700; color:var(--verde-escuro); }
+  .nv-dia span{ display:block; font-size:9.5px; color:#8a8a84; text-transform:uppercase; }
+  .nv-txt{ flex:1; min-width:0; }
+  .nv-txt b{ display:block; font-size:13.5px; color:var(--carvao); }
+  .nv-txt span{ display:block; font-size:11px; color:#8a8a84; }
+  .nv-chk{ flex:none; width:22px; height:22px; accent-color:var(--verde-escuro); cursor:pointer; }
 </style>
 </head>
 <body>
@@ -1434,6 +1474,22 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Contratos</span>
           <span class="menu-card-sub">Gerar contrato novo e buscar contratos</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardAluno">
+        <div class="menu-card-icone">&#128100;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Aluno</span>
+          <span class="menu-card-sub">Ficha completa: turma, contrato, livros e contatos</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardNiver">
+        <div class="menu-card-icone">&#127874;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Aniversariantes</span>
+          <span class="menu-card-sub">Pr&oacute;ximos 30 dias, com marca&ccedil;&atilde;o do que j&aacute; postou</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -2077,6 +2133,33 @@
       <div class="rec-total" id="mnTotal"></div>
       <div id="mnResultado"></div>
       <button class="pend-acao" id="btnGerarMensalidade" style="width:calc(100% - 40px);margin:12px 20px 0;">Gerar recibo em PDF</button>
+    </div>
+
+    <div class="recep-painel hidden" id="painelAluno">
+      <div class="busca-linha">
+        <div class="campo">
+          <label for="alBusca">Nome do aluno</label>
+          <input type="text" id="alBusca" placeholder="Digite parte do nome" autocomplete="off">
+        </div>
+        <button class="busca-btn" id="btnAlBuscar">Buscar</button>
+      </div>
+      <div id="alResultado"></div>
+    </div>
+
+    <div class="recep-painel hidden" id="painelNiver">
+      <div class="controls">
+        <div class="field">
+          <label for="nvJanela">Mostrar aniversariantes de</label>
+          <select id="nvJanela">
+            <option value="30">pr&oacute;ximos 30 dias</option>
+            <option value="60">pr&oacute;ximos 60 dias</option>
+            <option value="90">pr&oacute;ximos 90 dias</option>
+            <option value="7">pr&oacute;ximos 7 dias</option>
+          </select>
+        </div>
+      </div>
+      <div class="rec-total" id="nvResumo"></div>
+      <div id="nvLista"></div>
     </div>
 
     <div class="recep-painel hidden" id="painelFreela">
@@ -3153,7 +3236,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.0.0';
+const APP_VERSAO = '4.1.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3887,8 +3970,8 @@ function perguntarAntesDeSair(){
       + '<div class="sai-tit">' + d.titulo + '</div>'
       + '<div class="sai-sub">Se sair agora, o que não foi salvo se perde.</div>'
       + '<div class="sai-btns">'
-      + '<button class="ren-btn sec" id="saiNao">' + d.nao + '</button>'
-      + '<button class="pend-acao" id="saiSim">' + d.sim + '</button>'
+      + '<button class="sai-btn fica" id="saiNao">' + d.nao + '</button>'
+      + '<button class="sai-btn vai" id="saiSim">' + d.sim + '</button>'
       + '</div></div></div>';
     document.body.appendChild(fundo);
     document.getElementById('saiNao').onclick = function(){ fundo.remove(); resolve(false); };
@@ -7095,6 +7178,174 @@ async function nr1GerarPdf(nomeArquivo, html){
 }
 
 
+
+/* ============================================================================
+ * 4.1.0 - FICHA DO ALUNO E ANIVERSARIANTES
+ * ========================================================================== */
+
+document.getElementById('recepCardAluno').addEventListener('click', function(){
+  abrirPainelRecep('painelAluno','Ficha do aluno');
+  document.getElementById('alResultado').innerHTML =
+    '<div class="assess-aviso">Digite o nome do aluno e toque em Buscar.</div>';
+});
+
+document.getElementById('btnAlBuscar').addEventListener('click', buscarFicha);
+document.getElementById('alBusca').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') buscarFicha();
+});
+
+async function buscarFicha(){
+  var termo = document.getElementById('alBusca').value.trim();
+  var box = document.getElementById('alResultado');
+  if(termo.length < 2){ box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras.</div>'; return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Buscando...</p>';
+  try{
+    var d = await chamarAPI({ acao:'fichaDoAluno', termo: termo });
+    if(!d.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (d.erro||'Erro') + '</div>'; return; }
+    box.innerHTML = htmlFicha(d);
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar.</div>'; }
+}
+
+function htmlFicha(d){
+  var h = '<div style="padding:0 20px;">';
+
+  // identificação
+  h += '<div class="fa-bloco">'
+    + '<div class="fa-nome">' + d.aluno + '</div>'
+    + '<div class="fa-sub">' + (d.matricula ? 'Matrícula nº ' + d.matricula : 'sem matrícula')
+    + (d.tipo ? ' · ' + d.tipo : '') + (d.idade ? ' · ' + d.idade + ' anos' : '') + '</div>'
+    + (d.semCadastro ? '<div class="fa-tag no" style="margin-top:8px;">sem ficha na aba Cadastro</div>' : '')
+    + '</div>';
+
+  // contatos
+  h += '<div class="fa-bloco"><h4>Contatos</h4><div class="fa-grade">'
+    + '<div><span>Telefone</span><b>' + (d.telefone || '—') + '</b></div>'
+    + '<div><span>Aniversário</span><b>' + (d.nascimentoDiaMes || '—') + '</b></div>'
+    + '<div class="larga"><span>E-mail</span><b>' + (d.email || '—') + '</b></div>'
+    + (d.responsavel ? '<div class="larga"><span>Responsável</span><b>' + d.responsavel + '</b></div>' : '')
+    + (d.cidade ? '<div class="larga"><span>Cidade</span><b>' + d.cidade + '</b></div>' : '')
+    + '</div></div>';
+
+  // turmas
+  h += '<div class="fa-bloco"><h4>Turmas</h4>';
+  if(!d.turmas.length) h += '<div class="fa-sub">Não está em nenhuma turma.</div>';
+  d.turmas.forEach(function(t){
+    h += '<div class="fa-linha' + (t.ativo ? '' : ' off') + '">'
+      + '<b>Turma ' + t.turmaId + ' · ' + (t.nivel || '—')
+      + (t.ativo ? '<span class="fa-tag ok">ativo</span>'
+                 : '<span class="fa-tag no">' + (t.saida ? 'saiu em ' + t.saida : 'inativo') + '</span>')
+      + '</b><span>' + t.dias + ' · ' + t.horario + ' · ' + t.duracao + 'h'
+      + ' · ' + (t.professor || '—') + ' · ' + (t.modalidade || '—')
+      + (t.livro ? '<br>Livro atual: ' + t.livro : '')
+      + (t.inicio ? '<br>Entrou em ' + t.inicio : '') + '</span></div>';
+  });
+  h += '</div>';
+
+  // contrato
+  h += '<div class="fa-bloco"><h4>Contrato</h4>';
+  if(!d.contratoAtual){
+    h += '<div class="fa-sub">Nenhum contrato encontrado para este nome.</div>';
+  }else{
+    var c = d.contratoAtual;
+    var tag = c.vencido ? '<span class="fa-tag no">vencido</span>'
+      : (c.diasParaVencer !== null && c.diasParaVencer <= 60
+          ? '<span class="fa-tag av">vence em ' + c.diasParaVencer + ' dias</span>'
+          : '<span class="fa-tag ok">vigente</span>');
+    h += '<div class="fa-grade">'
+      + '<div><span>Número</span><b>nº ' + c.numero + ' ' + tag + '</b></div>'
+      + '<div><span>Mensalidade</span><b>' + c.mensalidadeTexto + '</b></div>'
+      + '<div><span>Início</span><b>' + (c.inicio || '—') + '</b></div>'
+      + '<div><span>Fim</span><b>' + (c.fim || '—') + '</b></div>'
+      + (c.parcelas ? '<div class="larga"><span>Total do contrato</span><b>' + c.totalTexto
+        + ' em ' + c.parcelas + 'x</b></div>' : '')
+      + '</div>';
+    if(c.pdfUrl) h += '<div class="doc-acoes" style="margin-top:9px;">' + botaoPdf(c.pdfUrl,'Abrir contrato','doc-link') + '</div>';
+    if(d.historicoContratos.length > 1){
+      h += '<div style="margin-top:11px;"><span style="font-size:9.5px;letter-spacing:.9px;color:#8a8a84;text-transform:uppercase;">Contratos anteriores</span>';
+      d.historicoContratos.slice(1).forEach(function(x){
+        h += '<div class="fa-linha off" style="margin-top:6px;"><b>nº ' + x.numero + '</b>'
+          + '<span>' + (x.inicio||'?') + ' a ' + (x.fim||'?') + ' · ' + x.mensalidadeTexto + '</span></div>';
+      });
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  // livros
+  h += '<div class="fa-bloco"><h4>Livros que já fez</h4>';
+  if(!d.livros.length) h += '<div class="fa-sub">Nenhuma aula lançada com livro registrado.</div>';
+  d.livros.forEach(function(l, i){
+    var ultimo = i === d.livros.length - 1;
+    h += '<div class="fa-linha' + (ultimo ? '' : ' off') + '"><b>' + l.livro
+      + (ultimo ? '<span class="fa-tag ok">fazendo agora</span>' : '') + '</b>'
+      + '<span>' + l.aulas + ' aula(s) · ' + l.de + ' a ' + l.ate + '</span></div>';
+  });
+  h += '</div>';
+
+  // boletins
+  h += '<div class="fa-bloco"><h4>Boletins emitidos</h4>';
+  if(!d.boletins.length) h += '<div class="fa-sub">Nenhum relatório de progresso emitido ainda.</div>';
+  d.boletins.forEach(function(b){
+    h += '<div class="fa-linha"><b>' + b.tipo + ' · ' + b.periodo + '</b>'
+      + '<span>' + b.quando + ' por ' + (b.por||'—') + '</span>'
+      + '<div class="doc-acoes" style="margin-top:6px;">' + botaoPdf(b.url,'Abrir','doc-link') + '</div></div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+/* ---------- ANIVERSARIANTES ---------- */
+
+document.getElementById('recepCardNiver').addEventListener('click', function(){
+  abrirPainelRecep('painelNiver','Aniversariantes');
+  carregarNiver();
+});
+document.getElementById('nvJanela').addEventListener('change', carregarNiver);
+
+async function carregarNiver(){
+  var box = document.getElementById('nvLista');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'aniversariantes',
+      janela: Number(document.getElementById('nvJanela').value) || 30 });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+
+    document.getElementById('nvResumo').innerHTML =
+      '<span>' + r.total + ' aniversariante(s) em ' + r.janela + ' dias'
+      + (r.semDataDeNascimento ? ' · ' + r.semDataDeNascimento + ' sem data no cadastro' : '') + '</span>'
+      + '<b>' + r.pendentes + ' a postar</b>';
+
+    if(!r.total){
+      box.innerHTML = '<div class="busca-vazia" style="margin:0 20px;">Ninguém faz aniversário nesse período.</div>';
+      return;
+    }
+    box.innerHTML = '<div style="padding:0 20px;">' + r.aniversariantes.map(function(x){
+      var quando = x.ehHoje ? 'é hoje' : (x.faltam === 1 ? 'amanhã' : 'em ' + x.faltam + ' dias');
+      return '<label class="nv-item' + (x.ehHoje ? ' hoje' : '') + (x.postadoEm ? ' feito' : '') + '">'
+        + '<span class="nv-dia"><b>' + x.dataBr + '</b><span>' + x.diaSemana + '</span></span>'
+        + '<span class="nv-txt"><b>' + x.aluno + ' · ' + x.idade + ' anos</b>'
+        + '<span>' + quando + ' · turma ' + x.turma + ' · ' + (x.nivel||'—')
+        + (x.telefone ? ' · ' + x.telefone : '')
+        + (x.postadoEm ? '<br>arte postada em ' + x.postadoEm : '') + '</span></span>'
+        + '<input type="checkbox" class="nv-chk" ' + (x.postadoEm ? 'checked' : '')
+        + ' data-aluno="' + x.aluno.replace(/"/g,'&quot;') + '"'
+        + ' data-ano="' + x.anoDoNiver + '" data-data="' + x.dataBr + '">'
+        + '</label>';
+    }).join('') + '</div>';
+
+    Array.prototype.forEach.call(box.querySelectorAll('.nv-chk'), function(c){
+      c.addEventListener('change', async function(){
+        var r2 = await chamarAPI({ acao:'marcarNiverPostado',
+          aluno: c.dataset.aluno, ano: Number(c.dataset.ano),
+          dataBr: c.dataset.data, desmarcar: !c.checked });
+        if(!r2.sucesso){ c.checked = !c.checked; mostrarToast(r2.erro || 'Não consegui marcar'); return; }
+        mostrarToast(c.checked ? 'Marcado como postado' : 'Desmarcado');
+        carregarNiver();
+      });
+    });
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Não consegui carregar.</div>'; }
+}
+
 /* ============================================================================
  * 3.9.6 - CHECK-IN DE FREELANCER E BUSCA DE RELATORIOS
  * ========================================================================== */
@@ -9954,6 +10205,7 @@ function aplicarPermissoes(){
   var soRecepcao = ['recepCardContratos','recepCardRenovacoes','recepCardTurmas',
     'recepCardDesligar','recepCardPresenca','recepCardCalendario','recepCardPanorama',
     'recepCardAfastamento','recepCardBaixa','recepCardRecibo','recepCardMensalidade',
+    'recepCardAluno','recepCardNiver',
     'recepCardFaltas'];
   soRecepcao.forEach(function(id){
     var el = document.getElementById(id);
@@ -10097,11 +10349,74 @@ async function carregarRenovacoes(){
 }
 
 /** Renovar em dois cliques: abre o formulario de contrato ja preenchido. */
+/* 4.1.0: campos que costumam mudar entre um contrato e outro.
+   O rotulo e o que aparece no popup de confirmacao. */
+var CAMPOS_CONFERIR_RENOVACAO = [
+  ['NOME_ALUNO', 'Nome do aluno'],
+  ['CPF', 'CPF'],
+  ['RG', 'RG'],
+  ['TELEFONE', 'Telefone'],
+  ['EMAIL', 'E-mail'],
+  ['ENDERECO', 'Endereço'],
+  ['CEP', 'CEP'],
+  ['CIDADE', 'Cidade'],
+  ['PROFISSAO', 'Profissão'],
+  ['ESTADO_CIVIL', 'Estado civil'],
+  ['NOME_RESPONSAVEL', 'Responsável'],
+  ['CPF_RESPONSAVEL', 'CPF do responsável'],
+  ['TELEFONE_RESPONSAVEL', 'Telefone do responsável']
+];
+
+/**
+ * Mostra o que veio do contrato anterior e pergunta o que mudou.
+ * Devolve null se cancelar, ou a lista de campos marcados como alterados.
+ */
+function confirmarDadosRenovacao(campos, nomeAluno){
+  var itens = CAMPOS_CONFERIR_RENOVACAO.filter(function(c){
+    var v = campos[c[0]];
+    return v !== '' && v !== null && v !== undefined;
+  });
+  if(!itens.length) return Promise.resolve([]);
+
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.innerHTML = '<div class="ap-cx">'
+      + '<div class="ap-topo"><b>Conferir os dados de ' + nomeAluno + '</b>'
+      + '<span>Isto veio do contrato anterior. Marque o que mudou, que eu limpo o campo '
+      + 'para você digitar o novo. Valores e datas você ajusta direto no formulário.</span></div>'
+      + '<div class="ap-lista">' + itens.map(function(c, i){
+          return '<label class="ap-item"><input type="checkbox" data-k="' + c[0] + '">'
+            + '<span><b>' + c[1] + '</b><i>' + String(campos[c[0]]).slice(0,70) + '</i></span></label>';
+        }).join('') + '</div>'
+      + '<div class="ap-rod">'
+      + '<button class="ren-btn sec" id="rnCancelar">Cancelar</button>'
+      + '<div style="flex:1;"></div>'
+      + '<button class="sai-btn vai" style="flex:none;padding:11px 18px;" id="rnOk">Continuar</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+
+    document.getElementById('rnCancelar').onclick = function(){ fundo.remove(); resolve(null); };
+    document.getElementById('rnOk').onclick = function(){
+      var mudaram = [];
+      Array.prototype.forEach.call(fundo.querySelectorAll('.ap-item input'), function(c){
+        if(c.checked) mudaram.push(c.dataset.k);
+      });
+      fundo.remove();
+      resolve(mudaram);
+    };
+  });
+}
+
 async function renovarContrato(numContrato){
   mostrarToast('Buscando os dados...');
   try{
     var r = await chamarAPI({ acao:'dadosParaRenovacao', numContrato: numContrato });
     if(!r.sucesso){ mostrarToast(r.erro || 'Erro ao buscar'); return; }
+
+    // 4.1.0: antes de puxar tudo, confere o que mudou desde o contrato anterior
+    var mudaram = await confirmarDadosRenovacao(r.campos, (r.campos && r.campos.NOME_ALUNO) || 'aluno');
+    if(mudaram === null){ mostrarToast('Renovação cancelada'); return; }
 
     document.getElementById('recepCards').classList.add('hidden');
     document.querySelectorAll('.recep-painel').forEach(function(p){ p.classList.add('hidden'); });
@@ -10111,17 +10426,31 @@ async function renovarContrato(numContrato){
 
     await abrirFormContrato(r.tipo);
 
-    var preenchidos = 0;
+    var preenchidos = 0, limpos = 0;
     Object.keys(r.campos).forEach(function(k){
       var el = document.getElementById('ctt_' + k);
-      if(el && r.campos[k] !== '' && r.campos[k] !== null && r.campos[k] !== undefined){
+      if(!el) return;
+      if(mudaram.indexOf(k) !== -1){
+        // marcado como alterado: limpa e destaca, para nao passar valor velho
+        el.value = '';
+        el.style.borderColor = 'var(--salmao)';
+        el.style.background = '#FBE9E5';
+        el.placeholder = 'preencha o dado novo';
+        limpos++;
+        return;
+      }
+      if(r.campos[k] !== '' && r.campos[k] !== null && r.campos[k] !== undefined){
         el.value = r.campos[k];
+        el.style.borderColor = '';
+        el.style.background = '';
         preenchidos++;
       }
     });
 
     var res = document.getElementById('contratoResultado');
     res.innerHTML = '<div class="' + (r.temFicha ? 'msg-ok' : 'msg-aviso') + '">'
+      + (limpos ? '<b>' + limpos + ' campo(s) marcado(s) como alterado(s)</b> estão em destaque, '
+                + 'esperando o dado novo.<br>' : '')
       + (r.temFicha
           ? '<b>' + preenchidos + ' campos preenchidos</b> a partir da ficha do aluno.'
           : '<b>Aluno sem ficha de cadastro.</b> Preenchi o que deu pelo contrato anterior, confira o resto.')
