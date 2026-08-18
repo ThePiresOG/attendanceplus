@@ -2948,8 +2948,17 @@ function _sessaoExpirou(msg){
   }catch(e){}
 }
 
+/** Ações que tornam a lista de turmas guardada obsoleta. */
+var _ACOES_QUE_MUDAM_TURMA = { removerAluno:1, adicionarAluno:1, registrarSaida:1,
+  editarTurma:1, criarTurma:1, arquivarTurma:1, salvarVinculo:1 };
+
 async function chamarAPI(payload){
   var acao = (payload && payload.acao) || 'sem-acao';
+  // 4.4.0: qualquer acao que mexa em turma ou aluno invalida a lista guardada,
+  // senao a tela de consulta continua mostrando o estado antigo
+  if(_ACOES_QUE_MUDAM_TURMA[acao] && typeof _invalidarCacheTurmas === 'function'){
+    setTimeout(_invalidarCacheTurmas, 0);
+  }
   // toda chamada leva o token do login; o servidor confere a permissão
   if(TOKEN_SESSAO && payload && !payload.token) payload.token = TOKEN_SESSAO;
   var tentativas = [];
@@ -3236,7 +3245,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.1.1';
+const APP_VERSAO = '4.4.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5908,7 +5917,10 @@ function mostrarConsultaTurma(){
   document.getElementById('ctResultado').innerHTML =
     '<div class="assess-aviso">Digite o c&oacute;digo da turma, o nome do professor, '
     + 'o nome de um aluno, o n&iacute;vel, o livro ou o dia da semana.</div>';
-  carregarTurmasConsulta();
+  // 4.4.0: sempre busca de novo. A lista ficava guardada da primeira consulta
+  // da sessao, entao aluno recem-adicionado nao aparecia aqui, mas aparecia em
+  // Turmas cadastradas, que le direto do servidor toda vez.
+  carregarTurmasConsulta(true);
   setTimeout(function(){ document.getElementById('ctBusca').focus(); }, 120);
 }
 
@@ -7214,13 +7226,29 @@ function htmlFicha(d){
     + '<div class="fa-nome">' + d.aluno + '</div>'
     + '<div class="fa-sub">' + (d.matricula ? 'Matrícula nº ' + d.matricula : 'sem matrícula')
     + (d.tipo ? ' · ' + d.tipo : '') + (d.idade ? ' · ' + d.idade + ' anos' : '') + '</div>'
-    + (d.semCadastro ? '<div class="fa-tag no" style="margin-top:8px;">sem ficha na aba Cadastro</div>' : '')
+    + (d.nomeNaTurma && d.nomeNaTurma !== d.aluno
+        ? '<div class="fa-sub">na aba de turmas aparece como "' + d.nomeNaTurma + '"</div>' : '')
+    + (d.nomeAmbiguo
+        ? '<div class="fa-tag no" style="margin-top:8px;">nome ambíguo: '
+          + d.candidatos.length + ' contratos servem. Use o nome completo na aba de turmas.</div>'
+        : '')
+    + (d.dadosDoContrato
+        ? '<div class="fa-tag av" style="margin-top:8px;">sem ficha na aba Cadastro · mostrando o que o contrato tem</div>'
+        : (d.semCadastro ? '<div class="fa-tag no" style="margin-top:8px;">sem ficha na aba Cadastro</div>' : ''))
     + '</div>';
 
   // contatos
-  h += '<div class="fa-bloco"><h4>Contatos</h4><div class="fa-grade">'
+  h += '<div class="fa-bloco"><h4>Contatos</h4>'
+    + (d.dadosDoContrato
+        ? '<div class="fa-sub" style="margin:-2px 0 10px;">Este aluno não tem linha na aba Cadastro. '
+          + 'Telefone, e-mail e data de nascimento só existem lá.</div>' : '')
+    + '<div class="fa-grade">'
     + '<div><span>Telefone</span><b>' + (d.telefone || '—') + '</b></div>'
-    + '<div><span>Aniversário</span><b>' + (d.nascimentoDiaMes || '—') + '</b></div>'
+    + '<div><span>Aniversário</span><b>'
+    + (d.nascimento
+        ? d.nascimento + (d.idade ? '<br><small style="font-weight:400;color:#8a8a84;">'
+            + d.idade + ' anos</small>' : '')
+        : '—') + '</b></div>'
     + '<div class="larga"><span>E-mail</span><b>' + (d.email || '—') + '</b></div>'
     + (d.responsavel ? '<div class="larga"><span>Responsável</span><b>' + d.responsavel + '</b></div>' : '')
     + (d.cidade ? '<div class="larga"><span>Cidade</span><b>' + d.cidade + '</b></div>' : '')
@@ -7311,12 +7339,21 @@ async function carregarNiver(){
     if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
 
     document.getElementById('nvResumo').innerHTML =
-      '<span>' + r.total + ' aniversariante(s) em ' + r.janela + ' dias'
-      + (r.semDataDeNascimento ? ' · ' + r.semDataDeNascimento + ' sem data no cadastro' : '') + '</span>'
+      '<span>' + r.total + ' aniversariante(s) em ' + r.janela + ' dias</span>'
       + '<b>' + r.pendentes + ' a postar</b>';
 
     if(!r.total){
-      box.innerHTML = '<div class="busca-vazia" style="margin:0 20px;">Ninguém faz aniversário nesse período.</div>';
+      var faltando = (r.semFichaDeCadastro || 0) + (r.semDataDeNascimento || 0);
+      box.innerHTML = '<div class="busca-vazia" style="margin:0 20px;text-align:left;">'
+        + 'Ninguém faz aniversário nesse período.'
+        + (faltando
+            ? '<br><br><b>Mas vale conferir:</b> de ' + r.alunosAtivos + ' aluno(s) ativo(s), '
+              + (r.semFichaDeCadastro ? '<b>' + r.semFichaDeCadastro + '</b> não tem linha na aba Cadastro' : '')
+              + (r.semFichaDeCadastro && r.semDataDeNascimento ? ' e ' : '')
+              + (r.semDataDeNascimento ? '<b>' + r.semDataDeNascimento + '</b> está sem data de nascimento' : '')
+              + '.<br><br>A data de aniversário só existe na aba Cadastro. '
+              + 'Quem não está lá nunca vai aparecer aqui.'
+            : '') + '</div>';
       return;
     }
     box.innerHTML = '<div style="padding:0 20px;">' + r.aniversariantes.map(function(x){
@@ -9824,6 +9861,13 @@ document.getElementById('btnSalvarTurma').addEventListener('click', async functi
   }
 });
 
+/** 4.4.0: joga fora a lista guardada, para a proxima consulta vir do servidor. */
+function _invalidarCacheTurmas(){
+  _TURMAS_CONSULTA = null;
+  _PROGRESSO_TURMAS = null;
+  if(typeof _LIVROS_CADASTRADOS !== 'undefined') _LIVROS_CADASTRADOS = [];
+}
+
 async function carregarListaTurmas(){
   var box = document.getElementById('turmaListaResultado');
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
@@ -10269,7 +10313,12 @@ async function mostrarNovidades(nome){
     // marca como vista assim que aparece, para nao repetir no proximo login
     // 3.9.2: espera de verdade. Solto, o registro as vezes nao chegava a
     // gravar e o aviso voltava no proximo login.
-    await chamarAPI({ acao:'marcarNovidadesVistas', nome: nome, versao: r.versaoAtual });
+    var marcou = await chamarAPI({ acao:'marcarNovidadesVistas', nome: nome, versao: r.versaoAtual });
+    if(!marcou || !marcou.sucesso){
+      // nao trava o login, mas deixa rastro para a gente saber por que repete
+      console.warn('[AttendancePlus] nao consegui registrar as novidades como vistas:',
+        (marcou && marcou.erro) || 'sem resposta');
+    }
 
     document.getElementById('novFechar').addEventListener('click', function(){
       box.classList.add('hidden');
