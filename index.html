@@ -3245,7 +3245,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.4.0';
+const APP_VERSAO = '4.4.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -5361,9 +5361,14 @@ document.getElementById('recepCardConexao').addEventListener('click', function()
 
 document.getElementById('btnRodarPing').addEventListener('click', rodarPing);
 
-/** Chamada crua, sem os tratamentos do chamarAPI, para capturar o erro puro. */
+/**
+ * Chamada crua, sem os tratamentos do chamarAPI, para capturar o erro puro.
+ * 4.4.1: mas COM o token. Sem ele, as etapas que exigem permissao respondiam
+ * "sua sessao expirou" e o teste acusava falha num app que estava funcionando.
+ */
 async function _pingCru(payload){
   var t0 = Date.now();
+  if(TOKEN_SESSAO && payload && !payload.token) payload.token = TOKEN_SESSAO;
   try{
     var res = await fetch(API_URL, {
       method:'POST',
@@ -5411,6 +5416,8 @@ async function rodarPing(){
   var html = '<div class="calc-box" style="margin-top:0;">'
     + '<div class="calc-linha"><span class="calc-rot">Versão deste HTML</span><span class="calc-val">' + APP_VERSAO + '</span></div>'
     + '<div class="calc-linha"><span class="calc-rot">Navegador online</span><span class="calc-val">' + (navigator.onLine ? 'sim' : 'NÃO') + '</span></div>'
+    + '<div class="calc-linha"><span class="calc-rot">Sessão ativa</span><span class="calc-val">'
+    + (TOKEN_SESSAO ? 'sim' : 'NÃO, entre no app de novo') + '</span></div>'
     + '</div>';
   box.innerHTML = html;
 
@@ -5452,7 +5459,9 @@ async function rodarPing(){
       + 'Não crie uma implantação nova, senão a URL muda.</div>';
   }else if(versaoServidor){
     veredito = '<div class="msg-ok"><b>Servidor e app na mesma versão (' + versaoServidor + ').</b><br>'
-      + 'Se algum teste acima falhou, o problema está naquela etapa específica. '
+      + 'A primeira chamada do dia costuma demorar bastante, às vezes mais de um minuto, '
+    + 'porque o Google precisa acordar o servidor. As seguintes ficam rápidas. '
+    + 'Se algum teste acima falhou, o problema está naquela etapa específica. '
       + 'Me mande esta tela que eu ataco direto.</div>';
   }else{
     veredito = '<div class="msg-bloqueio"><b>O servidor não respondeu nenhuma vez.</b><br>'
