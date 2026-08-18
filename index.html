@@ -3022,7 +3022,9 @@ async function chamarAPI(payload){
     tentativas: tentativas,
     erro: (navigator.onLine === false)
       ? 'Você está sem internet. Reconecte e tente de novo.'
-      : 'As duas formas de falar com o servidor falharam.'
+      : 'Não consegui confirmação do servidor. '
+        + 'ATENÇÃO: a operação pode ter sido concluída mesmo assim. '
+        + 'Antes de tentar de novo, confira na planilha se já foi gravada.'
   };
 }
 
@@ -3245,7 +3247,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.4.1';
+const APP_VERSAO = '4.6.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -11441,6 +11443,7 @@ const CAMPOS_18 = [
   ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
   ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
+  ['NUM_PARCELAS','Parcelas do pagamento (vazio = 1 por mês)','text'],
   ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
   ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
@@ -11473,6 +11476,7 @@ const CAMPOS_MENOR = [
   ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
   ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
+  ['NUM_PARCELAS','Parcelas do pagamento (vazio = 1 por mês)','text'],
   ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
   ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
   ['DATA_CONTRATO','Data do contrato','text'],
@@ -11630,6 +11634,7 @@ async function abrirFormContrato(tipo){
   const $vDesconto = document.getElementById('ctt_DESCONTO');
   const $vMatricula = document.getElementById('ctt_VALOR_MATRICULA');
   const $vPrazo = document.getElementById('ctt_PRAZO_MESES');
+  const $vParcelas = document.getElementById('ctt_NUM_PARCELAS');
   const atualizarPainelValor = ()=>{
     const parse = v => Number(String(v).replace(/\./g,'').replace(',','.')) || 0;
     const tabela = parse($vTabela.value);
@@ -11643,9 +11648,15 @@ async function abrirFormContrato(tipo){
     document.getElementById('vfDesconto').textContent = '- ' + fmt(desconto);
     document.getElementById('vfFinal').textContent = fmt(final);
     document.getElementById('vfTotal').textContent = fmt(total);
-    document.getElementById('vfTotalMemo').textContent = `${fmt(final)} x ${meses} mês(es) + ${fmt(matricula)} de matrícula`;
+    // 4.6.0: o parcelamento pode ser diferente do prazo do curso
+    var parcelas = Number(String(($vParcelas && $vParcelas.value) || '').replace(/\D/g,'')) || meses;
+    var memo = `${fmt(final)} x ${meses} mês(es) + ${fmt(matricula)} de matrícula`;
+    if(parcelas && parcelas !== meses && total > 0){
+      memo += `<br><b>Pagamento em ${parcelas}x de ${fmt(total / parcelas)}</b>`;
+    }
+    document.getElementById('vfTotalMemo').innerHTML = memo;
   };
-  [$vTabela, $vDesconto, $vMatricula, $vPrazo].forEach(el=>{
+  [$vTabela, $vDesconto, $vMatricula, $vPrazo, $vParcelas].forEach(el=>{
     if(el) el.addEventListener('input', atualizarPainelValor);
   });
 }
@@ -11698,8 +11709,10 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
     const r = await chamarAPI({ acao:'gerarContrato', tipo: tipoContratoAtual, dados });
     if(r.sucesso){
       $res.innerHTML = `<div style="padding:16px 20px;">
-        <div style="background:#E3EFE7;border-radius:12px;padding:16px;color:#3E8E5A;font-weight:600;text-align:center;">
-          ✓ Contrato Nº ${r.numeroContrato} gerado!
+        <div style="background:${r.jaExistia ? '#FDF3D4' : '#E3EFE7'};border-radius:12px;padding:16px;color:${r.jaExistia ? '#8a6d1a' : '#3E8E5A'};font-weight:600;text-align:center;">
+          ${r.jaExistia
+            ? '⚠ ' + (r.aviso || 'Este contrato já tinha sido gerado. Não criei outro.')
+            : '✓ Contrato Nº ' + r.numeroContrato + ' gerado!'}
         </div>
         ${_ehLink(r.pdfUrl) ? `<a href="${r.pdfUrl}" target="_blank" rel="noopener" style="display:block;margin-top:12px;text-align:center;background:var(--verde-escuro);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:600;">Abrir PDF do contrato</a>` : ''}
       </div>`;
