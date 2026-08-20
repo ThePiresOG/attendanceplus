@@ -3247,7 +3247,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.6.0';
+const APP_VERSAO = '4.8.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -10308,6 +10308,12 @@ function aplicarPermissoes(){
 /** Banner de novidades no menu, uma vez por versao. */
 async function mostrarNovidades(nome){
   try{
+    // ja vi esta versao neste aparelho? entao nem pergunta ao servidor
+    try{
+      var visto = localStorage.getItem('ap_novidades_vistas');
+      if(visto === APP_VERSAO + '|' + nome) return;
+    }catch(e){}
+
     // o servidor consulta a coluna F da aba Professores e so devolve o que a
     // pessoa ainda nao viu
     var r = await chamarAPI({ acao:'novidadesApp', nome: nome, perfil: PERFIL });
@@ -10324,6 +10330,11 @@ async function mostrarNovidades(nome){
     // marca como vista assim que aparece, para nao repetir no proximo login
     // 3.9.2: espera de verdade. Solto, o registro as vezes nao chegava a
     // gravar e o aviso voltava no proximo login.
+    // 4.7.0: alem de registrar no servidor, guarda no proprio aparelho.
+    // Se a gravacao na planilha falhar por qualquer motivo, o aviso para de
+    // reaparecer mesmo assim, em vez de incomodar a cada login.
+    try{ localStorage.setItem('ap_novidades_vistas', r.versaoAtual + '|' + nome); }catch(e){}
+
     var marcou = await chamarAPI({ acao:'marcarNovidadesVistas', nome: nome, versao: r.versaoAtual });
     if(!marcou || !marcou.sucesso){
       // nao trava o login, mas deixa rastro para a gente saber por que repete
@@ -10485,6 +10496,23 @@ async function renovarContrato(numContrato){
     document.getElementById('btnSairRecepcao').textContent = 'Voltar';
 
     await abrirFormContrato(r.tipo);
+
+    // 4.7.0: renovacao mantem a matricula do aluno.
+    // O formulario pede um numero novo de contrato E de matricula, mas na
+    // renovacao a matricula tem que ser a mesma, senao o historico do aluno
+    // se parte em duas pessoas diferentes.
+    if(r.matricula){
+      var $mat = document.getElementById('ctt_NUM_MATRICULA');
+      if($mat) $mat.value = r.matricula;
+      var cab = document.querySelector('#formContrato [style*="var(--perola)"] strong');
+      if(cab && cab.parentNode){
+        var numCt = (document.getElementById('ctt_NUM_CONTRATO') || {}).value || '';
+        cab.parentNode.innerHTML = '<strong>Contrato Nº ' + numCt + '</strong>'
+          + ' · Matrícula Nº ' + r.matricula
+          + '<div style="font-size:11px;color:#8A8A82;margin-top:2px;">'
+          + 'Renovação · matrícula mantida do contrato ' + r.contratoAnterior + '</div>';
+      }
+    }
 
     var preenchidos = 0, limpos = 0;
     Object.keys(r.campos).forEach(function(k){
