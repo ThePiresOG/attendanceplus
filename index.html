@@ -3247,7 +3247,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.9.0';
+const APP_VERSAO = '4.9.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4987,6 +4987,17 @@ document.getElementById('afastBuscaAluno').addEventListener('input', function(){
   window._afastTimer = setTimeout(buscarContratosAfast, 400);
 });
 
+/* 4.9.1: sete numeros de contrato pertencem a alunos diferentes na planilha
+   antiga. Todas as telas buscam o aluno antes de escolher o contrato, entao o
+   nome esta sempre na mao. Mandamos ele junto para o servidor nao ter que
+   adivinhar de quem e o numero. */
+function _alunoDoContrato(lista, num){
+  if(!lista || !num) return '';
+  for(var i=0;i<lista.length;i++){
+    if(String(lista[i].numeroContrato) === String(num)) return lista[i].aluno || '';
+  }
+  return '';
+}
 async function buscarContratosAfast(){
   var termo = document.getElementById('afastBuscaAluno').value.trim();
   var sel = document.getElementById('afastContrato');
@@ -5023,6 +5034,7 @@ async function simularAfast(){
 
   try{
     var r = await chamarAPI({ acao:'simularAfastamento', numContrato:num,
+                              aluno:_alunoDoContrato(_contratosAfast, num),
                               inicio:_isoParaBr(ini), fim:_isoParaBr(fim) });
     if(!r.sucesso){ box.innerHTML = '<div class="msg-bloqueio">'+(r.erro||'Erro')+'</div>'; btn.disabled = true; return; }
 
@@ -5065,6 +5077,7 @@ document.getElementById('btnGerarAdendo').addEventListener('click', async functi
     var r = await chamarAPI({
       acao:'gerarAdendo',
       numContrato: document.getElementById('afastContrato').value,
+      aluno: _alunoDoContrato(_contratosAfast, document.getElementById('afastContrato').value),
       inicio: _isoParaBr(document.getElementById('afastInicio').value),
       fim: _isoParaBr(document.getElementById('afastFim').value),
       motivo: motivo,
@@ -5234,6 +5247,7 @@ async function simularBaixaUI(){
     var r = await chamarAPI({
       acao:'simularBaixa',
       numContrato: num,
+      aluno: _alunoDoContrato(_contratosBaixa, num),
       dataCancelamento: _isoParaBr(document.getElementById('baixaData').value),
       valorTotal: _num(document.getElementById('baixaValorTotal').value),
       parcelasTotal: _num(document.getElementById('baixaParcelasTotal').value),
@@ -5285,6 +5299,7 @@ document.getElementById('btnGerarBaixa').addEventListener('click', async functio
       acao:'gerarBaixa',
       confirmar: true,
       numContrato: document.getElementById('baixaContrato').value,
+      aluno: _alunoDoContrato(_contratosBaixa, document.getElementById('baixaContrato').value),
       dataCancelamento: _isoParaBr(document.getElementById('baixaData').value),
       motivo: motivo,
       valorTotal: _num(document.getElementById('baixaValorTotal').value),
@@ -6867,13 +6882,15 @@ async function mnCarregarMeses(){
   if(!num){ box.innerHTML = ''; _MESES_CONTRATO = []; mnAtualizarTotal(); return; }
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando os meses...</p>';
   try{
-    var r = await chamarAPI({ acao:'mesesDoContrato', numContrato: num });
+    var r = await chamarAPI({ acao:'mesesDoContrato', numContrato: num,
+      aluno: _alunoDoContrato(_CONTRATOS_MENS, num) });
     if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
 
     // marca o que ja foi recebido, para nao emitir o mesmo mes duas vezes sem perceber
     var pagos = {};
     try{
-      var j = await chamarAPI({ acao:'mesesJaRecebidos', numContrato: num });
+      var j = await chamarAPI({ acao:'mesesJaRecebidos', numContrato: num,
+        aluno: _alunoDoContrato(_CONTRATOS_MENS, num) });
       (j.meses || []).forEach(function(m){ pagos[m.referencia] = m.numero; });
     }catch(e){}
 
@@ -6974,6 +6991,7 @@ document.getElementById('btnGerarMensalidade').addEventListener('click', async f
 
   try{
     var d = await chamarAPI({ acao:'dadosReciboMensalidade', numContrato: num,
+      aluno: _alunoDoContrato(_CONTRATOS_MENS, num),
       meses: meses, valorMes: valor,
       formaPagamento: document.getElementById('mnForma').value,
       parcelasCartao: Number(document.getElementById('mnParcelas').value) || 1 });
@@ -8144,6 +8162,7 @@ document.getElementById('btnGerarRecibo').addEventListener('click', async functi
 
   try{
     var d = await chamarAPI({ acao:'dadosRecibo', numContrato: num,
+      aluno: _alunoDoContrato(_CONTRATOS_RECIBO, num),
       comMatricula: comM, comMaterial: comD, valorMatricula: vM, valorMaterial: vD,
       livro: document.getElementById('recLivro').value,
       formaPagamento: document.getElementById('recForma').value,
@@ -10363,6 +10382,10 @@ document.getElementById('recepCardRenovacoes').addEventListener('click', functio
 document.getElementById('renPrazo').addEventListener('change', carregarRenovacoes);
 document.getElementById('renMostrar').addEventListener('change', carregarRenovacoes);
 
+/* 4.9.1: nome com apostrofo (Roberto D'Aurizio) quebrava o onclick do botao.
+   Guardamos a lista e o botao manda so a posicao dela. */
+var _LISTA_RENOV = [];
+
 async function carregarRenovacoes(){
   var box = document.getElementById('renResultado');
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
@@ -10373,6 +10396,7 @@ async function carregarRenovacoes(){
 
     var soPendentes = document.getElementById('renMostrar').value === 'pendentes';
     var lista = soPendentes ? r.renovacoes.filter(function(x){ return !x.renovado; }) : r.renovacoes;
+    _LISTA_RENOV = lista;
 
     var html = '<div class="ren-resumo">'
       + '<div class="' + (r.criticos ? 'alerta' : '') + '"><span class="n">' + r.criticos + '</span><span class="r">até 15 dias</span></div>'
@@ -10385,7 +10409,7 @@ async function carregarRenovacoes(){
       return;
     }
 
-    html += lista.map(function(x){
+    html += lista.map(function(x, iRen){
       var cls = x.renovado ? 'feito' : x.urgencia;
       var prazo = x.renovado ? 'renovado'
         : (x.diasRestantes <= 0 ? 'vence hoje' : 'em ' + x.diasRestantes + ' dias');
@@ -10406,7 +10430,7 @@ async function carregarRenovacoes(){
         + '</div>'
         + (x.renovado ? '' :
             '<div class="ren-acoes">'
-            + '<button class="ren-btn" onclick="renovarContrato(\'' + x.numeroContrato + '\')">Renovar</button>'
+            + '<button class="ren-btn" onclick="renovarContrato(' + iRen + ')">Renovar</button>'
             + (fone ? '<a class="ren-btn sec" style="text-decoration:none;" target="_blank" href="https://wa.me/' + fone + '?text=' + encodeURIComponent(msg) + '">WhatsApp</a>' : '')
             + (x.pdfUrl ? botaoPdf(x.pdfUrl, 'Contrato atual', 'ren-btn sec') : '')
             + '</div>')
@@ -10479,10 +10503,15 @@ function confirmarDadosRenovacao(campos, nomeAluno){
   });
 }
 
-async function renovarContrato(numContrato){
+async function renovarContrato(iRen){
+  var alvo = _LISTA_RENOV[iRen];
+  if(!alvo){ mostrarToast('Recarregue a lista de renovações'); return; }
+  var numContrato = alvo.numeroContrato;
+  var alunoDoCard = alvo.aluno || '';
   mostrarToast('Buscando os dados...');
   try{
-    var r = await chamarAPI({ acao:'dadosParaRenovacao', numContrato: numContrato });
+    var r = await chamarAPI({ acao:'dadosParaRenovacao', numContrato: numContrato,
+      aluno: alunoDoCard || '' });
     if(!r.sucesso){ mostrarToast(r.erro || 'Erro ao buscar'); return; }
 
     // 4.1.0: antes de puxar tudo, confere o que mudou desde o contrato anterior
