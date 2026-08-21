@@ -3253,7 +3253,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.9.2';
+const APP_VERSAO = '4.9.3';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -7236,19 +7236,23 @@ document.getElementById('recepCardAluno').addEventListener('click', function(){
     '<div class="assess-aviso">Digite o nome do aluno e toque em Buscar.</div>';
 });
 
-document.getElementById('btnAlBuscar').addEventListener('click', buscarFicha);
+// 4.9.3: passar a funcao direto fazia o navegador mandar o MouseEvent como
+// primeiro argumento. Ele chegava no servidor como se fosse o nome do aluno e
+// a busca nao achava mais ninguem.
+document.getElementById('btnAlBuscar').addEventListener('click', function(){ buscarFicha(); });
 document.getElementById('alBusca').addEventListener('keydown', function(e){
   if(e.key === 'Enter') buscarFicha();
 });
 
 async function buscarFicha(exato){
+  if(typeof exato !== 'string') exato = '';   // 4.9.3: nunca aceita evento
   var termo = document.getElementById('alBusca').value.trim();
   var box = document.getElementById('alResultado');
   if(termo.length < 2){ box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras.</div>'; return; }
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Buscando...</p>';
   try{
     var pedido = { acao:'fichaDoAluno', termo: termo };
-    if(exato) pedido.exato = exato;
+    if(exato) pedido.exato = String(exato);
     var d = await chamarAPI(pedido);
     if(!d.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (d.erro||'Erro') + '</div>'; return; }
     // 4.9.2: mais de um aluno com esse pedaco de nome. Quem escolhe e a pessoa.
@@ -9606,14 +9610,25 @@ async function abrirNovoAluno(){
   }
   window._DISPONIVEIS = r.alunos;
 
-  var semTurma = r.alunos.filter(function(a){ return a.semTurma; });
-  var comTurma = r.alunos.filter(function(a){ return !a.semTurma; });
+  // 4.9.3: aluno novo e ex-aluno de turma nao sao a mesma coisa. Tres grupos.
+  var novos   = r.alunos.filter(function(a){ return (a.situacao || (a.semTurma?'novo':'turma')) === 'novo'; });
+  var sairam  = r.alunos.filter(function(a){ return a.situacao === 'saiu'; });
+  var comTurma= r.alunos.filter(function(a){ return !a.semTurma; });
 
   var opcoes = '<option value="">Selecione o aluno</option>';
-  if(semTurma.length){
-    opcoes += '<optgroup label="Ainda sem turma (' + semTurma.length + ')">'
-      + semTurma.map(function(a,i){
+  if(novos.length){
+    opcoes += '<optgroup label="Novos, nunca alocados (' + novos.length + ')">'
+      + novos.map(function(a){
           return '<option value="' + r.alunos.indexOf(a) + '">' + a.nome + '</option>';
+        }).join('') + '</optgroup>';
+  }
+  if(sairam.length){
+    opcoes += '<optgroup label="Saíram de uma turma (' + sairam.length + ')">'
+      + sairam.map(function(a){
+          var de = (a.saiuDe && a.saiuDe.length)
+            ? ' — saiu da ' + a.saiuDe.map(function(s){ return s.turma + ' em ' + s.quando; }).join(', ')
+            : '';
+          return '<option value="' + r.alunos.indexOf(a) + '">' + a.nome + de + '</option>';
         }).join('') + '</optgroup>';
   }
   if(comTurma.length){
