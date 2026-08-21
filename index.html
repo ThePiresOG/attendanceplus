@@ -876,7 +876,13 @@
     border-radius:20px; margin-left:6px; }
   .fa-tag.ok{ background:#E3EFE7; color:#2f6b45; }
   .fa-tag.no{ background:#F5D3CC; color:#8a3b2d; }
-  .fa-tag.av{ background:#FDF3D4; color:#8a6d1a; }
+  .esc-aluno{display:block;width:100%;text-align:left;background:#fff;border:1px solid #e2e0d8;
+  border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-family:inherit;
+  transition:border-color .15s, box-shadow .15s;}
+.esc-aluno:hover{border-color:#5A7568;box-shadow:0 2px 8px rgba(90,117,104,.15);}
+.esc-nome{display:block;font-size:15px;font-weight:600;color:#2f3a34;margin-bottom:5px;}
+.esc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#8a8a82;}
+.fa-tag.av{ background:#FDF3D4; color:#8a6d1a; }
   .nv-item{ display:flex; align-items:center; gap:11px; background:var(--branco);
     border:1px solid var(--linha); border-radius:12px; padding:11px 14px; margin-bottom:8px; }
   .nv-item.hoje{ border-left:3px solid var(--salmao); }
@@ -3247,7 +3253,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.9.1';
+const APP_VERSAO = '4.9.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -7235,16 +7241,47 @@ document.getElementById('alBusca').addEventListener('keydown', function(e){
   if(e.key === 'Enter') buscarFicha();
 });
 
-async function buscarFicha(){
+async function buscarFicha(exato){
   var termo = document.getElementById('alBusca').value.trim();
   var box = document.getElementById('alResultado');
   if(termo.length < 2){ box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras.</div>'; return; }
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Buscando...</p>';
   try{
-    var d = await chamarAPI({ acao:'fichaDoAluno', termo: termo });
+    var pedido = { acao:'fichaDoAluno', termo: termo };
+    if(exato) pedido.exato = exato;
+    var d = await chamarAPI(pedido);
     if(!d.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (d.erro||'Erro') + '</div>'; return; }
+    // 4.9.2: mais de um aluno com esse pedaco de nome. Quem escolhe e a pessoa.
+    if(d.varios){ box.innerHTML = htmlEscolhaAluno(d); return; }
     box.innerHTML = htmlFicha(d);
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar.</div>'; }
+}
+
+var _OPCOES_FICHA = [];
+function htmlEscolhaAluno(d){
+  _OPCOES_FICHA = d.opcoes || [];
+  var h = '<div style="padding:0 20px;">'
+    + '<div class="fa-bloco"><h4>' + _OPCOES_FICHA.length + ' alunos com "' + d.termo + '"</h4>'
+    + '<div class="fa-sub" style="margin:-2px 0 12px;">Escolha de quem voce quer a ficha.</div>';
+
+  h += _OPCOES_FICHA.map(function(o, i){
+    var tag = o.soContrato ? '<span class="fa-tag av">só contrato, fora de turma</span>'
+            : (o.ativo ? '<span class="fa-tag ok">ativo</span>'
+                       : '<span class="fa-tag no">sem turma ativa</span>');
+    var onde = o.turmas && o.turmas.length ? 'Turma ' + o.turmas.join(', ') : '';
+    return '<button class="esc-aluno" onclick="escolherAluno(' + i + ')">'
+      + '<span class="esc-nome">' + o.nome + '</span>'
+      + '<span class="esc-meta">' + tag + (onde ? ' <span>' + onde + '</span>' : '') + '</span>'
+      + '</button>';
+  }).join('');
+
+  return h + '</div></div>';
+}
+
+function escolherAluno(i){
+  var o = _OPCOES_FICHA[i];
+  if(!o) return;
+  buscarFicha(o.nome);
 }
 
 function htmlFicha(d){
