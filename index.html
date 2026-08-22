@@ -18,6 +18,11 @@
   :root{
     color-scheme: light only;
     --verde-escuro:#5A7568;
+    /* 5.1.0: --verde-claro era usado em 18 lugares do CSS e nunca tinha sido
+       declarado. Onde era fundo, virava transparente (a etiqueta de turma
+       Grupo saia com texto branco no branco); onde era cor, herdava a cor do
+       texto ao redor. Descobri renderizando a tela nova. */
+    --verde-claro:#6F8F79;
     --verde-medio:#A3A9AC;
     --azul-claro:#BECCCF;
     --salmao:#DB776B;
@@ -876,28 +881,94 @@
     border-radius:20px; margin-left:6px; }
   .fa-tag.ok{ background:#E3EFE7; color:#2f6b45; }
   .fa-tag.no{ background:#F5D3CC; color:#8a3b2d; }
-  /* ---------- 5.0.0: nivelamento, relatorio do aluno e ficha ---------- */
-  .niv-horarios{ display:flex; flex-direction:column; gap:6px; max-height:230px; overflow-y:auto;
-    background:var(--branco); border:1px solid var(--linha); border-radius:12px; padding:10px; }
-  .niv-op{ display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color:var(--carvao);
-    line-height:1.4; cursor:pointer; padding:4px 2px; border-radius:8px; }
-  .niv-op:hover{ background:#F4F2EC; }
-  .niv-op.combina span{ font-weight:600; }
-  .niv-op.cheia{ opacity:.5; }
-  .niv-op input{ margin-top:2px; flex-shrink:0; }
-  .niv-hora{ display:flex; align-items:center; gap:8px; }
-  .niv-hora input{ flex:1; }
-  .niv-hora span{ font-size:12.5px; color:#8a8a82; }
+  /* ---------- 5.1.0: tela do nivelamento ---------- */
+  .nv-wrap{ padding:14px 20px 96px; }
+  .nv-cartao{ background:var(--branco); border:1px solid var(--linha); border-radius:16px;
+    padding:16px 16px 18px; margin-bottom:12px; }
+  .nv-secao{ display:flex; align-items:center; gap:9px; margin:0 0 14px;
+    font-size:11px; letter-spacing:1.1px; text-transform:uppercase; color:#8a8a84; font-weight:600; }
+  .nv-secao span{ display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; background:var(--verde-escuro); color:#fff;
+    font-size:11px; letter-spacing:0; flex-shrink:0; }
+  .nv-grid{ display:flex; flex-wrap:wrap; gap:14px 16px; }
+  .nv-campo{ display:flex; flex-direction:column; gap:6px;
+    flex:1 1 calc(50% - 8px); min-width:190px; }
+  .nv-full{ flex:1 1 100%; min-width:100%; }
+  .nv-campo label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--verde-escuro); font-weight:600; }
+  .nv-campo input[type=text], .nv-campo input[type=date], .nv-campo input[type=time],
+  .nv-campo input[type=month], .nv-campo select, .nv-campo textarea{
+    width:100%; box-sizing:border-box; font-family:'Poppins',sans-serif; font-size:13.5px;
+    padding:11px 12px; border-radius:10px; border:1.5px solid var(--linha);
+    background:var(--perola); color:var(--carvao); }
+  .nv-campo textarea{ resize:vertical; line-height:1.5; }
+  .nv-campo select{ appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%235A7568' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+  .nv-dica{ font-size:11px; color:#9a9a94; line-height:1.45; }
+  .nv-hora{ display:flex; align-items:center; gap:8px; }
+  .nv-hora input{ flex:1; min-width:0; }
+  .nv-hora span{ font-size:12px; color:#9a9a94; flex-shrink:0; }
+
+  .nv-turmas{ display:flex; flex-direction:column; gap:2px; max-height:250px; overflow-y:auto;
+    background:var(--perola); border:1.5px solid var(--linha); border-radius:10px; padding:6px; }
+  .nv-vazio{ margin:0; padding:12px 6px; font-size:12.5px; color:#9a9a94; text-align:center; }
+  .nv-turma{ display:flex; align-items:flex-start; gap:9px; padding:9px 8px; border-radius:9px;
+    cursor:pointer; transition:background .12s; }
+  .nv-turma:hover{ background:#EDEBE4; }
+  .nv-turma input{ margin:2px 0 0; flex-shrink:0; width:auto; }
+  .nv-turma-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .nv-turma-id{ font-size:13px; font-weight:600; color:var(--carvao); }
+  .nv-turma-sub{ font-size:11.5px; color:#8a8a82; }
+  .nv-turma.combina{ background:#EAF1EC; }
+  .nv-turma.combina:hover{ background:#E0EAE3; }
+  .nv-turma.cheia{ opacity:.45; }
+  .nv-vaga{ font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase;
+    padding:2px 7px; border-radius:20px; background:var(--verde-claro); color:#fff; margin-left:6px; }
+  .nv-vaga.zero{ background:#D9D6CD; color:#6c6c66; }
+
+  .nv-acoes-fixas{ position:sticky; bottom:0; padding:12px 0 0;
+    background:linear-gradient(to top, var(--branco) 68%, transparent); }
+  .nv-acoes-fixas .btn-principal{ width:100%; }
+
+  .nv-chips{ font-size:0; margin:-4px; }
+  .nv-chip{ display:inline-block; margin:4px; font-family:'Poppins',sans-serif; font-size:12px;
+    padding:7px 13px; border-radius:20px; width:auto;
+    border:1.5px solid var(--linha); background:var(--branco); color:var(--carvao); cursor:pointer; }
+  .nv-chip:hover{ border-color:var(--verde-escuro); }
+  .nv-chip.on{ background:var(--verde-escuro); color:#fff; border-color:var(--verde-escuro); }
+
+  .nv-resumo{ display:flex; gap:8px; margin-bottom:12px; }
+  .nv-resumo>div{ flex:1; background:var(--branco); border:1px solid var(--linha);
+    border-radius:14px; padding:11px 8px; text-align:center; }
+  .nv-resumo .n{ display:block; font-size:19px; font-weight:600; color:var(--verde-escuro); }
+  .nv-resumo .r{ display:block; font-size:10.5px; color:#8a8a82; margin-top:2px; }
+
+  .niv-ok{ margin:2px 0 12px; background:#EAF1EC; border-left:3px solid var(--verde-escuro);
+    border-radius:8px; padding:11px 13px; font-size:13px; color:var(--carvao); }
   .niv-faixa{ margin:6px 20px 0; background:#EAF1EC; border-left:3px solid var(--verde-escuro);
     border-radius:8px; padding:9px 12px; font-size:12.5px; color:var(--carvao); line-height:1.5; }
-  .niv-ok{ margin:10px 0 0; background:#EAF1EC; border-left:3px solid var(--verde-escuro);
-    border-radius:8px; padding:10px 12px; font-size:13px; color:var(--carvao); }
-  .niv-item{ background:var(--branco); border:1px solid var(--linha); border-radius:14px;
-    padding:13px 15px; margin-bottom:9px; }
-  .niv-topo{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
-  .niv-nome{ font-size:14.5px; font-weight:600; color:var(--carvao); }
-  .niv-meta{ font-size:12.5px; color:#7d7d76; line-height:1.6; }
-  .niv-acoes{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .niv-item{ background:var(--branco); border:1px solid var(--linha); border-radius:16px;
+    padding:14px 16px; margin-bottom:10px; }
+  .niv-topo{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .niv-nome{ font-size:15px; font-weight:600; color:var(--carvao); line-height:1.3; }
+  .niv-nivel{ display:inline-block; font-size:11px; font-weight:600; padding:3px 9px;
+    border-radius:20px; background:var(--azul-claro); color:var(--verde-escuro); margin-top:4px; }
+  .niv-meta{ font-size:12.5px; color:#7d7d76; line-height:1.65; }
+  .niv-meta b{ color:var(--carvao); font-weight:600; }
+  .niv-acoes{ font-size:0; margin:8px -3px 0; }
+  .niv-acoes .ren-btn, .niv-acoes a.ren-btn{ display:inline-block; margin:3px; width:auto;
+    vertical-align:top; text-decoration:none; }
+
+  @media (max-width:560px){
+    .nv-campo{ flex:1 1 100%; min-width:100%; }
+    .nv-wrap{ padding:12px 16px 96px; }
+    .nv-resumo{ flex-wrap:wrap; }
+    .nv-resumo>div{ flex:1 1 calc(50% - 4px); }
+  }
+  @media (min-width:900px){
+    .nv-wrap{ max-width:760px; margin:0 auto; }
+  }
 
   .kpi-resumo{ display:flex; gap:8px; margin-bottom:12px; }
   .kpi-resumo>div{ flex:1; background:var(--branco); border:1px solid var(--linha);
@@ -2937,7 +3008,7 @@
       <div class="assess-resultado" id="usrResultado"></div>
     </div>
 
-    <!-- ============ 5.0.0 NIVELAMENTO ============ -->
+    <!-- ============ 5.1.0 NIVELAMENTO ============ -->
     <div class="recep-painel hidden" id="painelNivelamento">
       <div class="menu-opcoes" id="nivSubcards">
         <button class="menu-card" id="nivSubNovo">
@@ -2952,11 +3023,11 @@
           <div class="menu-card-icone">&#128203;</div>
           <div class="menu-card-txt">
             <span class="menu-card-titulo">Nivelamentos feitos</span>
-            <span class="menu-card-sub">Buscar, marcar quem fechou e gerar o PDF</span>
+            <span class="menu-card-sub">Buscar por nome e por per&iacute;odo</span>
           </div>
           <span class="menu-card-seta">&rarr;</span>
         </button>
-        <button class="menu-card" id="nivSubKpi">
+        <button class="menu-card hidden" id="nivSubKpi">
           <div class="menu-card-icone">&#128200;</div>
           <div class="menu-card-txt">
             <span class="menu-card-titulo">Convers&atilde;o</span>
@@ -2966,84 +3037,143 @@
         </button>
       </div>
 
-      <div class="hidden" id="nivFormBox">
-        <div class="controls">
-          <div class="field">
-            <label for="nivAluno">&#128100; Nome do aluno</label>
-            <input type="text" id="nivAluno" placeholder="Nome completo do prospecto">
-          </div>
-          <div class="field">
-            <label for="nivNivel">&#128221; Resultado do nivelamento</label>
-            <select id="nivNivel"><option value="">Selecione o n&iacute;vel</option></select>
-          </div>
-          <div class="field">
-            <label for="nivDisp">&#128197; Disponibilidade para fazer aulas</label>
-            <input type="text" id="nivDisp" placeholder="Ex: manh&atilde;s de ter&ccedil;a e quinta">
-          </div>
-          <div class="field">
-            <label>&#9200; Hor&aacute;rios dispon&iacute;veis que temos hoje</label>
-            <div id="nivHorarios" class="niv-horarios">
-              <p style="color:#9a9a94;font-size:12.5px;margin:0;">Escolha o n&iacute;vel para ver as turmas.</p>
+      <!-- ---------- novo nivelamento ---------- -->
+      <div class="hidden" id="formNivelamento">
+        <div class="nv-wrap">
+
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>1</span> Quem fez o teste</h3>
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="nivAluno">Nome do aluno</label>
+                <input type="text" id="nivAluno" placeholder="Nome completo do prospecto" autocomplete="off">
+              </div>
+              <div class="nv-campo">
+                <label for="nivNivel">Resultado do nivelamento</label>
+                <select id="nivNivel"><option value="">Selecione o n&iacute;vel</option></select>
+                <small class="nv-dica">Serve para saber se ele entra no meio do livro.</small>
+              </div>
+              <div class="nv-campo">
+                <label for="nivProf">Professor(a) respons&aacute;vel</label>
+                <input type="text" id="nivProf" autocomplete="off">
+              </div>
             </div>
-          </div>
-          <div class="field">
-            <label for="nivObs">&#128204; Mais informa&ccedil;&otilde;es</label>
-            <textarea id="nivObs" rows="3" placeholder="Indica&ccedil;&atilde;o, m&iacute;dia social, o que mais achar importante"></textarea>
-          </div>
-          <div class="field">
-            <label for="nivProf">&#128104;&#8205;&#127979; Professor(a) respons&aacute;vel</label>
-            <input type="text" id="nivProf">
-          </div>
-          <div class="field">
-            <label for="nivData">&#128198; Data do nivelamento</label>
-            <input type="date" id="nivData">
-          </div>
-          <div class="field">
-            <label>&#128338; Hor&aacute;rio do nivelamento</label>
-            <div class="niv-hora">
-              <input type="time" id="nivHoraIni"> <span>a</span> <input type="time" id="nivHoraFim">
+          </section>
+
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>2</span> Quando foi</h3>
+            <div class="nv-grid">
+              <div class="nv-campo">
+                <label for="nivData">Data do nivelamento</label>
+                <input type="date" id="nivData">
+              </div>
+              <div class="nv-campo">
+                <label>Hor&aacute;rio do nivelamento</label>
+                <div class="nv-hora">
+                  <input type="time" id="nivHoraIni" aria-label="hora de in&iacute;cio">
+                  <span>at&eacute;</span>
+                  <input type="time" id="nivHoraFim" aria-label="hora de t&eacute;rmino">
+                </div>
+              </div>
             </div>
+          </section>
+
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>3</span> Disponibilidade</h3>
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="nivDisp">Disponibilidade para fazer aulas</label>
+                <input type="text" id="nivDisp" placeholder="Ex: manh&atilde;s de ter&ccedil;a e quinta, ou s&aacute;bado de manh&atilde;">
+              </div>
+              <div class="nv-campo nv-full">
+                <label>Hor&aacute;rios dispon&iacute;veis que temos hoje</label>
+                <div id="nivHorarios" class="nv-turmas">
+                  <p class="nv-vazio">Escolha o n&iacute;vel acima para ver as turmas com vaga.</p>
+                </div>
+                <small class="nv-dica" id="nivHorariosDica"></small>
+              </div>
+            </div>
+          </section>
+
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>4</span> Mais informa&ccedil;&otilde;es</h3>
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="nivObs">Como chegou at&eacute; a gente</label>
+                <textarea id="nivObs" rows="3" placeholder="Indica&ccedil;&atilde;o de algu&eacute;m, veio por qual m&iacute;dia social, passou na frente..."></textarea>
+                <small class="nv-dica">Esse campo alimenta o relat&oacute;rio de convers&atilde;o por origem.</small>
+              </div>
+            </div>
+          </section>
+
+          <div id="nivResultado"></div>
+          <div class="nv-acoes-fixas">
+            <button class="btn-principal" id="btnSalvarNiv">Salvar nivelamento</button>
           </div>
         </div>
-        <div class="par">
-          <button class="btn-principal" id="btnSalvarNiv">Salvar nivelamento</button>
-        </div>
-        <div id="nivResultado"></div>
       </div>
 
-      <div class="hidden" id="nivListaBox">
-        <div class="controls">
-          <div class="field">
-            <label for="nivBusca">Buscar pelo nome</label>
-            <input type="text" id="nivBusca" placeholder="Digite parte do nome">
-          </div>
-          <div class="field">
-            <label for="nivFiltroSit">Situa&ccedil;&atilde;o</label>
-            <select id="nivFiltroSit">
-              <option value="">Todas</option>
-              <option value="Aguardando">Aguardando</option>
-              <option value="Fechou">Fechou</option>
-              <option value="N&atilde;o fechou">N&atilde;o fechou</option>
-            </select>
-          </div>
+      <!-- ---------- nivelamentos feitos ---------- -->
+      <div class="hidden" id="listaNivelamentos">
+        <div class="nv-wrap">
+          <section class="nv-cartao">
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="nivBusca">Nome do prospecto</label>
+                <input type="text" id="nivBusca" placeholder="Digite parte do nome, ou deixe vazio para ver todos">
+              </div>
+              <div class="nv-campo">
+                <label for="nivDe">De</label>
+                <input type="month" id="nivDe">
+              </div>
+              <div class="nv-campo">
+                <label for="nivAte">At&eacute;</label>
+                <input type="month" id="nivAte">
+              </div>
+              <div class="nv-campo nv-full">
+                <label for="nivFiltroSit">Situa&ccedil;&atilde;o</label>
+                <select id="nivFiltroSit">
+                  <option value="">Todas</option>
+                  <option value="Aguardando">Aguardando resposta</option>
+                  <option value="Fechou">Fechou</option>
+                  <option value="N&atilde;o fechou">N&atilde;o fechou</option>
+                </select>
+              </div>
+              <div class="nv-campo nv-full">
+                <div class="nv-chips">
+                  <button type="button" class="nv-chip" data-atalho="mes">Este m&ecirc;s</button>
+                  <button type="button" class="nv-chip" data-atalho="3">&Uacute;ltimos 3 meses</button>
+                  <button type="button" class="nv-chip" data-atalho="ano">Este ano</button>
+                  <button type="button" class="nv-chip" data-atalho="tudo">Tudo</button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div id="nivListaResumo"></div>
+          <div id="nivListaResultado"></div>
         </div>
-        <div id="nivListaResultado"></div>
       </div>
 
-      <div class="hidden" id="nivKpiBox">
-        <div class="controls">
-          <div class="field">
-            <label for="nivKpiMeses">Per&iacute;odo</label>
-            <select id="nivKpiMeses">
-              <option value="12">&uacute;ltimos 12 meses</option>
-              <option value="6">&uacute;ltimos 6 meses</option>
-              <option value="3">&uacute;ltimos 3 meses</option>
-              <option value="60">tudo</option>
-            </select>
-          </div>
+      <!-- ---------- conversao ---------- -->
+      <div class="hidden" id="consultaKpiNivelamento">
+        <div class="nv-wrap">
+          <section class="nv-cartao">
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="nivKpiMeses">Per&iacute;odo</label>
+                <select id="nivKpiMeses">
+                  <option value="12">&uacute;ltimos 12 meses</option>
+                  <option value="6">&uacute;ltimos 6 meses</option>
+                  <option value="3">&uacute;ltimos 3 meses</option>
+                  <option value="120">tudo</option>
+                </select>
+              </div>
+            </div>
+          </section>
+          <div id="nivKpiResultado"></div>
         </div>
-        <div id="nivKpiResultado"></div>
       </div>
+
       <div id="nivPalco" style="position:fixed;left:-10000px;top:0;"></div>
     </div>
 
@@ -3499,7 +3629,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.0.1';
+const APP_VERSAO = '5.1.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -10602,10 +10732,11 @@ function aplicarPermissoes(){
   // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
   // e Admin via o card da NR-1 solto, sem o titulo em cima.
 
-/* ==================== 5.0.0 NIVELAMENTO ==================== */
+/* ==================== 5.1.0 NIVELAMENTO ==================== */
 var _NIVEIS = [];
 var _TURMAS_NIV = [];
 var _LISTA_NIV = [];
+var _NIV_PODE_PDF = false;
 
 document.getElementById('cardNivelamento').addEventListener('click', function(){
   // 5.0.1: o card mora no menu da gestao, mas o painel mora dentro da tela da
@@ -10617,37 +10748,43 @@ document.getElementById('cardNivelamento').addEventListener('click', function(){
   mostrarSubcardsNiv();
 });
 
+/* 5.1.0: os tres blocos passaram a se chamar formNivelamento, listaNivelamentos
+   e consultaKpiNivelamento porque o historico de navegacao so reconhece filhos
+   de painel com prefixo form, lista ou consulta. Com os nomes antigos, o botao
+   Voltar deixava o formulario aberto por baixo dos subcards. */
+var _NIV_BLOCOS = ['formNivelamento','listaNivelamentos','consultaKpiNivelamento'];
+
 function mostrarSubcardsNiv(){
   document.getElementById('nivSubcards').classList.remove('hidden');
-  ['nivFormBox','nivListaBox','nivKpiBox'].forEach(function(id){
-    document.getElementById(id).classList.add('hidden');
+  _NIV_BLOCOS.forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.add('hidden');
   });
 }
 function abrirNivBox(id, titulo){
   document.getElementById('nivSubcards').classList.add('hidden');
-  ['nivFormBox','nivListaBox','nivKpiBox'].forEach(function(x){
-    document.getElementById(x).classList.add('hidden');
+  _NIV_BLOCOS.forEach(function(x){
+    var e = document.getElementById(x);
+    if(e) e.classList.toggle('hidden', x !== id);
   });
-  document.getElementById(id).classList.remove('hidden');
   $recepcaoSub.textContent = titulo;
 }
 
 document.getElementById('nivSubNovo').addEventListener('click', function(){
-  abrirNivBox('nivFormBox','Novo nivelamento');
+  abrirNivBox('formNivelamento','Novo nivelamento');
   document.getElementById('nivData').value = new Date().toISOString().slice(0,10);
   document.getElementById('nivProf').value = professorLogado || '';
   document.getElementById('nivResultado').innerHTML = '';
 });
 document.getElementById('nivSubLista').addEventListener('click', function(){
-  abrirNivBox('nivListaBox','Nivelamentos feitos');
+  abrirNivBox('listaNivelamentos','Nivelamentos feitos');
   carregarListaNiv();
 });
 document.getElementById('nivSubKpi').addEventListener('click', function(){
-  abrirNivBox('nivKpiBox','Conversão dos nivelamentos');
+  abrirNivBox('consultaKpiNivelamento','Conversão dos nivelamentos');
   carregarKpiNiv();
 });
 
-/* preenche a lista de níveis assim que o card é liberado */
 function _montarNiveis(niveis){
   _NIVEIS = niveis || [];
   var sel = document.getElementById('nivNivel');
@@ -10656,25 +10793,42 @@ function _montarNiveis(niveis){
     + _NIVEIS.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
 }
 
-/* ao escolher o nível, mostra as turmas que combinam */
+/* ---------- turmas com vaga no nivel do prospecto ---------- */
 document.getElementById('nivNivel').addEventListener('change', carregarHorariosNiv);
 
 async function carregarHorariosNiv(){
   var nivel = document.getElementById('nivNivel').value;
   var box = document.getElementById('nivHorarios');
-  box.innerHTML = '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Buscando turmas...</p>';
+  var dica = document.getElementById('nivHorariosDica');
+  if(!nivel){
+    box.innerHTML = '<p class="nv-vazio">Escolha o nível acima para ver as turmas com vaga.</p>';
+    dica.textContent = ''; return;
+  }
+  box.innerHTML = '<p class="nv-vazio">Buscando turmas...</p>';
   try{
     var r = await chamarAPI({ acao:'horariosDisponiveis', nivel: nivel });
-    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro')+'</div>'; return; }
+    if(!r.sucesso){ box.innerHTML = '<p class="nv-vazio">'+(r.erro||'Erro ao buscar')+'</p>'; return; }
     _TURMAS_NIV = r.turmas || [];
-    if(!_TURMAS_NIV.length){ box.innerHTML = '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Nenhuma turma cadastrada.</p>'; return; }
+    if(!_TURMAS_NIV.length){ box.innerHTML = '<p class="nv-vazio">Nenhuma turma cadastrada.</p>'; return; }
 
     box.innerHTML = _TURMAS_NIV.map(function(t,i){
-      return '<label class="niv-op'+(t.cheia?' cheia':'')+(t.combina?' combina':'')+'">'
-        + '<input type="checkbox" value="'+i+'"'+(t.cheia?' data-cheia="1"':'')+'>'
-        + '<span>'+t.rotulo+'</span></label>';
+      var cls = 'nv-turma' + (t.combina ? ' combina' : '') + (t.cheia ? ' cheia' : '');
+      return '<label class="'+cls+'">'
+        + '<input type="checkbox" value="'+i+'">'
+        + '<span class="nv-turma-txt">'
+        + '<span class="nv-turma-id">Turma '+t.turmaId+' · '+t.dias+' '+t.horario
+        + '<span class="nv-vaga'+(t.cheia?' zero':'')+'">'
+        + (t.cheia ? 'sem vaga' : t.vagas+(t.vagas===1?' vaga':' vagas'))+'</span></span>'
+        + '<span class="nv-turma-sub">'+t.nivel+' · '+t.professor+' · '+t.modalidade
+        + (t.livro ? ' · '+t.livro : '')+'</span>'
+        + '</span></label>';
     }).join('');
-  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar turmas.</div>'; }
+
+    var combinam = _TURMAS_NIV.filter(function(t){ return t.combina && !t.cheia; }).length;
+    dica.textContent = combinam
+      ? combinam + ' turma(s) de nível ' + nivel + ' com vaga aparecem primeiro na lista.'
+      : 'Nenhuma turma de nível ' + nivel + ' com vaga hoje. As outras estão listadas abaixo.';
+  }catch(e){ box.innerHTML = '<p class="nv-vazio">Falha ao buscar turmas.</p>'; }
 }
 
 document.getElementById('btnSalvarNiv').addEventListener('click', async function(){
@@ -10689,7 +10843,7 @@ document.getElementById('btnSalvarNiv').addEventListener('click', async function
   var escolhidos = [];
   Array.prototype.forEach.call(document.querySelectorAll('#nivHorarios input:checked'), function(c){
     var t = _TURMAS_NIV[Number(c.value)];
-    if(t) escolhidos.push(t.rotulo);
+    if(t) escolhidos.push('Turma '+t.turmaId+' · '+t.dias+' '+t.horario+' · '+t.professor);
   });
 
   btn.disabled = true; btn.textContent = 'Salvando...';
@@ -10705,61 +10859,116 @@ document.getElementById('btnSalvarNiv').addEventListener('click', async function
       horaInicio: document.getElementById('nivHoraIni').value,
       horaFim: document.getElementById('nivHoraFim').value
     });
-    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro ao salvar')+'</div>'; return; }
-
-    box.innerHTML = '<div class="niv-ok">Nivelamento nº '+r.numero+' salvo.</div>';
-    ['nivAluno','nivDisp','nivObs'].forEach(function(id){ document.getElementById(id).value=''; });
-    document.getElementById('nivNivel').value = '';
-    document.getElementById('nivHorarios').innerHTML =
-      '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Escolha o nível para ver as turmas.</p>';
-    mostrarToast('Nivelamento salvo');
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro ao salvar')+'</div>'; }
+    else {
+      box.innerHTML = '<div class="niv-ok">Nivelamento nº '+r.numero+' salvo para '+aluno+'.</div>';
+      ['nivAluno','nivDisp','nivObs','nivHoraIni','nivHoraFim'].forEach(function(id){
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('nivNivel').value = '';
+      carregarHorariosNiv();
+      mostrarToast('Nivelamento salvo');
+    }
   }catch(e){
     box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>';
   }
   btn.disabled = false; btn.textContent = 'Salvar nivelamento';
 });
 
-/* ---------- lista ---------- */
+/* ---------- nivelamentos feitos: nome + periodo ---------- */
 document.getElementById('nivBusca').addEventListener('input', function(){
   clearTimeout(window._nivTimer);
   window._nivTimer = setTimeout(carregarListaNiv, 400);
 });
-document.getElementById('nivFiltroSit').addEventListener('change', carregarListaNiv);
+['nivFiltroSit','nivDe','nivAte'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', function(){
+    _nivChipAtivo(null);
+    carregarListaNiv();
+  });
+});
+
+function _nivChipAtivo(el){
+  Array.prototype.forEach.call(document.querySelectorAll('.nv-chip'), function(c){
+    c.classList.toggle('on', c === el);
+  });
+}
+function _mesISO(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth()+1)).slice(-2); }
+
+Array.prototype.forEach.call(document.querySelectorAll('.nv-chip'), function(chip){
+  chip.addEventListener('click', function(){
+    var hoje = new Date();
+    var $de = document.getElementById('nivDe'), $ate = document.getElementById('nivAte');
+    var a = this.dataset.atalho;
+
+    if(a === 'mes'){ $de.value = _mesISO(hoje); $ate.value = _mesISO(hoje); }
+    else if(a === '3'){
+      $de.value = _mesISO(new Date(hoje.getFullYear(), hoje.getMonth()-2, 1));
+      $ate.value = _mesISO(hoje);
+    }
+    else if(a === 'ano'){ $de.value = hoje.getFullYear()+'-01'; $ate.value = _mesISO(hoje); }
+    else { $de.value = ''; $ate.value = ''; }
+
+    _nivChipAtivo(this);
+    carregarListaNiv();
+  });
+});
 
 async function carregarListaNiv(){
   var box = document.getElementById('nivListaResultado');
+  var resumo = document.getElementById('nivListaResumo');
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  resumo.innerHTML = '';
   try{
     var r = await chamarAPI({ acao:'listarNivelamentos',
       termo: document.getElementById('nivBusca').value.trim(),
-      situacao: document.getElementById('nivFiltroSit').value });
+      situacao: document.getElementById('nivFiltroSit').value,
+      de: document.getElementById('nivDe').value,
+      ate: document.getElementById('nivAte').value });
+
     if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro')+'</div>'; return; }
     _LISTA_NIV = r.nivelamentos || [];
-    if(!_LISTA_NIV.length){ box.innerHTML = '<div class="assess-aviso">Nenhum nivelamento encontrado.</div>'; return; }
+
+    if(!_LISTA_NIV.length){
+      box.innerHTML = '<div class="assess-aviso">Nenhum nivelamento nesse filtro.</div>';
+      return;
+    }
+
+    resumo.innerHTML = '<div class="nv-resumo">'
+      + '<div><span class="n">'+r.total+'</span><span class="r">no filtro</span></div>'
+      + '<div><span class="n">'+r.fechou+'</span><span class="r">fecharam</span></div>'
+      + '<div><span class="n">'+r.aguardando+'</span><span class="r">aguardando</span></div>'
+      + '<div><span class="n">'+r.naoFechou+'</span><span class="r">não fecharam</span></div>'
+      + '</div>';
 
     box.innerHTML = _LISTA_NIV.map(function(x,i){
       var cls = x.situacao === 'Fechou' ? 'ok' : (x.situacao === 'Não fechou' ? 'no' : 'av');
+      var acoes = [];
+      if(_NIV_PODE_PDF) acoes.push('<button class="ren-btn" onclick="pdfNivelamento('+i+')">PDF</button>');
+      if(x.situacao !== 'Fechou'){
+        acoes.push('<button class="ren-btn" onclick="nivVirarContrato('+i+')">Gerar contrato</button>');
+        if(x.situacao !== 'Não fechou')
+          acoes.push('<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Não fechou\')">Não fechou</button>');
+      }
+      if(x.situacao === 'Não fechou')
+        acoes.push('<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Aguardando\')">Reabrir</button>');
+      if(x.pdfUrl && _NIV_PODE_PDF) acoes.push(botaoPdf(x.pdfUrl,'PDF salvo','ren-btn sec'));
+
       return '<div class="niv-item">'
-        + '<div class="niv-topo"><span class="niv-nome">'+x.aluno+'</span>'
+        + '<div class="niv-topo">'
+        + '<div><div class="niv-nome">'+x.aluno+'</div>'
+        + '<span class="niv-nivel">nível '+x.nivel+'</span></div>'
         + '<span class="fa-tag '+cls+'">'+x.situacao+'</span></div>'
-        + '<div class="niv-meta">Nº '+x.numero+' · nível <b>'+x.nivel+'</b> · '+x.data
-        + (x.horaInicio ? ' das '+x.horaInicio+' às '+x.horaFim : '')
-        + '<br>Professor: '+(x.professor||'—')
+        + '<div class="niv-meta">'
+        + 'Nº '+x.numero+' · '+x.data
+        + (x.horaInicio ? ', das '+x.horaInicio+' às '+x.horaFim : '')
+        + '<br>Aplicado por <b>'+(x.professor||'—')+'</b>'
         + (x.disponibilidade ? '<br>Disponibilidade: '+x.disponibilidade : '')
-        + (x.horarios ? '<br>Horários de interesse: '+x.horarios : '')
+        + (x.horarios ? '<br>Interesse: '+x.horarios.split(' | ').join('; ') : '')
         + (x.observacoes ? '<br>'+x.observacoes : '')
-        + (x.numeroContrato ? '<br>Virou o contrato nº '+x.numeroContrato : '')
+        + (x.numeroContrato ? '<br>Virou o contrato nº <b>'+x.numeroContrato+'</b>' : '')
         + '</div>'
-        + '<div class="niv-acoes">'
-        + '<button class="ren-btn" onclick="pdfNivelamento('+i+')">PDF</button>'
-        + (x.situacao !== 'Fechou'
-            ? '<button class="ren-btn" onclick="nivVirarContrato('+i+')">Gerar contrato</button>'
-              + '<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Não fechou\')">Não fechou</button>'
-            : '')
-        + (x.situacao === 'Não fechou'
-            ? '<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Aguardando\')">Reabrir</button>' : '')
-        + (x.pdfUrl ? botaoPdf(x.pdfUrl,'Ver PDF salvo','ren-btn sec') : '')
-        + '</div></div>';
+        + (acoes.length ? '<div class="niv-acoes">'+acoes.join('')+'</div>' : '')
+        + '</div>';
     }).join('');
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao carregar.</div>'; }
 }
@@ -10773,11 +10982,10 @@ async function nivMarcar(i, situacao){
   carregarListaNiv();
 }
 
-/* leva o prospecto para o formulário de contrato, já preenchido */
 function nivVirarContrato(i){
   var x = _LISTA_NIV[i];
   if(!x) return;
-  window._NIV_ORIGEM = { linha: x.linha, numero: x.numero, aluno: x.aluno };
+  window._NIV_ORIGEM = { linha: x.linha, numero: x.numero, aluno: x.aluno, nivel: x.nivel };
   // A tela de contratos comeca nos subcards 18+ / Menor. O nome so pode ser
   // escrito depois que a pessoa escolher o tipo e o formulario existir, entao
   // guardamos aqui e abrirFormContrato preenche.
@@ -10791,15 +10999,15 @@ function nivVirarContrato(i){
   }
 }
 
-/* 5.0.0: sair da tela de contratos sem gerar limpa a origem, senao o proximo
-   contrato fecharia o nivelamento errado. */
+/* Sair da tela de contratos sem gerar limpa a origem, senao o proximo contrato
+   fecharia o nivelamento errado. */
 function _limparOrigemNiv(){
   window._NIV_ORIGEM = null;
   var faixa = document.getElementById('cttFaixaNiv');
   if(faixa){ faixa.classList.add('hidden'); faixa.textContent = ''; }
 }
 
-/* ---------- KPI ---------- */
+/* ---------- conversao ---------- */
 document.getElementById('nivKpiMeses').addEventListener('change', carregarKpiNiv);
 
 async function carregarKpiNiv(){
@@ -10809,10 +11017,10 @@ async function carregarKpiNiv(){
     var r = await chamarAPI({ acao:'kpiNivelamentos',
       meses: Number(document.getElementById('nivKpiMeses').value) || 12 });
     if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro')+'</div>'; return; }
-    if(!r.total){ box.innerHTML = '<div class="assess-aviso">Nenhum nivelamento registrado ainda.</div>'; return; }
+    if(!r.total){ box.innerHTML = '<div class="assess-aviso">Nenhum nivelamento no período.</div>'; return; }
 
     var barra = function(lista, chave){
-      var max = Math.max.apply(null, lista.map(function(x){ return x.total; }));
+      var max = Math.max.apply(null, lista.map(function(x){ return x.total; })) || 1;
       return lista.map(function(x){
         return '<div class="kpi-linha">'
           + '<span class="kpi-rot">'+(x[chave]||'—')+'</span>'
@@ -10823,7 +11031,7 @@ async function carregarKpiNiv(){
     };
 
     box.innerHTML =
-        '<div class="kpi-resumo">'
+        '<div class="nv-resumo">'
       + '<div><span class="n">'+r.total+'</span><span class="r">nivelamentos</span></div>'
       + '<div><span class="n">'+r.fechou+'</span><span class="r">fecharam</span></div>'
       + '<div><span class="n">'+r.conversao+'%</span><span class="r">conversão</span></div>'
@@ -10867,12 +11075,13 @@ async function pdfNivelamento(i){
 
   var nome = 'Nivelamento_'+x.numero+'_'+x.aluno.replace(/\s+/g,'_');
   try{
-    var opt = { margin:[10,10,10,10], filename:nome+'.pdf',
+    var blob = await html2pdf().set({
+      margin:[10,10,10,10], filename:nome+'.pdf',
       image:{type:'jpeg',quality:0.96}, html2canvas:{scale:2,useCORS:true},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
-    var blob = await html2pdf().set(opt).from(palco.firstElementChild).outputPdf('blob');
-    _baixarBlob(blob, nome+'.pdf');
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    }).from(palco.firstElementChild).outputPdf('blob');
 
+    _baixarBlob(blob, nome+'.pdf');
     var b64 = await _blobParaBase64(blob);
     var g = await chamarAPI({ acao:'arquivarPdfNivelamento', base64:b64,
       nomeArquivo:nome, numero:x.numero, linha:x.linha });
@@ -11234,11 +11443,15 @@ async function salvarFicha(btn){
     if(!card) return;
     card.classList.add('hidden');
     chamarAPI({ acao:'podeVerNivelamento' }).then(function(r){
-      if(r && r.sucesso && r.pode){
-        card.classList.remove('hidden');
-        _montarNiveis(r.niveis);
-        _ajustarTitulosDeSecao();
-      }
+      if(!r || !r.sucesso || !r.pode) return;
+      card.classList.remove('hidden');
+      _montarNiveis(r.niveis);
+      // 5.1.0: Lidia e Guilherme aplicam o teste, mas nao levam PDF nem numero
+      // de conversao para fora. Quem gera documento e Felipe e a recepcao.
+      _NIV_PODE_PDF = !!r.pdf;
+      var kpi = document.getElementById('nivSubKpi');
+      if(kpi) kpi.classList.toggle('hidden', !r.kpi);
+      _ajustarTitulosDeSecao();
     }).catch(function(){});
   })();
 
