@@ -956,6 +956,31 @@
     border-radius:20px; background:var(--azul-claro); color:var(--verde-escuro); margin-top:4px; }
   .niv-meta{ font-size:12.5px; color:#7d7d76; line-height:1.65; }
   .niv-meta b{ color:var(--carvao); font-weight:600; }
+  /* 5.2.0 */
+  .nv-aviso{ margin:-6px 0 14px; font-size:12px; color:#8a6d1a; background:#FBF0D8;
+    border-radius:9px; padding:9px 11px; line-height:1.5; }
+  .nv-total{ background:var(--perola); border:1.5px dashed var(--linha); border-radius:10px;
+    padding:11px 13px; font-size:13.5px; color:var(--carvao); line-height:1.6; }
+  .nv-total b{ color:var(--verde-escuro); font-size:15px; }
+  .nv-total span{ color:#8a8a82; font-size:12px; }
+  .nv-total-erro{ color:#8a3b2d; font-size:12.5px; }
+
+  .niv-oferta{ margin-top:9px; background:var(--perola); border-radius:10px;
+    padding:9px 11px; font-size:12.5px; color:#6c6c66; line-height:1.6; }
+  .niv-oferta b{ color:var(--verde-escuro); }
+  .niv-oferta span{ font-size:11.5px; }
+  .niv-item.vencido{ border-color:#E5C860; }
+  .niv-alerta{ background:#FDF3D4; border-radius:9px; padding:8px 11px; margin-bottom:10px;
+    font-size:12px; color:#8a6d1a; line-height:1.45; }
+  .niv-alerta.topo{ margin-bottom:12px; }
+  .niv-nivel.obj{ background:var(--perola); color:#6c6c66; margin-left:5px; }
+
+  .mv-det{ margin-top:6px; width:100%; box-sizing:border-box; font-family:'Poppins',sans-serif; font-size:13px;
+    padding:10px 12px; border-radius:10px; border:1.5px solid var(--linha);
+    background:var(--perola); color:var(--carvao); margin-bottom:4px; }
+  .kpi-bar.perda i{ background:#C87F72; }
+  .kpi-legenda{ font-size:11px; color:#9a9a94; margin:6px 0 0; }
+
   .niv-acoes{ font-size:0; margin:8px -3px 0; }
   .niv-acoes .ren-btn, .niv-acoes a.ren-btn{ display:inline-block; margin:3px; width:auto;
     vertical-align:top; text-decoration:none; }
@@ -3057,6 +3082,18 @@
                 <label for="nivProf">Professor(a) respons&aacute;vel</label>
                 <input type="text" id="nivProf" autocomplete="off">
               </div>
+              <div class="nv-campo">
+                <label for="nivTelefone">Telefone</label>
+                <input type="tel" id="nivTelefone" placeholder="(15) 99999-9999" autocomplete="off">
+              </div>
+              <div class="nv-campo">
+                <label for="nivEmail">E-mail</label>
+                <input type="email" id="nivEmail" placeholder="para mandar a proposta" autocomplete="off">
+              </div>
+              <div class="nv-campo nv-full">
+                <label for="nivObjetivo">Para que ele quer o ingl&ecirc;s</label>
+                <select id="nivObjetivo"><option value="">Selecione</option></select>
+              </div>
             </div>
           </section>
 
@@ -3096,12 +3133,57 @@
           </section>
 
           <section class="nv-cartao">
-            <h3 class="nv-secao"><span>4</span> Mais informa&ccedil;&otilde;es</h3>
+            <h3 class="nv-secao"><span>4</span> Condi&ccedil;&otilde;es passadas</h3>
+            <p class="nv-aviso">Sem isso, quando ele voltar em duas semanas ningu&eacute;m sabe o que
+              j&aacute; foi oferecido, e a Espresso corre o risco de cotar dois valores diferentes
+              para a mesma pessoa.</p>
+            <div class="nv-grid">
+              <div class="nv-campo">
+                <label for="nivMensalidade">Mensalidade cotada</label>
+                <input type="text" id="nivMensalidade" inputmode="decimal" placeholder="R$ 0,00">
+              </div>
+              <div class="nv-campo">
+                <label for="nivDesconto">Desconto oferecido</label>
+                <input type="text" id="nivDesconto" inputmode="decimal" placeholder="R$ 0,00">
+              </div>
+              <div class="nv-campo">
+                <label for="nivMatricula">Matr&iacute;cula</label>
+                <input type="text" id="nivMatricula" inputmode="decimal" placeholder="R$ 0,00">
+              </div>
+              <div class="nv-campo">
+                <label for="nivMaterial">Material did&aacute;tico</label>
+                <select id="nivMaterial">
+                  <option value="">N&atilde;o falamos disso</option>
+                  <option value="incluso">Incluso na mensalidade</option>
+                  <option value="&agrave; parte">Cobrado &agrave; parte</option>
+                </select>
+              </div>
+              <div class="nv-campo nv-full">
+                <label for="nivForma">Forma de pagamento conversada</label>
+                <input type="text" id="nivForma" placeholder="Ex: cart&atilde;o em 12x, Pix, boleto mensal">
+              </div>
+              <div class="nv-campo nv-full">
+                <label for="nivObsOferta">Observa&ccedil;&atilde;o da oferta</label>
+                <input type="text" id="nivObsOferta" placeholder="Ex: desconto v&aacute;lido at&eacute; sexta, irm&atilde;o tamb&eacute;m estuda aqui">
+              </div>
+              <div class="nv-campo nv-full">
+                <div class="nv-total" id="nivTotalOferta"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>5</span> Mais informa&ccedil;&otilde;es</h3>
             <div class="nv-grid">
               <div class="nv-campo nv-full">
                 <label for="nivObs">Como chegou at&eacute; a gente</label>
                 <textarea id="nivObs" rows="3" placeholder="Indica&ccedil;&atilde;o de algu&eacute;m, veio por qual m&iacute;dia social, passou na frente..."></textarea>
                 <small class="nv-dica">Esse campo alimenta o relat&oacute;rio de convers&atilde;o por origem.</small>
+              </div>
+              <div class="nv-campo">
+                <label for="nivRetorno">Retornar o contato em</label>
+                <input type="date" id="nivRetorno">
+                <small class="nv-dica">Quem n&atilde;o recebe retorno n&atilde;o fecha. A lista avisa quando vencer.</small>
               </div>
             </div>
           </section>
@@ -3629,7 +3711,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.1.0';
+const APP_VERSAO = '5.2.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -10793,6 +10875,41 @@ function _montarNiveis(niveis){
     + _NIVEIS.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
 }
 
+var _MOTIVOS_NIV = [];
+function _montarListasNiv(r){
+  _MOTIVOS_NIV = (r && r.motivos) || [];
+  var obj = document.getElementById('nivObjetivo');
+  if(obj && r && r.objetivos){
+    obj.innerHTML = '<option value="">Selecione</option>'
+      + r.objetivos.map(function(o){ return '<option value="'+o+'">'+o+'</option>'; }).join('');
+  }
+}
+
+/* 5.2.0: mostra o que o prospecto vai pagar de fato, para a pessoa conferir
+   antes de salvar. Erro de cotacao aparece aqui, nao depois. */
+function _resumoOferta(){
+  var n = function(id){ return _num(document.getElementById(id).value); };
+  var mens = n('nivMensalidade'), desc = n('nivDesconto'), mat = n('nivMatricula');
+  var box = document.getElementById('nivTotalOferta');
+  if(!mens && !desc && !mat){ box.innerHTML = ''; return; }
+
+  var final = mens - desc;
+  if(final < 0){
+    box.innerHTML = '<span class="nv-total-erro">O desconto está maior que a mensalidade. Confira os valores.</span>';
+    return;
+  }
+  var material = document.getElementById('nivMaterial').value;
+  box.innerHTML = '<b>' + _brl(final) + '</b> por mês'
+    + (desc ? ' <span>(' + _brl(mens) + ' menos ' + _brl(desc) + ' de desconto)</span>' : '')
+    + (mat ? '<br>Matrícula de <b>' + _brl(mat) + '</b>' : '')
+    + (material ? '<br>Material ' + material : '');
+}
+['nivMensalidade','nivDesconto','nivMatricula','nivMaterial'].forEach(function(id){
+  var e = document.getElementById(id);
+  if(e) e.addEventListener('input', _resumoOferta);
+  if(e) e.addEventListener('change', _resumoOferta);
+});
+
 /* ---------- turmas com vaga no nivel do prospecto ---------- */
 document.getElementById('nivNivel').addEventListener('change', carregarHorariosNiv);
 
@@ -10857,15 +10974,29 @@ document.getElementById('btnSalvarNiv').addEventListener('click', async function
       professor: document.getElementById('nivProf').value.trim(),
       data: _isoParaBr(document.getElementById('nivData').value),
       horaInicio: document.getElementById('nivHoraIni').value,
-      horaFim: document.getElementById('nivHoraFim').value
+      horaFim: document.getElementById('nivHoraFim').value,
+      // 5.2.0
+      telefone: document.getElementById('nivTelefone').value.trim(),
+      email: document.getElementById('nivEmail').value.trim(),
+      objetivo: document.getElementById('nivObjetivo').value,
+      mensalidade: document.getElementById('nivMensalidade').value.trim(),
+      desconto: document.getElementById('nivDesconto').value.trim(),
+      matricula: document.getElementById('nivMatricula').value.trim(),
+      material: document.getElementById('nivMaterial').value,
+      formaPagamento: document.getElementById('nivForma').value.trim(),
+      obsOferta: document.getElementById('nivObsOferta').value.trim(),
+      retornarEm: _isoParaBr(document.getElementById('nivRetorno').value)
     });
     if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro ao salvar')+'</div>'; }
     else {
       box.innerHTML = '<div class="niv-ok">Nivelamento nº '+r.numero+' salvo para '+aluno+'.</div>';
-      ['nivAluno','nivDisp','nivObs','nivHoraIni','nivHoraFim'].forEach(function(id){
+      ['nivAluno','nivDisp','nivObs','nivHoraIni','nivHoraFim','nivTelefone','nivEmail',
+       'nivMensalidade','nivDesconto','nivMatricula','nivForma','nivObsOferta','nivRetorno']
+        .forEach(function(id){ document.getElementById(id).value = ''; });
+      ['nivNivel','nivObjetivo','nivMaterial'].forEach(function(id){
         document.getElementById(id).value = '';
       });
-      document.getElementById('nivNivel').value = '';
+      document.getElementById('nivTotalOferta').innerHTML = '';
       carregarHorariosNiv();
       mostrarToast('Nivelamento salvo');
     }
@@ -10933,7 +11064,11 @@ async function carregarListaNiv(){
       return;
     }
 
-    resumo.innerHTML = '<div class="nv-resumo">'
+    resumo.innerHTML =
+        (r.vencidos
+          ? '<div class="niv-alerta topo">'+r.vencidos+' retorno(s) vencido(s) nesse filtro. '
+            + 'Eles aparecem marcados na lista.</div>' : '')
+      + '<div class="nv-resumo">'
       + '<div><span class="n">'+r.total+'</span><span class="r">no filtro</span></div>'
       + '<div><span class="n">'+r.fechou+'</span><span class="r">fecharam</span></div>'
       + '<div><span class="n">'+r.aguardando+'</span><span class="r">aguardando</span></div>'
@@ -10953,20 +11088,54 @@ async function carregarListaNiv(){
         acoes.push('<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Aguardando\')">Reabrir</button>');
       if(x.pdfUrl && _NIV_PODE_PDF) acoes.push(botaoPdf(x.pdfUrl,'PDF salvo','ren-btn sec'));
 
-      return '<div class="niv-item">'
+      // WhatsApp com o texto ja pronto, igual ao card de Renovacoes
+      var fone = String(x.telefone||'').replace(/\D/g,'');
+      if(fone && fone.length <= 11) fone = '55' + fone;
+      if(fone){
+        var msg = 'Oi, ' + x.aluno.split(' ')[0] + '! Aqui é da Espresso English. '
+          + 'Passando para saber o que você achou do nosso nivelamento. '
+          + 'Ficou alguma dúvida sobre as turmas ou as condições?';
+        acoes.push('<a class="ren-btn sec" style="text-decoration:none;" target="_blank" '
+          + 'href="https://wa.me/'+fone+'?text='+encodeURIComponent(msg)+'">WhatsApp</a>');
+      }
+
+      var oferta = '';
+      if(x.mensalidade || x.matricula){
+        var fin = (x.mensalidade||0) - (x.desconto||0);
+        oferta = '<div class="niv-oferta">Ofertado: <b>'+_brl(fin)+'</b>/mês'
+          + (x.desconto ? ' <span>(desconto de '+_brl(x.desconto)+')</span>' : '')
+          + (x.matricula ? ' · matrícula '+_brl(x.matricula) : '')
+          + (x.material ? ' · material '+x.material : '')
+          + (x.formaPagamento ? '<br>'+x.formaPagamento : '')
+          + (x.obsOferta ? '<br>'+x.obsOferta : '')
+          + '</div>';
+      }
+
+      return '<div class="niv-item'+(x.retornoVencido?' vencido':'')+'">'
+        + (x.retornoVencido
+            ? '<div class="niv-alerta">Retorno era para '+x.retornarEm+' e ainda não foi feito.</div>' : '')
         + '<div class="niv-topo">'
         + '<div><div class="niv-nome">'+x.aluno+'</div>'
-        + '<span class="niv-nivel">nível '+x.nivel+'</span></div>'
+        + '<span class="niv-nivel">nível '+x.nivel+'</span>'
+        + (x.objetivo ? '<span class="niv-nivel obj">'+x.objetivo+'</span>' : '')
+        + '</div>'
         + '<span class="fa-tag '+cls+'">'+x.situacao+'</span></div>'
         + '<div class="niv-meta">'
         + 'Nº '+x.numero+' · '+x.data
         + (x.horaInicio ? ', das '+x.horaInicio+' às '+x.horaFim : '')
         + '<br>Aplicado por <b>'+(x.professor||'—')+'</b>'
+        + (x.telefone ? '<br>'+x.telefone : '')
+        + (x.email ? '<br>'+x.email : '')
         + (x.disponibilidade ? '<br>Disponibilidade: '+x.disponibilidade : '')
         + (x.horarios ? '<br>Interesse: '+x.horarios.split(' | ').join('; ') : '')
         + (x.observacoes ? '<br>'+x.observacoes : '')
+        + (x.retornarEm && !x.retornoVencido && x.situacao === 'Aguardando'
+            ? '<br>Retornar em <b>'+x.retornarEm+'</b>' : '')
+        + (x.motivo ? '<br>Não fechou por: <b>'+x.motivo+'</b>'
+            + (x.motivoDetalhe ? ' — '+x.motivoDetalhe : '') : '')
         + (x.numeroContrato ? '<br>Virou o contrato nº <b>'+x.numeroContrato+'</b>' : '')
         + '</div>'
+        + oferta
         + (acoes.length ? '<div class="niv-acoes">'+acoes.join('')+'</div>' : '')
         + '</div>';
     }).join('');
@@ -10976,10 +11145,60 @@ async function carregarListaNiv(){
 async function nivMarcar(i, situacao){
   var x = _LISTA_NIV[i];
   if(!x) return;
+
+  var extra = {};
+  // 5.2.0: perder sem saber o porque nao ajuda ninguem. Perde por horario
+  // pede turma nova; perde por preco pede conversa de oferta. Sao decisoes
+  // diferentes, e so da para separar se o motivo for registrado.
+  if(situacao === 'Não fechou'){
+    var esc = await perguntarMotivoNiv(x.aluno);
+    if(!esc) return;
+    extra.motivo = esc.motivo;
+    extra.motivoDetalhe = esc.detalhe;
+  }
+
   mostrarToast('Atualizando...');
-  var r = await chamarAPI({ acao:'marcarNivelamentoFechado', linha: x.linha, situacao: situacao });
+  var r = await chamarAPI(Object.assign({ acao:'marcarNivelamentoFechado',
+    linha: x.linha, situacao: situacao }, extra));
   if(!r.sucesso){ mostrarToast(r.erro || 'Erro'); return; }
   carregarListaNiv();
+}
+
+/* Pergunta por que o prospecto nao fechou. Sem motivo, nao grava. */
+function perguntarMotivoNiv(nome){
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    // usa o mesmo modal do pop-up de aulas fora do previsto: ap-cx, ap-topo,
+    // ap-lista, ap-item e ap-rod. Nada de classe inventada.
+    fundo.innerHTML = '<div class="ap-cx">'
+      + '<div class="ap-topo"><b>Por que ' + nome.split(' ')[0] + ' não fechou?</b>'
+      + '<span>Isso vira número no relatório. Perder por horário pede turma nova, '
+      + 'perder por preço pede outra conversa.</span></div>'
+      + '<div class="ap-lista">'
+      + _MOTIVOS_NIV.map(function(m){
+          return '<label class="ap-item"><input type="radio" name="mvNiv" value="'
+            + String(m).replace(/"/g,'&quot;') + '">'
+            + '<span><b>' + m + '</b></span></label>';
+        }).join('')
+      + '<input type="text" class="mv-det" id="mvDetalhe" placeholder="Quer detalhar? (opcional)">'
+      + '</div>'
+      + '<div class="ap-rod">'
+      + '<div style="flex:1;"></div>'
+      + '<button class="ren-btn sec" id="mvCancelar">Cancelar</button>'
+      + '<button class="pend-acao" id="mvOk">Salvar</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+
+    fundo.querySelector('#mvCancelar').onclick = function(){ fundo.remove(); resolve(null); };
+    fundo.querySelector('#mvOk').onclick = function(){
+      var m = fundo.querySelector('input[name="mvNiv"]:checked');
+      if(!m){ mostrarToast('Escolha um motivo'); return; }
+      var det = fundo.querySelector('#mvDetalhe').value.trim();
+      fundo.remove();
+      resolve({ motivo: m.value, detalhe: det });
+    };
+  });
 }
 
 function nivVirarContrato(i){
@@ -11041,9 +11260,28 @@ async function carregarKpiNiv(){
       + 'Olhando só quem já decidiu, a conversão é <b>'+r.conversaoDecididos+'%</b> ('
       + r.fechou+' de '+r.decididos+').'
       + '</div>'
+      + (r.ticketMedio
+          ? '<div class="kpi-nota">Ticket médio de quem fechou: <b>'+_brl(r.ticketMedio)+'</b> por mês.</div>'
+          : '')
+      + ((r.porMotivo && r.porMotivo.length)
+          ? '<div class="kpi-bloco"><h4>Por que a gente perdeu</h4>'
+            + r.porMotivo.map(function(x){
+                return '<div class="kpi-linha">'
+                  + '<span class="kpi-rot">'+x.motivo+'</span>'
+                  + '<span class="kpi-bar perda"><i style="width:'+x.peso+'%"></i></span>'
+                  + '<span class="kpi-num">'+x.total+' · '+x.peso+'%</span></div>';
+              }).join('')
+            + '<p class="kpi-legenda">Percentual sobre o total de perdas, não sobre todos os nivelamentos.</p>'
+            + '</div>'
+          : '')
+      + ((r.porFaixa && r.porFaixa.length)
+          ? '<div class="kpi-bloco"><h4>Conversão por faixa de mensalidade</h4>'
+            + barra(r.porFaixa,'faixa')+'</div>' : '')
       + '<div class="kpi-bloco"><h4>Por mês</h4>'+barra(r.porMes,'rotulo')+'</div>'
       + '<div class="kpi-bloco"><h4>Por professor</h4>'+barra(r.porProfessor,'nome')+'</div>'
       + '<div class="kpi-bloco"><h4>Por nível de entrada</h4>'+barra(r.porNivel,'nivel')+'</div>'
+      + ((r.porObjetivo && r.porObjetivo.length)
+          ? '<div class="kpi-bloco"><h4>Por objetivo</h4>'+barra(r.porObjetivo,'objetivo')+'</div>' : '')
       + (r.porOrigem.length
           ? '<div class="kpi-bloco"><h4>Por origem</h4>'+barra(r.porOrigem,'texto')+'</div>' : '');
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao calcular.</div>'; }
@@ -11446,6 +11684,7 @@ async function salvarFicha(btn){
       if(!r || !r.sucesso || !r.pode) return;
       card.classList.remove('hidden');
       _montarNiveis(r.niveis);
+      _montarListasNiv(r);
       // 5.1.0: Lidia e Guilherme aplicam o teste, mas nao levam PDF nem numero
       // de conversao para fora. Quem gera documento e Felipe e a recepcao.
       _NIV_PODE_PDF = !!r.pdf;
