@@ -876,6 +876,80 @@
     border-radius:20px; margin-left:6px; }
   .fa-tag.ok{ background:#E3EFE7; color:#2f6b45; }
   .fa-tag.no{ background:#F5D3CC; color:#8a3b2d; }
+  /* ---------- 5.0.0: nivelamento, relatorio do aluno e ficha ---------- */
+  .niv-horarios{ display:flex; flex-direction:column; gap:6px; max-height:230px; overflow-y:auto;
+    background:var(--branco); border:1px solid var(--linha); border-radius:12px; padding:10px; }
+  .niv-op{ display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color:var(--carvao);
+    line-height:1.4; cursor:pointer; padding:4px 2px; border-radius:8px; }
+  .niv-op:hover{ background:#F4F2EC; }
+  .niv-op.combina span{ font-weight:600; }
+  .niv-op.cheia{ opacity:.5; }
+  .niv-op input{ margin-top:2px; flex-shrink:0; }
+  .niv-hora{ display:flex; align-items:center; gap:8px; }
+  .niv-hora input{ flex:1; }
+  .niv-hora span{ font-size:12.5px; color:#8a8a82; }
+  .niv-faixa{ margin:6px 20px 0; background:#EAF1EC; border-left:3px solid var(--verde-escuro);
+    border-radius:8px; padding:9px 12px; font-size:12.5px; color:var(--carvao); line-height:1.5; }
+  .niv-ok{ margin:10px 0 0; background:#EAF1EC; border-left:3px solid var(--verde-escuro);
+    border-radius:8px; padding:10px 12px; font-size:13px; color:var(--carvao); }
+  .niv-item{ background:var(--branco); border:1px solid var(--linha); border-radius:14px;
+    padding:13px 15px; margin-bottom:9px; }
+  .niv-topo{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+  .niv-nome{ font-size:14.5px; font-weight:600; color:var(--carvao); }
+  .niv-meta{ font-size:12.5px; color:#7d7d76; line-height:1.6; }
+  .niv-acoes{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+
+  .kpi-resumo{ display:flex; gap:8px; margin-bottom:12px; }
+  .kpi-resumo>div{ flex:1; background:var(--branco); border:1px solid var(--linha);
+    border-radius:14px; padding:12px 8px; text-align:center; }
+  .kpi-resumo .n{ display:block; font-size:22px; font-weight:600; color:var(--verde-escuro); }
+  .kpi-resumo .r{ display:block; font-size:11px; color:#8a8a82; margin-top:2px; }
+  .kpi-nota{ font-size:12.5px; color:#7d7d76; line-height:1.6; margin-bottom:14px; }
+  .kpi-bloco{ margin-bottom:16px; }
+  .kpi-bloco h4{ font-size:11px; letter-spacing:1.1px; text-transform:uppercase;
+    color:#8a8a84; margin:0 0 8px; }
+  .kpi-linha{ display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px; }
+  .kpi-rot{ flex:0 0 34%; color:var(--carvao); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .kpi-bar{ flex:1; height:8px; background:#EDEBE4; border-radius:6px; overflow:hidden; }
+  .kpi-bar i{ display:block; height:100%; background:var(--verde-escuro); border-radius:6px; }
+  .kpi-num{ flex:0 0 78px; text-align:right; color:#7d7d76; }
+
+  .ra-chk{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--carvao);
+    padding:6px 0; cursor:pointer; }
+  .fi-vazio label{ color:#8a6d1a; }
+  .fi-marca{ font-size:10px; letter-spacing:.6px; text-transform:uppercase;
+    background:#FBF0D8; color:#8a6d1a; border-radius:5px; padding:1px 5px; margin-left:5px; }
+
+  /* documento em PDF: relatorio do aluno e ficha do nivelamento */
+  .doc-pdf{ width:186mm; background:#fff; color:#2f3a34; font-family:'Poppins',sans-serif;
+    font-size:11px; line-height:1.55; padding:4mm; }
+  .doc-cab{ display:flex; align-items:center; gap:14px; border-bottom:2px solid #5A7568;
+    padding-bottom:9px; margin-bottom:14px; }
+  .doc-logo{ width:52px; height:auto; }
+  .doc-cab h1{ font-size:17px; margin:0; color:#3d4f45; font-weight:600; }
+  .doc-cab span{ font-size:10.5px; color:#8a8a82; }
+  .doc-num{ font-size:12px; font-weight:600; color:#5A7568; margin-bottom:10px; }
+  .doc-decl{ font-size:11.5px; text-align:justify; margin:0 0 14px; line-height:1.75; }
+  .doc-h2{ font-size:12px; letter-spacing:.8px; text-transform:uppercase; color:#5A7568;
+    margin:16px 0 7px; padding-bottom:3px; border-bottom:1px solid #E0DED6;
+    page-break-after:avoid; }
+  .doc-tab{ width:100%; border-collapse:collapse; margin-bottom:9px; page-break-inside:avoid; }
+  .doc-tab th, .doc-tab td{ border:1px solid #E0DED6; padding:5px 8px; text-align:left;
+    vertical-align:top; font-size:10.5px; }
+  .doc-tab th{ background:#F4F2EC; font-weight:600; color:#4a5a50; width:32%; }
+  .doc-lista th{ width:auto; text-align:left; }
+  .doc-skills th{ width:12%; font-size:9.5px; }
+  .doc-skills td{ width:13%; text-align:center; font-weight:600; }
+  .doc-nota{ font-size:10.5px; color:#6c6c66; margin:4px 0 10px; }
+  .doc-com{ border-left:3px solid #E0DED6; padding:2px 0 2px 10px; margin-bottom:9px;
+    page-break-inside:avoid; }
+  .doc-com span{ font-size:9.5px; color:#8a8a82; display:block; }
+  .doc-com p{ margin:2px 0 0; font-size:10.5px; }
+  .doc-assina{ margin-top:26px; text-align:center; page-break-inside:avoid; }
+  .doc-linha{ width:190px; border-top:1px solid #2f3a34; margin:0 auto 5px; }
+  .doc-assina p{ margin:0; font-size:10.5px; }
+  .doc-rodape{ margin-top:16px; font-size:9px; color:#9a9a94; text-align:center; }
+
   .esc-aluno{display:block;width:100%;text-align:left;background:#fff;border:1px solid #e2e0d8;
   border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-family:inherit;
   transition:border-color .15s, box-shadow .15s;}
@@ -1085,6 +1159,14 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Check-in de freelancer</span>
           <span class="menu-card-sub">Dias trabalhados e comprovante em PDF</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="cardNivelamento">
+        <div class="menu-card-icone">&#128218;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Nivelamento</span>
+          <span class="menu-card-sub">Prospecto que fez o teste, hor&aacute;rios e convers&atilde;o</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -1491,6 +1573,22 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardRelAluno">
+        <div class="menu-card-icone">&#128203;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Relat&oacute;rio do aluno</span>
+          <span class="menu-card-sub">Frequ&ecirc;ncia, livros e coment&aacute;rios em PDF para empresa ou fam&iacute;lia</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardFicha">
+        <div class="menu-card-icone">&#9997;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Completar ficha</span>
+          <span class="menu-card-sub">Nascimento, RG, e-mail e endere&ccedil;o sem abrir a planilha</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardNiver">
         <div class="menu-card-icone">&#127874;</div>
         <div class="menu-card-txt">
@@ -1730,6 +1828,7 @@
       </div>
 
       <div class="hidden" id="formContrato">
+        <div class="niv-faixa hidden" id="cttFaixaNiv"></div>
         <div id="contratoFormCampos" style="padding:8px 20px;"></div>
         <div style="padding:12px 20px;">
           <button class="acao salvar" id="btnGerarContrato" style="width:100%;">Gerar contrato e PDF</button>
@@ -2838,6 +2937,153 @@
       <div class="assess-resultado" id="usrResultado"></div>
     </div>
 
+    <!-- ============ 5.0.0 NIVELAMENTO ============ -->
+    <div class="recep-painel hidden" id="painelNivelamento">
+      <div class="menu-opcoes" id="nivSubcards">
+        <button class="menu-card" id="nivSubNovo">
+          <div class="menu-card-icone">&#10133;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Novo nivelamento</span>
+            <span class="menu-card-sub">Registrar o prospecto que acabou de fazer o teste</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="nivSubLista">
+          <div class="menu-card-icone">&#128203;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Nivelamentos feitos</span>
+            <span class="menu-card-sub">Buscar, marcar quem fechou e gerar o PDF</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="nivSubKpi">
+          <div class="menu-card-icone">&#128200;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Convers&atilde;o</span>
+            <span class="menu-card-sub">Quantos viraram aluno, por professor e por origem</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="nivFormBox">
+        <div class="controls">
+          <div class="field">
+            <label for="nivAluno">&#128100; Nome do aluno</label>
+            <input type="text" id="nivAluno" placeholder="Nome completo do prospecto">
+          </div>
+          <div class="field">
+            <label for="nivNivel">&#128221; Resultado do nivelamento</label>
+            <select id="nivNivel"><option value="">Selecione o n&iacute;vel</option></select>
+          </div>
+          <div class="field">
+            <label for="nivDisp">&#128197; Disponibilidade para fazer aulas</label>
+            <input type="text" id="nivDisp" placeholder="Ex: manh&atilde;s de ter&ccedil;a e quinta">
+          </div>
+          <div class="field">
+            <label>&#9200; Hor&aacute;rios dispon&iacute;veis que temos hoje</label>
+            <div id="nivHorarios" class="niv-horarios">
+              <p style="color:#9a9a94;font-size:12.5px;margin:0;">Escolha o n&iacute;vel para ver as turmas.</p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="nivObs">&#128204; Mais informa&ccedil;&otilde;es</label>
+            <textarea id="nivObs" rows="3" placeholder="Indica&ccedil;&atilde;o, m&iacute;dia social, o que mais achar importante"></textarea>
+          </div>
+          <div class="field">
+            <label for="nivProf">&#128104;&#8205;&#127979; Professor(a) respons&aacute;vel</label>
+            <input type="text" id="nivProf">
+          </div>
+          <div class="field">
+            <label for="nivData">&#128198; Data do nivelamento</label>
+            <input type="date" id="nivData">
+          </div>
+          <div class="field">
+            <label>&#128338; Hor&aacute;rio do nivelamento</label>
+            <div class="niv-hora">
+              <input type="time" id="nivHoraIni"> <span>a</span> <input type="time" id="nivHoraFim">
+            </div>
+          </div>
+        </div>
+        <div class="par">
+          <button class="btn-principal" id="btnSalvarNiv">Salvar nivelamento</button>
+        </div>
+        <div id="nivResultado"></div>
+      </div>
+
+      <div class="hidden" id="nivListaBox">
+        <div class="controls">
+          <div class="field">
+            <label for="nivBusca">Buscar pelo nome</label>
+            <input type="text" id="nivBusca" placeholder="Digite parte do nome">
+          </div>
+          <div class="field">
+            <label for="nivFiltroSit">Situa&ccedil;&atilde;o</label>
+            <select id="nivFiltroSit">
+              <option value="">Todas</option>
+              <option value="Aguardando">Aguardando</option>
+              <option value="Fechou">Fechou</option>
+              <option value="N&atilde;o fechou">N&atilde;o fechou</option>
+            </select>
+          </div>
+        </div>
+        <div id="nivListaResultado"></div>
+      </div>
+
+      <div class="hidden" id="nivKpiBox">
+        <div class="controls">
+          <div class="field">
+            <label for="nivKpiMeses">Per&iacute;odo</label>
+            <select id="nivKpiMeses">
+              <option value="12">&uacute;ltimos 12 meses</option>
+              <option value="6">&uacute;ltimos 6 meses</option>
+              <option value="3">&uacute;ltimos 3 meses</option>
+              <option value="60">tudo</option>
+            </select>
+          </div>
+        </div>
+        <div id="nivKpiResultado"></div>
+      </div>
+      <div id="nivPalco" style="position:fixed;left:-10000px;top:0;"></div>
+    </div>
+
+    <!-- ============ 5.0.0 RELATORIO DO ALUNO ============ -->
+    <div class="recep-painel hidden" id="painelRelAluno">
+      <div class="controls">
+        <div class="field">
+          <label for="raBusca">Nome do aluno</label>
+          <input type="text" id="raBusca" placeholder="Digite parte do nome">
+        </div>
+        <div class="field">
+          <label for="raDe">De (opcional)</label>
+          <input type="date" id="raDe">
+        </div>
+        <div class="field">
+          <label for="raAte">At&eacute; (opcional)</label>
+          <input type="date" id="raAte">
+        </div>
+      </div>
+      <div class="par">
+        <button class="btn-principal" id="btnRaBuscar">Montar relat&oacute;rio</button>
+      </div>
+      <div id="raResultado"></div>
+      <div id="raPalco" style="position:fixed;left:-10000px;top:0;"></div>
+    </div>
+
+    <!-- ============ 5.0.0 COMPLETAR FICHA ============ -->
+    <div class="recep-painel hidden" id="painelFicha">
+      <div class="controls">
+        <div class="field">
+          <label for="fiBusca">Nome do aluno</label>
+          <input type="text" id="fiBusca" placeholder="Digite parte do nome">
+        </div>
+      </div>
+      <div class="par">
+        <button class="btn-principal" id="btnFiBuscar">Abrir ficha</button>
+      </div>
+      <div id="fiResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelRelAulas">
       <div class="busca-linha" style="padding-bottom:4px;">
         <div class="campo">
@@ -3253,7 +3499,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '4.9.3';
+const APP_VERSAO = '5.0.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4940,6 +5186,7 @@ function _hojeIso(){
 }
 
 function abrirPainelRecep(idPainel, titulo){
+  if(idPainel !== 'painelContratos' && typeof _limparOrigemNiv === 'function') _limparOrigemNiv();
   document.getElementById('recepCards').classList.add('hidden');
   document.getElementById('recepAbasPresenca').classList.add('hidden');
   document.querySelectorAll('.recep-painel').forEach(function(p){ p.classList.add('hidden'); });
@@ -10354,6 +10601,642 @@ function aplicarPermissoes(){
   // 3.8.1: a resposta chega depois da limpeza dos titulos, entao a secao
   // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
   // e Admin via o card da NR-1 solto, sem o titulo em cima.
+
+/* ==================== 5.0.0 NIVELAMENTO ==================== */
+var _NIVEIS = [];
+var _TURMAS_NIV = [];
+var _LISTA_NIV = [];
+
+document.getElementById('cardNivelamento').addEventListener('click', function(){
+  abrirPainelRecep('painelNivelamento','Nivelamento');
+  mostrarSubcardsNiv();
+});
+
+function mostrarSubcardsNiv(){
+  document.getElementById('nivSubcards').classList.remove('hidden');
+  ['nivFormBox','nivListaBox','nivKpiBox'].forEach(function(id){
+    document.getElementById(id).classList.add('hidden');
+  });
+}
+function abrirNivBox(id, titulo){
+  document.getElementById('nivSubcards').classList.add('hidden');
+  ['nivFormBox','nivListaBox','nivKpiBox'].forEach(function(x){
+    document.getElementById(x).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+  $recepcaoSub.textContent = titulo;
+}
+
+document.getElementById('nivSubNovo').addEventListener('click', function(){
+  abrirNivBox('nivFormBox','Novo nivelamento');
+  document.getElementById('nivData').value = new Date().toISOString().slice(0,10);
+  document.getElementById('nivProf').value = professorLogado || '';
+  document.getElementById('nivResultado').innerHTML = '';
+});
+document.getElementById('nivSubLista').addEventListener('click', function(){
+  abrirNivBox('nivListaBox','Nivelamentos feitos');
+  carregarListaNiv();
+});
+document.getElementById('nivSubKpi').addEventListener('click', function(){
+  abrirNivBox('nivKpiBox','Conversão dos nivelamentos');
+  carregarKpiNiv();
+});
+
+/* preenche a lista de níveis assim que o card é liberado */
+function _montarNiveis(niveis){
+  _NIVEIS = niveis || [];
+  var sel = document.getElementById('nivNivel');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Selecione o nível</option>'
+    + _NIVEIS.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
+}
+
+/* ao escolher o nível, mostra as turmas que combinam */
+document.getElementById('nivNivel').addEventListener('change', carregarHorariosNiv);
+
+async function carregarHorariosNiv(){
+  var nivel = document.getElementById('nivNivel').value;
+  var box = document.getElementById('nivHorarios');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Buscando turmas...</p>';
+  try{
+    var r = await chamarAPI({ acao:'horariosDisponiveis', nivel: nivel });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro')+'</div>'; return; }
+    _TURMAS_NIV = r.turmas || [];
+    if(!_TURMAS_NIV.length){ box.innerHTML = '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Nenhuma turma cadastrada.</p>'; return; }
+
+    box.innerHTML = _TURMAS_NIV.map(function(t,i){
+      return '<label class="niv-op'+(t.cheia?' cheia':'')+(t.combina?' combina':'')+'">'
+        + '<input type="checkbox" value="'+i+'"'+(t.cheia?' data-cheia="1"':'')+'>'
+        + '<span>'+t.rotulo+'</span></label>';
+    }).join('');
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar turmas.</div>'; }
+}
+
+document.getElementById('btnSalvarNiv').addEventListener('click', async function(){
+  var btn = this;
+  var box = document.getElementById('nivResultado');
+  var aluno = document.getElementById('nivAluno').value.trim();
+  var nivel = document.getElementById('nivNivel').value;
+
+  if(!aluno){ box.innerHTML = '<div class="assess-aviso">Escreva o nome do prospecto.</div>'; return; }
+  if(!nivel){ box.innerHTML = '<div class="assess-aviso">Escolha o resultado do nivelamento.</div>'; return; }
+
+  var escolhidos = [];
+  Array.prototype.forEach.call(document.querySelectorAll('#nivHorarios input:checked'), function(c){
+    var t = _TURMAS_NIV[Number(c.value)];
+    if(t) escolhidos.push(t.rotulo);
+  });
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try{
+    var r = await chamarAPI({
+      acao:'salvarNivelamento',
+      aluno: aluno, nivel: nivel,
+      disponibilidade: document.getElementById('nivDisp').value.trim(),
+      horarios: escolhidos,
+      observacoes: document.getElementById('nivObs').value.trim(),
+      professor: document.getElementById('nivProf').value.trim(),
+      data: _isoParaBr(document.getElementById('nivData').value),
+      horaInicio: document.getElementById('nivHoraIni').value,
+      horaFim: document.getElementById('nivHoraFim').value
+    });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro ao salvar')+'</div>'; return; }
+
+    box.innerHTML = '<div class="niv-ok">Nivelamento nº '+r.numero+' salvo.</div>';
+    ['nivAluno','nivDisp','nivObs'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('nivNivel').value = '';
+    document.getElementById('nivHorarios').innerHTML =
+      '<p style="color:#9a9a94;font-size:12.5px;margin:0;">Escolha o nível para ver as turmas.</p>';
+    mostrarToast('Nivelamento salvo');
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>';
+  }
+  btn.disabled = false; btn.textContent = 'Salvar nivelamento';
+});
+
+/* ---------- lista ---------- */
+document.getElementById('nivBusca').addEventListener('input', function(){
+  clearTimeout(window._nivTimer);
+  window._nivTimer = setTimeout(carregarListaNiv, 400);
+});
+document.getElementById('nivFiltroSit').addEventListener('change', carregarListaNiv);
+
+async function carregarListaNiv(){
+  var box = document.getElementById('nivListaResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarNivelamentos',
+      termo: document.getElementById('nivBusca').value.trim(),
+      situacao: document.getElementById('nivFiltroSit').value });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro')+'</div>'; return; }
+    _LISTA_NIV = r.nivelamentos || [];
+    if(!_LISTA_NIV.length){ box.innerHTML = '<div class="assess-aviso">Nenhum nivelamento encontrado.</div>'; return; }
+
+    box.innerHTML = _LISTA_NIV.map(function(x,i){
+      var cls = x.situacao === 'Fechou' ? 'ok' : (x.situacao === 'Não fechou' ? 'no' : 'av');
+      return '<div class="niv-item">'
+        + '<div class="niv-topo"><span class="niv-nome">'+x.aluno+'</span>'
+        + '<span class="fa-tag '+cls+'">'+x.situacao+'</span></div>'
+        + '<div class="niv-meta">Nº '+x.numero+' · nível <b>'+x.nivel+'</b> · '+x.data
+        + (x.horaInicio ? ' das '+x.horaInicio+' às '+x.horaFim : '')
+        + '<br>Professor: '+(x.professor||'—')
+        + (x.disponibilidade ? '<br>Disponibilidade: '+x.disponibilidade : '')
+        + (x.horarios ? '<br>Horários de interesse: '+x.horarios : '')
+        + (x.observacoes ? '<br>'+x.observacoes : '')
+        + (x.numeroContrato ? '<br>Virou o contrato nº '+x.numeroContrato : '')
+        + '</div>'
+        + '<div class="niv-acoes">'
+        + '<button class="ren-btn" onclick="pdfNivelamento('+i+')">PDF</button>'
+        + (x.situacao !== 'Fechou'
+            ? '<button class="ren-btn" onclick="nivVirarContrato('+i+')">Gerar contrato</button>'
+              + '<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Não fechou\')">Não fechou</button>'
+            : '')
+        + (x.situacao === 'Não fechou'
+            ? '<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Aguardando\')">Reabrir</button>' : '')
+        + (x.pdfUrl ? botaoPdf(x.pdfUrl,'Ver PDF salvo','ren-btn sec') : '')
+        + '</div></div>';
+    }).join('');
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao carregar.</div>'; }
+}
+
+async function nivMarcar(i, situacao){
+  var x = _LISTA_NIV[i];
+  if(!x) return;
+  mostrarToast('Atualizando...');
+  var r = await chamarAPI({ acao:'marcarNivelamentoFechado', linha: x.linha, situacao: situacao });
+  if(!r.sucesso){ mostrarToast(r.erro || 'Erro'); return; }
+  carregarListaNiv();
+}
+
+/* leva o prospecto para o formulário de contrato, já preenchido */
+function nivVirarContrato(i){
+  var x = _LISTA_NIV[i];
+  if(!x) return;
+  window._NIV_ORIGEM = { linha: x.linha, numero: x.numero, aluno: x.aluno };
+  // A tela de contratos comeca nos subcards 18+ / Menor. O nome so pode ser
+  // escrito depois que a pessoa escolher o tipo e o formulario existir, entao
+  // guardamos aqui e abrirFormContrato preenche.
+  mostrarToast('Escolha 18+ ou Menor para ' + x.aluno);
+  abrirPainelRecep('painelContratos','Contratos');
+  var faixa = document.getElementById('cttFaixaNiv');
+  if(faixa){
+    faixa.classList.remove('hidden');
+    faixa.textContent = 'Nivelamento nº ' + x.numero + ' de ' + x.aluno
+      + ' (nível ' + x.nivel + '). Escolha 18+ ou Menor de idade para continuar.';
+  }
+}
+
+/* 5.0.0: sair da tela de contratos sem gerar limpa a origem, senao o proximo
+   contrato fecharia o nivelamento errado. */
+function _limparOrigemNiv(){
+  window._NIV_ORIGEM = null;
+  var faixa = document.getElementById('cttFaixaNiv');
+  if(faixa){ faixa.classList.add('hidden'); faixa.textContent = ''; }
+}
+
+/* ---------- KPI ---------- */
+document.getElementById('nivKpiMeses').addEventListener('change', carregarKpiNiv);
+
+async function carregarKpiNiv(){
+  var box = document.getElementById('nivKpiResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Calculando...</p>';
+  try{
+    var r = await chamarAPI({ acao:'kpiNivelamentos',
+      meses: Number(document.getElementById('nivKpiMeses').value) || 12 });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">'+(r.erro||'Erro')+'</div>'; return; }
+    if(!r.total){ box.innerHTML = '<div class="assess-aviso">Nenhum nivelamento registrado ainda.</div>'; return; }
+
+    var barra = function(lista, chave){
+      var max = Math.max.apply(null, lista.map(function(x){ return x.total; }));
+      return lista.map(function(x){
+        return '<div class="kpi-linha">'
+          + '<span class="kpi-rot">'+(x[chave]||'—')+'</span>'
+          + '<span class="kpi-bar"><i style="width:'+Math.round(x.total/max*100)+'%"></i></span>'
+          + '<span class="kpi-num">'+x.fechou+'/'+x.total+' · '+x.conversao+'%</span>'
+          + '</div>';
+      }).join('');
+    };
+
+    box.innerHTML =
+        '<div class="kpi-resumo">'
+      + '<div><span class="n">'+r.total+'</span><span class="r">nivelamentos</span></div>'
+      + '<div><span class="n">'+r.fechou+'</span><span class="r">fecharam</span></div>'
+      + '<div><span class="n">'+r.conversao+'%</span><span class="r">conversão</span></div>'
+      + '</div>'
+      + '<div class="kpi-nota">'
+      + r.aguardando+' ainda aguardando resposta e '+r.perdeu+' disseram não. '
+      + 'Olhando só quem já decidiu, a conversão é <b>'+r.conversaoDecididos+'%</b> ('
+      + r.fechou+' de '+r.decididos+').'
+      + '</div>'
+      + '<div class="kpi-bloco"><h4>Por mês</h4>'+barra(r.porMes,'rotulo')+'</div>'
+      + '<div class="kpi-bloco"><h4>Por professor</h4>'+barra(r.porProfessor,'nome')+'</div>'
+      + '<div class="kpi-bloco"><h4>Por nível de entrada</h4>'+barra(r.porNivel,'nivel')+'</div>'
+      + (r.porOrigem.length
+          ? '<div class="kpi-bloco"><h4>Por origem</h4>'+barra(r.porOrigem,'texto')+'</div>' : '');
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao calcular.</div>'; }
+}
+
+/* ---------- PDF do nivelamento ---------- */
+async function pdfNivelamento(i){
+  var x = _LISTA_NIV[i];
+  if(!x) return;
+  mostrarToast('Montando o PDF...');
+  var palco = document.getElementById('nivPalco');
+  palco.innerHTML =
+      '<div class="doc-pdf">'
+    + '<div class="doc-cab"><img src="data:image/png;base64,'+LOGO_REL_COR+'" class="doc-logo">'
+    + '<div><h1>Nivelamento</h1><span>Espresso English · Sorocaba/SP</span></div></div>'
+    + '<div class="doc-num">Nivelamento nº '+x.numero+'</div>'
+    + '<table class="doc-tab">'
+    + '<tr><th>Aluno</th><td>'+x.aluno+'</td></tr>'
+    + '<tr><th>Resultado</th><td><b>'+x.nivel+'</b></td></tr>'
+    + '<tr><th>Data</th><td>'+x.data+(x.horaInicio ? ', das '+x.horaInicio+' às '+x.horaFim : '')+'</td></tr>'
+    + '<tr><th>Professor(a)</th><td>'+(x.professor||'—')+'</td></tr>'
+    + '<tr><th>Disponibilidade</th><td>'+(x.disponibilidade||'—')+'</td></tr>'
+    + '<tr><th>Horários sugeridos</th><td>'+(x.horarios ? x.horarios.split(' | ').join('<br>') : '—')+'</td></tr>'
+    + '<tr><th>Observações</th><td>'+(x.observacoes||'—')+'</td></tr>'
+    + '</table>'
+    + '<p class="doc-rodape">Documento gerado pelo AttendancePlus em '
+    + new Date().toLocaleDateString('pt-BR')+'.</p>'
+    + '</div>';
+
+  var nome = 'Nivelamento_'+x.numero+'_'+x.aluno.replace(/\s+/g,'_');
+  try{
+    var opt = { margin:[10,10,10,10], filename:nome+'.pdf',
+      image:{type:'jpeg',quality:0.96}, html2canvas:{scale:2,useCORS:true},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
+    var blob = await html2pdf().set(opt).from(palco.firstElementChild).outputPdf('blob');
+    _baixarBlob(blob, nome+'.pdf');
+
+    var b64 = await _blobParaBase64(blob);
+    var g = await chamarAPI({ acao:'arquivarPdfNivelamento', base64:b64,
+      nomeArquivo:nome, numero:x.numero, linha:x.linha });
+    mostrarToast(g && g.sucesso ? 'PDF salvo no Drive' : 'PDF baixado');
+    if(g && g.sucesso) carregarListaNiv();
+  }catch(e){ mostrarToast('Falha ao gerar o PDF'); }
+  palco.innerHTML = '';
+}
+
+/* ---------- 5.0.0: helpers de PDF, para nao repetir o mesmo bloco ---------- */
+function _baixarBlob(blob, arquivo){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = arquivo; document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+function _blobParaBase64(blob){
+  return new Promise(function(res){
+    var fr = new FileReader();
+    fr.onloadend = function(){ res(String(fr.result).split(',')[1]); };
+    fr.readAsDataURL(blob);
+  });
+}
+
+/* Escolha de aluno reaproveitando a busca da ficha. Usado pelo relatorio e
+   pela tela de completar ficha, para nao ter tres buscas diferentes. */
+function _htmlEscolha(opcoes, termo, fn, sub){
+  _OPCOES_FICHA = opcoes || [];
+  return '<div style="padding:0 20px;"><div class="fa-bloco">'
+    + '<h4>' + _OPCOES_FICHA.length + ' alunos com "' + termo + '"</h4>'
+    + '<div class="fa-sub" style="margin:-2px 0 12px;">' + sub + '</div>'
+    + _OPCOES_FICHA.map(function(o,i){
+        return '<button class="esc-aluno" onclick="' + fn + '(_OPCOES_FICHA[' + i + '].nome)">'
+          + '<span class="esc-nome">' + o.nome + '</span>'
+          + '<span class="esc-meta">'
+          + (o.ativo ? '<span class="fa-tag ok">ativo</span>' : '<span class="fa-tag no">sem turma ativa</span>')
+          + (o.turmas && o.turmas.length ? ' <span>Turma ' + o.turmas.join(', ') + '</span>' : '')
+          + '</span></button>';
+      }).join('') + '</div></div>';
+}
+
+/* ==================== 5.0.0 RELATORIO DO ALUNO ==================== */
+var _REL_ALUNO = null;
+
+document.getElementById('recepCardRelAluno').addEventListener('click', function(){
+  abrirPainelRecep('painelRelAluno','Relatório do aluno');
+  document.getElementById('raResultado').innerHTML = '';
+});
+document.getElementById('btnRaBuscar').addEventListener('click', function(){ montarRelAluno(); });
+document.getElementById('raBusca').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') montarRelAluno();
+});
+
+async function montarRelAluno(exato){
+  if(typeof exato !== 'string') exato = '';
+  var termo = document.getElementById('raBusca').value.trim();
+  var box = document.getElementById('raResultado');
+  if(termo.length < 2){ box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras.</div>'; return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Montando...</p>';
+
+  try{
+    if(!exato){
+      var f = await chamarAPI({ acao:'fichaDoAluno', termo: termo });
+      if(f && f.varios){
+        box.innerHTML = _htmlEscolha(f.opcoes, f.termo, 'montarRelAluno', 'Escolha de quem é o relatório.');
+        return;
+      }
+      if(f && f.sucesso && f.aluno) exato = f.aluno;
+      else { box.innerHTML = '<div class="assess-aviso">' + ((f&&f.erro)||'Aluno não encontrado.') + '</div>'; return; }
+    }
+
+    var r = await chamarAPI({ acao:'relatorioAluno', aluno: exato,
+      de: _isoParaBr(document.getElementById('raDe').value),
+      ate: _isoParaBr(document.getElementById('raAte').value),
+      emitidoPor: professorLogado || 'Recepção' });
+
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    _REL_ALUNO = r;
+    box.innerHTML = htmlPreviaRelAluno(r);
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao montar o relatório.</div>'; }
+}
+
+function htmlPreviaRelAluno(r){
+  var fq = r.frequencia;
+  var h = '<div style="padding:0 20px;">';
+
+  h += '<div class="fa-bloco"><div class="fa-nome">' + r.aluno + '</div>'
+    + '<div class="fa-sub">' + (r.matricula ? 'Matrícula nº ' + r.matricula : 'sem matrícula')
+    + (r.tipo ? ' · ' + r.tipo : '')
+    + ' · ' + (r.ativo ? 'aluno ativo' : 'não está mais em turma') + '</div>'
+    + '<div class="fa-sub">Período: ' + (r.periodo.de||'—') + ' a ' + (r.periodo.ate||'—') + '</div></div>';
+
+  h += '<div class="ren-resumo">'
+    + '<div><span class="n">' + (fq.percentual === null ? '—' : fq.percentual + '%') + '</span><span class="r">frequência</span></div>'
+    + '<div><span class="n">' + fq.presencas + '</span><span class="r">presenças</span></div>'
+    + '<div><span class="n">' + fq.faltas + '</span><span class="r">faltas</span></div>'
+    + '<div><span class="n">' + r.horas.cumpridas + 'h</span><span class="r">cumpridas</span></div>'
+    + '</div>';
+
+  if(!fq.aulas){
+    h += '<div class="assess-aviso">Nenhuma aula registrada nesse período. '
+      + 'Confira as datas ou o vínculo do aluno com a turma.</div>';
+  }
+
+  var linhas = [];
+  linhas.push(['Livros', r.livros.length ? r.livros.map(function(x){
+    return x.livro + ' (' + x.aulas + ' aula(s), ' + x.de + ' a ' + x.ate + ')'; }).join('<br>') : '—']);
+  linhas.push(['Professores', r.professores.length ? r.professores.map(function(x){
+    return x.nome + ' · ' + x.aulas + ' aula(s)'; }).join('<br>') : '—']);
+  linhas.push(['Nível de entrada', r.nivelEntrada
+    ? r.nivelEntrada.nivel + ' (nivelamento de ' + r.nivelEntrada.data + ')' : 'sem registro de nivelamento']);
+  linhas.push(['Nível atual', r.nivelAtual || '—']);
+  linhas.push(['Avaliações', r.notas.length ? r.notas.length + ' lançamento(s)' : 'nenhuma lançada ainda']);
+  linhas.push(['Comentários de aula', r.comentarios.length ? r.comentarios.length + ' comentário(s)' : 'nenhum']);
+
+  h += '<div class="fa-bloco"><h4>O que o sistema encontrou</h4><div class="fa-lista">'
+    + linhas.map(function(l){ return '<div><span>' + l[0] + '</span><b>' + l[1] + '</b></div>'; }).join('')
+    + '</div></div>';
+
+  h += '<div class="fa-bloco"><h4>Escolha o que incluir</h4>'
+    + [['raIncDecl','Texto de declaração no topo',1],
+       ['raIncFreq','Frequência e faltas',1],
+       ['raIncHoras','Horas de curso cumpridas',1],
+       ['raIncLivros','Livros e lições',1],
+       ['raIncProfs','Professores que teve',1],
+       ['raIncNivel','Nível de entrada x atual',1],
+       ['raIncNotas','Notas das avaliações', r.notas.length ? 1 : 0],
+       ['raIncComent','Comentários do professor',1],
+       ['raIncFaltas','Listar as datas das faltas',0]]
+      .map(function(c){
+        return '<label class="ra-chk"><input type="checkbox" id="' + c[0] + '"' + (c[2]?' checked':'') + '> ' + c[1] + '</label>';
+      }).join('')
+    + '</div>';
+
+  h += '<div class="par" style="padding:0 0 16px;">'
+    + '<button class="btn-principal" onclick="gerarPdfRelAluno(this)">Gerar PDF</button></div>';
+
+  return h + '</div>';
+}
+
+async function gerarPdfRelAluno(btn){
+  var r = _REL_ALUNO;
+  if(!r) return;
+  var quer = function(id){ var e = document.getElementById(id); return e && e.checked; };
+
+  var rot = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  var palco = document.getElementById('raPalco');
+  var fq = r.frequencia;
+
+  var turmaTxt = r.turmas.map(function(t){
+    return 'turma ' + t.turmaId + ' (' + t.nivel + '), ' + t.dias + ' às ' + t.horario
+      + ', ' + String(t.modalidade).toLowerCase() + ', com ' + t.professor;
+  }).join('; ');
+
+  var html = '<div class="doc-pdf">'
+    + '<div class="doc-cab"><img src="data:image/png;base64,' + LOGO_REL_COR + '" class="doc-logo">'
+    + '<div><h1>Relatório de acompanhamento</h1>'
+    + '<span>Espresso English · Sorocaba/SP</span></div></div>';
+
+  if(quer('raIncDecl')){
+    html += '<p class="doc-decl">Declaramos para os devidos fins que <b>' + r.aluno + '</b>'
+      + (r.matricula ? ', matrícula nº ' + r.matricula : '')
+      + (r.responsavel ? ', sob responsabilidade de ' + r.responsavel : '')
+      + (r.ativo ? ' está matriculado(a) e frequentando' : ' esteve matriculado(a) e frequentou')
+      + ' o curso de língua inglesa da Espresso English'
+      + (turmaTxt ? ', na ' + turmaTxt : '')
+      + ', no período de ' + (r.periodo.de||'—') + ' a ' + (r.periodo.ate||'—') + '.</p>';
+  }
+
+  html += '<table class="doc-tab">'
+    + '<tr><th>Aluno</th><td>' + r.aluno + '</td></tr>'
+    + (r.matricula ? '<tr><th>Matrícula</th><td>' + r.matricula + '</td></tr>' : '')
+    + (r.responsavel ? '<tr><th>Responsável</th><td>' + r.responsavel + '</td></tr>' : '')
+    + (r.contrato ? '<tr><th>Contrato</th><td>nº ' + r.contrato.numero + ' · ' + r.contrato.inicio + ' a ' + r.contrato.fim + '</td></tr>' : '')
+    + '<tr><th>Período do relatório</th><td>' + (r.periodo.de||'—') + ' a ' + (r.periodo.ate||'—') + '</td></tr>'
+    + '</table>';
+
+  if(quer('raIncNivel')){
+    html += '<h2 class="doc-h2">Evolução de nível</h2><table class="doc-tab">'
+      + '<tr><th>Nível de entrada</th><td>'
+      + (r.nivelEntrada ? r.nivelEntrada.nivel + ' · nivelamento de ' + r.nivelEntrada.data : 'sem registro')
+      + '</td></tr>'
+      + '<tr><th>Nível atual</th><td>' + (r.nivelAtual||'—') + '</td></tr></table>';
+  }
+
+  if(quer('raIncFreq')){
+    html += '<h2 class="doc-h2">Frequência</h2><table class="doc-tab">'
+      + '<tr><th>Aulas no período</th><td>' + fq.aulas + '</td></tr>'
+      + '<tr><th>Presenças</th><td>' + fq.presencas + '</td></tr>'
+      + '<tr><th>Faltas</th><td>' + fq.faltas + '</td></tr>'
+      + (fq.remarcadas ? '<tr><th>Aulas remarcadas</th><td>' + fq.remarcadas + ' (não contam como falta)</td></tr>' : '')
+      + '<tr><th>Percentual de presença</th><td><b>'
+      + (fq.percentual === null ? 'sem aulas no período' : fq.percentual + '%') + '</b></td></tr>'
+      + '</table>';
+    if(quer('raIncFaltas') && fq.datasFalta.length){
+      html += '<p class="doc-nota">Datas das faltas: ' + fq.datasFalta.join(', ') + '.</p>';
+    }
+  }
+
+  if(quer('raIncHoras')){
+    html += '<h2 class="doc-h2">Carga horária</h2><table class="doc-tab">'
+      + '<tr><th>Horas oferecidas no período</th><td>' + r.horas.oferecidas + 'h</td></tr>'
+      + '<tr><th>Horas cumpridas pelo aluno</th><td><b>' + r.horas.cumpridas + 'h</b></td></tr>'
+      + '</table>';
+  }
+
+  if(quer('raIncLivros') && r.livros.length){
+    html += '<h2 class="doc-h2">Material didático</h2><table class="doc-tab doc-lista">'
+      + '<tr><th>Livro</th><th>Aulas</th><th>Presenças</th><th>Período</th></tr>'
+      + r.livros.map(function(x){
+          return '<tr><td>' + x.livro + '</td><td>' + x.aulas + '</td><td>' + x.presencas + '</td><td>' + x.de + ' a ' + x.ate + '</td></tr>';
+        }).join('') + '</table>';
+  }
+
+  if(quer('raIncProfs') && r.professores.length){
+    html += '<h2 class="doc-h2">Professores</h2><table class="doc-tab doc-lista">'
+      + '<tr><th>Professor(a)</th><th>Aulas</th><th>Período</th></tr>'
+      + r.professores.map(function(x){
+          return '<tr><td>' + x.nome + '</td><td>' + x.aulas + '</td><td>' + x.de + ' a ' + x.ate + '</td></tr>';
+        }).join('') + '</table>';
+  }
+
+  if(quer('raIncNotas') && r.notas.length){
+    html += '<h2 class="doc-h2">Avaliações</h2>'
+      + r.notas.map(function(n){
+          return '<p class="doc-nota"><b>' + n.data + '</b> · ' + n.ano + '/' + n.semestre
+            + ' · checkpoint ' + n.checkpoint + ' · média <b>' + n.media + '</b></p>'
+            + '<table class="doc-tab doc-skills"><tr>'
+            + '<th>Interaction</th><td>' + n.interaction + '</td>'
+            + '<th>Fluency</th><td>' + n.fluency + '</td>'
+            + '<th>Pronunciation</th><td>' + n.pronunciation + '</td>'
+            + '<th>Listening</th><td>' + n.listening + '</td></tr><tr>'
+            + '<th>Vocabulary</th><td>' + n.vocabulary + '</td>'
+            + '<th>Grammar</th><td>' + n.grammar + '</td>'
+            + '<th>Reading</th><td>' + n.reading + '</td>'
+            + '<th>Writing</th><td>' + n.writing + '</td></tr></table>'
+            + (n.comentario ? '<p class="doc-nota">' + n.comentario + '</p>' : '');
+        }).join('');
+  }
+
+  if(quer('raIncComent') && r.comentarios.length){
+    html += '<h2 class="doc-h2">Comentários das aulas</h2>'
+      + r.comentarios.map(function(c){
+          return '<div class="doc-com"><span>' + c.data + ' · ' + c.professor
+            + (c.presente ? '' : ' · aluno ausente') + '</span><p>' + c.texto + '</p></div>';
+        }).join('');
+  }
+
+  html += '<div class="doc-assina"><div class="doc-linha"></div>'
+    + '<p>Espresso English<br>Sorocaba/SP</p></div>'
+    + '<p class="doc-rodape">Emitido em ' + r.emitidoEm
+    + (r.emitidoPor ? ' por ' + r.emitidoPor : '')
+    + '. Documento gerado pelo AttendancePlus a partir dos registros de aula.</p>'
+    + '</div>';
+
+  palco.innerHTML = html;
+  var arquivo = 'Relatorio_' + r.aluno.replace(/\s+/g,'_') + '_' + r.emitidoEm.replace(/\//g,'-') + '.pdf';
+
+  try{
+    var blob = await html2pdf().set({
+      margin:[12,12,12,12], filename:arquivo,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollY:0},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy']}
+    }).from(palco.firstElementChild).outputPdf('blob');
+
+    _baixarBlob(blob, arquivo);
+    var b64 = await _blobParaBase64(blob);
+    var g = await chamarAPI({ acao:'arquivarRelatorioAluno', base64:b64, nomeArquivo:arquivo });
+    mostrarToast(g && g.sucesso ? 'PDF baixado e guardado no Drive' : 'PDF baixado');
+  }catch(e){ mostrarToast('Falha ao gerar o PDF'); }
+  palco.innerHTML = '';
+  btn.disabled = false; btn.textContent = rot;
+}
+
+/* ==================== 5.0.0 COMPLETAR FICHA ==================== */
+var _FICHA_ABERTA = null;
+
+document.getElementById('recepCardFicha').addEventListener('click', function(){
+  abrirPainelRecep('painelFicha','Completar ficha');
+  document.getElementById('fiResultado').innerHTML = '';
+});
+document.getElementById('btnFiBuscar').addEventListener('click', function(){ abrirFicha(); });
+document.getElementById('fiBusca').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') abrirFicha();
+});
+
+async function abrirFicha(exato){
+  if(typeof exato !== 'string') exato = '';
+  var termo = document.getElementById('fiBusca').value.trim();
+  var box = document.getElementById('fiResultado');
+  if(termo.length < 2){ box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras.</div>'; return; }
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Buscando...</p>';
+
+  try{
+    if(!exato){
+      var f = await chamarAPI({ acao:'fichaDoAluno', termo: termo });
+      if(f && f.varios){
+        box.innerHTML = _htmlEscolha(f.opcoes, f.termo, 'abrirFicha', 'Escolha qual ficha completar.');
+        return;
+      }
+      if(f && f.sucesso && f.aluno) exato = f.aluno;
+      else { box.innerHTML = '<div class="assess-aviso">' + ((f&&f.erro)||'Aluno não encontrado.') + '</div>'; return; }
+    }
+
+    var r = await chamarAPI({ acao:'fichaParaCompletar', aluno: exato });
+    if(!r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + (r.erro||'Erro') + '</div>'; return; }
+    _FICHA_ABERTA = r;
+
+    box.innerHTML = '<div style="padding:0 20px;">'
+      + '<div class="fa-bloco"><div class="fa-nome">' + r.aluno + '</div>'
+      + '<div class="fa-sub">Matrícula nº ' + r.matricula + ' · linha ' + r.linha + ' da aba Cadastro</div>'
+      + (r.faltando
+          ? '<div class="fa-tag av" style="margin-top:8px;">' + r.faltando + ' campo(s) em branco</div>'
+          : '<div class="fa-tag ok" style="margin-top:8px;">ficha completa</div>')
+      + '</div>'
+      + '<div class="controls">'
+      + r.campos.map(function(c,i){
+          return '<div class="field' + (c.vazio ? ' fi-vazio' : '') + '">'
+            + '<label for="fi_' + i + '">' + c.rotulo + (c.vazio ? ' <span class="fi-marca">falta</span>' : '') + '</label>'
+            + '<input type="' + (c.tipo === 'date' ? 'date' : 'text') + '" id="fi_' + i + '" value="'
+            + String(c.valor).replace(/"/g,'&quot;') + '">'
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div class="par" style="padding:0 0 16px;">'
+      + '<button class="btn-principal" onclick="salvarFicha(this)">Salvar ficha</button></div>'
+      + '</div>';
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao abrir a ficha.</div>'; }
+}
+
+async function salvarFicha(btn){
+  var r = _FICHA_ABERTA;
+  if(!r) return;
+  var valores = {};
+  r.campos.forEach(function(c,i){
+    var e = document.getElementById('fi_' + i);
+    if(e) valores[c.col] = e.value;
+  });
+
+  var rot = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try{
+    var g = await chamarAPI({ acao:'salvarFichaAluno', linha:r.linha, valores:valores });
+    if(!g.sucesso) mostrarToast(g.erro || 'Erro ao salvar');
+    else if(g.erros && g.erros.length) mostrarToast('Salvo, mas: ' + g.erros.join('; '));
+    else mostrarToast('Ficha salva');
+    if(g.sucesso) abrirFicha(r.aluno);
+  }catch(e){ mostrarToast('Falha ao salvar'); }
+  btn.disabled = false; btn.textContent = rot;
+}
+
+  /* 5.0.0: o card de nivelamento tambem e nominal. Quem decide e o servidor. */
+  (function(){
+    var card = document.getElementById('cardNivelamento');
+    if(!card) return;
+    card.classList.add('hidden');
+    chamarAPI({ acao:'podeVerNivelamento' }).then(function(r){
+      if(r && r.sucesso && r.pode){
+        card.classList.remove('hidden');
+        _montarNiveis(r.niveis);
+        _ajustarTitulosDeSecao();
+      }
+    }).catch(function(){});
+  })();
+
   (function(){
     var card = document.getElementById('cardNR1');
     if(!card) return;
@@ -11768,6 +12651,20 @@ async function abrirFormContrato(tipo){
   [$vTabela, $vDesconto, $vMatricula, $vPrazo, $vParcelas].forEach(el=>{
     if(el) el.addEventListener('input', atualizarPainelValor);
   });
+
+  // 5.0.0: veio do card Nivelamento. Os campos so existem agora, depois que o
+  // formulario foi montado, entao e aqui que o nome entra.
+  if(window._NIV_ORIGEM){
+    const $n = document.getElementById('ctt_NOME_ALUNO');
+    if($n) $n.value = window._NIV_ORIGEM.aluno;
+    const faixa = document.getElementById('cttFaixaNiv');
+    if(faixa){
+      faixa.classList.remove('hidden');
+      faixa.textContent = 'Contrato vindo do nivelamento nº ' + window._NIV_ORIGEM.numero
+        + ' de ' + window._NIV_ORIGEM.aluno
+        + '. Quando você gerar, eu marco o nivelamento como fechado.';
+    }
+  }
 }
 
 document.getElementById('subcard18').addEventListener('click', ()=> abrirFormContrato('18'));
@@ -11825,6 +12722,21 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
         </div>
         ${_ehLink(r.pdfUrl) ? `<a href="${r.pdfUrl}" target="_blank" rel="noopener" style="display:block;margin-top:12px;text-align:center;background:var(--verde-escuro);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:600;">Abrir PDF do contrato</a>` : ''}
       </div>`;
+
+      // 5.0.0: veio do card Nivelamento? marca o prospecto como fechado.
+      if(window._NIV_ORIGEM && r.numeroContrato && !r.jaExistia){
+        const origem = window._NIV_ORIGEM;
+        window._NIV_ORIGEM = null;
+        try{
+          const m = await chamarAPI({ acao:'marcarNivelamentoFechado',
+            linha: origem.linha, situacao: 'Fechou', numeroContrato: r.numeroContrato });
+          if(m && m.sucesso){
+            $res.innerHTML += `<div class="niv-ok" style="margin:0 20px 16px;">Nivelamento nº ${origem.numero} de ${origem.aluno} marcado como fechado.</div>`;
+          }
+        }catch(e){}
+        const faixa = document.getElementById('cttFaixaNiv');
+        if(faixa) faixa.classList.add('hidden');
+      }
     } else {
       $res.innerHTML = `<div class="assess-aviso">${r.erro || 'Erro ao gerar contrato'}</div>`;
     }
