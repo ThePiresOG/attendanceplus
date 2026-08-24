@@ -97,6 +97,35 @@
   .badge-vip{ background:var(--salmao); color:var(--branco); }
   .badge-grupo{ background:var(--verde-claro); color:var(--branco); }
 
+  /* 5.3.0: aula cancelada com aviso previo */
+  .cancel-linha{ padding:6px 20px 0; }
+  .cancel-btn{ display:block; width:100%; box-sizing:border-box; text-align:left;
+    font-family:'Poppins',sans-serif; background:var(--branco); border:1.5px dashed var(--linha);
+    border-radius:12px; padding:11px 13px; cursor:pointer; transition:border-color .15s, background .15s;
+    font-size:0; }
+  .cancel-btn:hover{ border-color:#E5C860; background:#FEFBF2; }
+  .cancel-ico{ display:inline-block; vertical-align:top; font-size:17px; color:#B8973A;
+    width:26px; line-height:1.25; }
+  .cancel-txt{ display:inline-block; vertical-align:top; width:calc(100% - 26px); }
+  .cancel-txt b{ display:block; font-size:13px; color:var(--carvao); font-weight:600; line-height:1.35; }
+  .cancel-txt i{ display:block; font-size:11.5px; color:#8a8a82; font-style:normal;
+    line-height:1.4; margin-top:2px; }
+
+  .cancel-aviso{ margin:8px 20px 0; background:#FDF3D4; border:1.5px solid #E5C860;
+    border-radius:12px; padding:12px 14px; }
+  .cancel-aviso>b{ display:block; font-size:13.5px; color:#7d6318; margin-bottom:6px; }
+  .cancel-aviso>span{ display:block; font-size:12.5px; color:#8a6d1a; line-height:1.55; }
+  .cancel-aviso input{ display:block; width:100%; box-sizing:border-box; margin-top:10px;
+    font-family:'Poppins',sans-serif; font-size:13px; padding:9px 11px;
+    border-radius:9px; border:1.5px solid #E5C860; background:var(--branco); color:var(--carvao); }
+  .cancel-desfazer{ display:block; width:100%; margin-top:9px;
+    font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600;
+    padding:10px 12px; border-radius:9px; border:1.5px solid var(--verde-escuro);
+    background:var(--verde-escuro); color:#fff; cursor:pointer; }
+
+  /* lista travada enquanto a aula esta marcada como cancelada */
+  .lista.aula-cancelada{ opacity:.42; pointer-events:none; }
+
   /* Alerta de aluno sozinho */
   .alerta-sozinho{ margin:10px 20px 0; background:#FDF3D4; border:1.5px solid #E5C860; border-radius:10px; padding:10px 12px; font-size:12.5px; color:#8a6d1a; display:flex; align-items:center; gap:8px; }
 
@@ -1129,6 +1158,25 @@
     <div id="alertaSozinho" class="alerta-sozinho hidden">⚠ <span>Turma de grupo com apenas 1 aluno</span></div>
 
     <div class="presenca-corpo">
+
+    <div class="cancel-linha">
+      <button class="cancel-btn" id="btnCancelarAula">
+        <span class="cancel-ico">&#9888;</span>
+        <span class="cancel-txt">
+          <b>Aula cancelada</b>
+          <i>Todos os alunos avisaram antes que n&atilde;o vinham</i>
+        </span>
+      </button>
+    </div>
+
+    <div class="cancel-aviso hidden" id="cancelAviso">
+      <b>Esta aula n&atilde;o aconteceu.</b>
+      <span>Ela fica registrada para n&atilde;o virar pend&ecirc;ncia, mas <b>n&atilde;o entra na sua folha</b>
+        e n&atilde;o marca falta para nenhum aluno.</span>
+      <input type="text" id="cancelObs" placeholder="Observa&ccedil;&atilde;o (opcional): quem avisou, quando...">
+      <button class="cancel-desfazer" id="btnDesfazerCancel">Desfazer, a aula aconteceu</button>
+    </div>
+
     <div class="lista" id="lista"></div>
 
     <div class="campos-aula">
@@ -3711,7 +3759,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.2.0';
+const APP_VERSAO = '5.3.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3931,8 +3979,13 @@ async function carregarAulaDoDia(){
   try{
     carregarLicoes();
     const r = await chamarAPI({ acao:'aulaDoDia', turmaId: t.turmaId, data: $data.value });
-    $campoComentario.value = r.comentario || '';
-    $campoHomework.value = r.homework || '';
+    // 5.3.0: reabrir uma aula ja marcada como nao realizada volta a tela ao
+    // mesmo estado. Sem isso o professor salvaria por cima e a aula voltaria
+    // a contar na folha sem ninguem perceber.
+    _AULA_CANCELADA = !!r.cancelada;
+    _pintarCancelada();
+    $campoComentario.value = r.cancelada ? '' : (r.comentario || '');
+    $campoHomework.value = r.cancelada ? '' : (r.homework || '');
     atualizarTravaAula();
     $selo.classList.toggle('hidden', !r.existe);
     // se a aula já foi registrada, usa a duração salva; senão, o padrão da turma
@@ -3943,6 +3996,8 @@ async function carregarAulaDoDia(){
       if($dur.selectedIndex < 0) $dur.value = '1';
     }
   } catch(err){
+    _AULA_CANCELADA = false;
+    _pintarCancelada();
     $campoComentario.value = '';
     $campoHomework.value = '';
     $selo.classList.add('hidden');
@@ -4176,7 +4231,8 @@ function atualizarResumo(){
   const limiteTurma = (t.capacidade && t.capacidade < MAX_SLOTS) ? t.capacidade : MAX_SLOTS;
   $qtdPend.textContent = Math.max(0, limiteTurma - t.alunos.length);
   const dataFmt = new Date($data.value + 'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});
-  $dataResumo.textContent = `${dataFmt} · Turma ${t.turmaId} · ${t.dias.join('/')} ${t.horario}`;
+  $dataResumo.textContent = `${dataFmt} · Turma ${t.turmaId} · ${t.dias.join('/')} ${t.horario}`
+    + (_AULA_CANCELADA ? ' · AULA NÃO REALIZADA' : '');
 }
 
 function mostrarToast(msg){
@@ -4184,6 +4240,57 @@ function mostrarToast(msg){
   $toast.classList.add('show');
   setTimeout(()=> $toast.classList.remove('show'), 1800);
 }
+
+/* ============ 5.3.0: aula cancelada com aviso previo ============
+   O professor precisava escolher entre duas mentiras: marcar aula dada e
+   receber por algo que nao houve, ou marcar falta de todo mundo e castigar
+   quem avisou. Agora existe a terceira opcao, que e a verdade. */
+var _AULA_CANCELADA = false;
+
+function _pintarCancelada(){
+  var aviso = document.getElementById('cancelAviso');
+  var btn = document.getElementById('btnCancelarAula');
+  var lista = document.getElementById('lista');
+  if(!aviso || !btn || !lista) return;
+
+  aviso.classList.toggle('hidden', !_AULA_CANCELADA);
+  btn.classList.toggle('hidden', _AULA_CANCELADA);
+  lista.classList.toggle('aula-cancelada', _AULA_CANCELADA);
+
+  // comentario, homework e licao nao fazem sentido em aula que nao houve
+  ['campoComentario','campoHomework','blocoLicoes'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', _AULA_CANCELADA);
+  });
+  atualizarResumo();
+}
+
+document.getElementById('btnCancelarAula').addEventListener('click', function(){
+  var t = turmaAtual();
+  if(!t){ mostrarToast('Escolha a turma primeiro'); return; }
+  var quantos = (t.alunos || []).length;
+  if(!confirm('Marcar a aula de ' + ($data.value.split('-').reverse().join('/'))
+    + ' da turma ' + t.turmaId + ' como NÃO REALIZADA?\n\n'
+    + 'Use isso só quando os ' + quantos + ' aluno(s) avisaram com antecedência.\n\n'
+    + 'A aula fica registrada, mas não entra na sua folha de pagamento.')) return;
+
+  _AULA_CANCELADA = true;
+  // limpa qualquer P/F/R que ja estivesse marcado
+  var marcados = chaveSessao();
+  Object.keys(marcados).forEach(function(k){ delete marcados[k]; });
+  _pintarCancelada();
+  desenharAlunos(t, false, t.capacidade || MAX_SLOTS);
+  mostrarToast('Aula marcada como não realizada');
+});
+
+document.getElementById('btnDesfazerCancel').addEventListener('click', function(){
+  _AULA_CANCELADA = false;
+  document.getElementById('cancelObs').value = '';
+  _pintarCancelada();
+  var t = turmaAtual();
+  if(t) desenharAlunos(t, false, t.capacidade || MAX_SLOTS);
+  mostrarToast('Aula voltou ao normal');
+});
 
 document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
   const btnS = ev.currentTarget;
@@ -4199,12 +4306,17 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
   const t = turmaAtual();
   const marcados = chaveSessao();
   const nomes = Object.keys(marcados);
-  if(nomes.length === 0){ mostrarToast('Marque ao menos um aluno antes de salvar'); return; }
-  // 3.5.0: sem anotacao da aula nao salva. A proxima aula comeca de onde esta parou.
-  if(!_aulaPreenchida()){
-    mostrarToast('Escreva o comentário da aula antes de salvar');
-    abrirAulaDeHoje();
-    return;
+
+  // 5.3.0: aula que nao aconteceu nao tem presenca para marcar nem comentario
+  // para escrever. As duas exigencias abaixo valem so para aula de verdade.
+  if(!_AULA_CANCELADA){
+    if(nomes.length === 0){ mostrarToast('Marque ao menos um aluno antes de salvar'); return; }
+    // 3.5.0: sem anotacao da aula nao salva. A proxima aula comeca de onde esta parou.
+    if(!_aulaPreenchida()){
+      mostrarToast('Escreva o comentário da aula antes de salvar');
+      abrirAulaDeHoje();
+      return;
+    }
   }
   // 3.9.2: lançamento retroativo confirma a data antes de gravar.
   // Aula lançada no dia errado bagunça a folha e some da conferência.
@@ -4233,7 +4345,7 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
   // destravar. Quem cancelava ficava com o botao preso em "Salvando..." e nada
   // acontecia, sem nenhuma explicacao na tela. Agora ela vem antes, e toda
   // saida avisa o motivo.
-  const semMarcacao = t.alunos.length - nomes.length;
+  const semMarcacao = _AULA_CANCELADA ? 0 : (t.alunos.length - nomes.length);
   if(semMarcacao > 0){
     const ok = confirm(semMarcacao + ' aluno(s) sem marcação de presença ou falta.\n\n'
       + 'Salvar mesmo assim?');
@@ -4265,16 +4377,32 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
       $btnSair.style.opacity = '';
     }
   };
-  const registros = nomes.map(nome => ({
-    turmaId: t.turmaId, nivel: t.nivel, professor: t.professor, data: $data.value, aluno: nome, status: marcados[nome]
-  }));
+  // 5.3.0: na aula cancelada todo mundo entra com C, para a ficha do aluno
+  // saber que naquele dia nao houve aula e nao contar falta para ninguem.
+  const registros = _AULA_CANCELADA
+    ? t.alunos.map(nome => ({
+        turmaId: t.turmaId, nivel: t.nivel, professor: t.professor,
+        data: $data.value, aluno: nome, status: 'C'
+      }))
+    : nomes.map(nome => ({
+        turmaId: t.turmaId, nivel: t.nivel, professor: t.professor,
+        data: $data.value, aluno: nome, status: marcados[nome]
+      }));
   mostrarToast('Salvando...');
   try{
     const $dur = document.getElementById('campoDuracao');
     const duracaoAula = $dur ? (Number($dur.value) || 1) : (t.duracaoPadrao || 1);
-    const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: duracaoAula, livro: t.livro || '', comentario: $campoComentario.value.trim(), homework: $campoHomework.value.trim() });
+    const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: duracaoAula,
+      livro: t.livro || '', comentario: $campoComentario.value.trim(),
+      homework: $campoHomework.value.trim(),
+      cancelada: _AULA_CANCELADA
+        ? { ativo: true, observacao: (document.getElementById('cancelObs').value || '').trim() }
+        : null });
     if(resultado.sucesso){
-      mostrarToast('Presença salva para turma ' + t.turmaId);
+      mostrarToast(_AULA_CANCELADA
+        ? 'Aula da turma ' + t.turmaId + ' registrada como não realizada'
+        : 'Presença salva para turma ' + t.turmaId);
+      _AULA_CANCELADA = false;
       if(VEIO_DE_PENDENCIA) setTimeout(voltarDaPendencia, 900);
       else setTimeout(irParaMenu, 900);
     }
@@ -11435,6 +11563,9 @@ function htmlPreviaRelAluno(r){
   linhas.push(['Nível atual', r.nivelAtual || '—']);
   linhas.push(['Avaliações', r.notas.length ? r.notas.length + ' lançamento(s)' : 'nenhuma lançada ainda']);
   linhas.push(['Comentários de aula', r.comentarios.length ? r.comentarios.length + ' comentário(s)' : 'nenhum']);
+  if(r.canceladas && r.canceladas.length){
+    linhas.push(['Aulas não realizadas', r.canceladas.length + ' dia(s) em que a turma toda avisou']);
+  }
 
   h += '<div class="fa-bloco"><h4>O que o sistema encontrou</h4><div class="fa-lista">'
     + linhas.map(function(l){ return '<div><span>' + l[0] + '</span><b>' + l[1] + '</b></div>'; }).join('')
