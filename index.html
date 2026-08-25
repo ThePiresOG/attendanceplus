@@ -669,6 +669,7 @@
   .ct-alunos{ border-top:1px solid var(--linha); padding-top:10px; }
   .ct-aluno{ font-size:13px; color:var(--carvao); padding:4px 0; display:flex; gap:8px; align-items:center; }
   .ct-aluno .num{ font-size:10px; color:#9a9a94; width:16px; }
+  .ct-porque{ font-size:11px; color:#8a8a82; margin-top:6px; font-style:italic; }
   .ct-vaga{ font-size:12.5px; color:#9a9a94; padding:4px 0 4px 24px; font-style:italic; }
   @media (min-width:820px){
     .ct-grade{ grid-template-columns:1fr 1fr 1fr; }
@@ -3774,7 +3775,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.4.1';
+const APP_VERSAO = '5.4.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -6628,6 +6629,51 @@ function _linhaProgresso(turmaId){
     + (p.tituloProxima ? ' ' + p.tituloProxima : '') + '</div>';
 }
 
+/* ============ 5.4.2: busca de turma que sabe o que e nivel ============
+   O jeito antigo juntava todos os campos num texto so e pedia que cada palavra
+   aparecesse em algum lugar. Isso e generoso demais: "b1" batia dentro de
+   qualquer coisa, inclusive no nome de um aluno ou no nome do livro, e turma
+   A2 aparecia numa busca por B1.
+   Agora um termo que tem cara de nivel (a1, a2.1, b2...) so bate no campo
+   nivel, e ainda por prefixo: "b1" acha B1, B1.1 e B1.2, e nunca B2.
+   A funcao devolve TAMBEM onde cada termo bateu, para a tela poder mostrar. */
+function _ehNivel(t){ return /^[abc][12](\.[12])?$/.test(t); }
+
+function _casaTurma(t, palavras, norm){
+  var campos = [
+    ['turma',      String(t.turmaId || '')],
+    ['professor',  String(t.professor || '')],
+    ['nível',      String(t.nivel || '')],
+    ['livro',      String(t.livro || '')],
+    ['dias',       String(t.dias || '')],
+    ['horário',    String(t.horario || '')],
+    ['modalidade', String(t.modalidade || '')],
+    ['tipo',       String(t.tipo || '')],
+    ['aluno',      (t.alunos || []).join(' ')]
+  ];
+  var porque = [];
+
+  for(var i = 0; i < palavras.length; i++){
+    var p = palavras[i], achou = null;
+
+    if(_ehNivel(p)){
+      // nivel so vale contra o campo nivel, e por comeco
+      var nv = norm(String(t.nivel || ''));
+      if(nv && nv.indexOf(p) === 0) achou = 'nível ' + t.nivel;
+    } else {
+      for(var c = 0; c < campos.length; c++){
+        if(norm(campos[c][1]).indexOf(p) !== -1){
+          achou = campos[c][0] + (campos[c][0] === 'aluno' ? '' : ' ' + campos[c][1]);
+          break;
+        }
+      }
+    }
+    if(!achou) return null;      // faltou um termo, a turma nao entra
+    porque.push(achou);
+  }
+  return porque;
+}
+
 function _semAcentoCli(t){
   return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -6649,11 +6695,10 @@ async function filtrarTurmasConsulta(){
   // Antes o sistema procurava a frase inteira, entao "lidia sab online" nao
   // achava nada, porque esse texto exato nao existe em lugar nenhum.
   var palavras = termo.split(/\s+/).filter(function(x){ return x; });
-  var achadas = lista.filter(function(t){
-    var alvo = _semAcentoCli([t.turmaId, t.professor, t.nivel, t.livro, t.dias,
-                              t.horario, t.modalidade, t.tipo,
-                              (t.alunos || []).join(' ')].join(' '));
-    return palavras.every(function(p){ return alvo.indexOf(p) !== -1; });
+  var achadas = [];
+  lista.forEach(function(t){
+    var porque = _casaTurma(t, palavras, _semAcentoCli);
+    if(porque){ t._porque = porque; achadas.push(t); }
   });
 
   if(!achadas.length){
@@ -6665,6 +6710,8 @@ async function filtrarTurmasConsulta(){
   }
 
   box.innerHTML = achadas.map(function(t){
+    var porque = (t._porque && t._porque.length)
+      ? '<div class="ct-porque">achou por: ' + t._porque.join(' · ') + '</div>' : '';
     var alunos = (t.alunos || []).map(function(n, i){
       return '<div class="ct-aluno"><span class="num">' + (i+1) + '</span>' + n + '</div>';
     }).join('');
@@ -6693,6 +6740,7 @@ async function filtrarTurmasConsulta(){
       + (alunos || '<div class="ct-vaga">Turma sem aluno ativo</div>')
       + vagas
       + (extras.length ? '<div class="ct-vaga">' + extras.join(' &middot; ') + '</div>' : '')
+      + porque
       + '</div>'
       + _linhaProgresso(t.turmaId)
       + '</div>';
@@ -10626,13 +10674,11 @@ function desenharTurmas(){
   var termo = _busca((document.getElementById('turmaBusca') || {}).value || '').trim();
   var todas = window._TURMAS_LISTA || [];
 
+  var _pal = termo ? termo.split(/\s+/).filter(function(x){ return x; }) : [];
   var lista = !termo ? todas : todas.filter(function(t){
-    var alvo = _busca([
-      t.turmaId, t.nivel, t.livro, t.professor, t.dias, t.horario,
-      t.modalidade, t.tipo, (t.alunos || []).join(' ')
-    ].join(' '));
-    // cada palavra digitada precisa aparecer em algum lugar
-    return termo.split(/\s+/).every(function(p){ return alvo.indexOf(p) !== -1; });
+    var porque = _casaTurma(t, _pal, _busca);
+    if(porque) t._porque = porque;
+    return !!porque;
   });
 
   cont.textContent = termo
@@ -11480,7 +11526,7 @@ async function pdfNivelamento(i){
   var palco = document.getElementById('nivPalco');
   palco.innerHTML =
       '<div class="doc-pdf">'
-    + '<div class="doc-cab"><img src="data:image/png;base64,'+LOGO_REL_COR+'" class="doc-logo">'
+    + '<div class="doc-cab"><img src="' + LOGO_REL_COR + '" class="doc-logo">'
     + '<div><h1>Nivelamento</h1><span>Espresso English · Sorocaba/SP</span></div></div>'
     + '<div class="doc-num">Nivelamento nº '+x.numero+'</div>'
     + '<table class="doc-tab">'
@@ -11510,7 +11556,17 @@ async function pdfNivelamento(i){
       nomeArquivo:nome, numero:x.numero, linha:x.linha });
     mostrarToast(g && g.sucesso ? 'PDF salvo no Drive' : 'PDF baixado');
     if(g && g.sucesso) carregarListaNiv();
-  }catch(e){ mostrarToast('Falha ao gerar o PDF'); }
+  }catch(e){
+    // 5.4.2: antes so aparecia "Falha ao gerar o PDF" e sumia em 2 segundos.
+    // Sem o motivo na tela, nao dava para saber o que tinha quebrado.
+    mostrarToast('Falha ao gerar o PDF');
+    var box = document.getElementById('nivListaResultado');
+    if(box) box.insertAdjacentHTML('afterbegin',
+      '<div class="msg-bloqueio" style="margin-bottom:10px;">'
+      + '<b>Não consegui gerar o PDF do nivelamento nº ' + x.numero + '.</b><br>'
+      + (e && e.message ? e.message : e) + '</div>');
+    console.error('pdfNivelamento:', e);
+  }
   palco.innerHTML = '';
 }
 
@@ -11665,7 +11721,7 @@ async function gerarPdfRelAluno(btn){
   }).join('; ');
 
   var html = '<div class="doc-pdf">'
-    + '<div class="doc-cab"><img src="data:image/png;base64,' + LOGO_REL_COR + '" class="doc-logo">'
+    + '<div class="doc-cab"><img src="' + LOGO_REL_COR + '" class="doc-logo">'
     + '<div><h1>Relatório de acompanhamento</h1>'
     + '<span>Espresso English · Sorocaba/SP</span></div></div>';
 
