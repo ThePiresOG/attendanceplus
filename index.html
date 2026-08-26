@@ -342,6 +342,39 @@
   .ren-resumo .r{ font-size:10.5px; color:var(--verde-medio); }
   .ren-resumo div.alerta{ background:#FBE9E5; }
   .ren-resumo div.alerta .n{ color:#8a3b2d; }
+  /* ---------- 5.5.0: home ---------- */
+  .home-secao{ margin:14px 20px 8px; font-size:11px; letter-spacing:1.1px;
+    text-transform:uppercase; color:#8a8a84; font-weight:600; }
+  .home-aviso{ display:block; width:100%; box-sizing:border-box; text-align:left;
+    font-family:'Poppins',sans-serif; margin:0 20px 8px; width:calc(100% - 40px);
+    background:var(--branco); border:0; border-left:3px solid var(--linha);
+    padding:12px 14px; cursor:pointer; font-size:0; }
+  .home-aviso.atrasado{ border-left-color:var(--salmao); }
+  .home-aviso.perto{ border-left-color:#EF9F27; }
+  .home-aviso.info{ border-left-color:var(--azul-claro); }
+  .home-aviso .ha-txt{ display:inline-block; vertical-align:top; width:calc(100% - 22px); }
+  .home-aviso b{ display:block; font-size:14px; font-weight:600; color:var(--carvao); line-height:1.35; }
+  .home-aviso i{ display:block; font-size:12px; font-style:normal; color:#7d7d76;
+    line-height:1.5; margin-top:3px; }
+  .home-aviso .ha-seta{ display:inline-block; vertical-align:top; width:22px;
+    text-align:right; font-size:15px; color:var(--verde-escuro); line-height:1.4; }
+
+  .home-limpo{ margin:0 20px 8px; background:var(--branco); border:1px solid var(--linha);
+    border-radius:12px; padding:18px 16px; text-align:center; }
+  .home-limpo span{ font-size:22px; color:var(--verde-claro); }
+  .home-limpo b{ display:block; font-size:14px; color:var(--carvao); margin-top:4px; }
+  .home-limpo i{ display:block; font-size:12px; font-style:normal; color:#7d7d76; margin-top:3px; }
+
+  .home-hoje{ margin:0 20px 8px; background:var(--branco); border:1px solid var(--linha);
+    border-radius:12px; padding:6px 14px; }
+  .home-aula{ display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    padding:9px 0; border-top:1px solid #F1EFE8; }
+  .home-aula:first-child{ border-top:0; }
+  .home-aula-t{ font-size:13px; color:var(--carvao); }
+  .home-aula-t small{ display:block; font-size:11.5px; color:#8a8a82; margin-top:2px; }
+  .home-aula-h{ font-size:12.5px; color:#7d7d76; white-space:nowrap; }
+  .home-aula-h.feito{ color:var(--verde-claro); font-weight:600; }
+
   .nov-banner{ margin:0 20px 10px; background:#EDF1EE; border-left:3px solid var(--verde-claro); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--carvao); line-height:1.5; }
   .nov-banner b{ color:var(--verde-escuro); }
   .nov-banner ul{ margin:7px 0 0; padding-left:18px; }
@@ -353,7 +386,7 @@
 
 
   /* ===== 2.3.0: PENDENCIAS DE PRESENCA ===== */
-  .pend-box{ margin:0 20px 10px; border-radius:12px; padding:13px 15px; background:#FDF3D4; border-left:3px solid #D9A441; }
+  .pend-box{ margin:0 20px 8px; border-radius:0; padding:12px 14px; background:var(--branco); border-left:3px solid var(--salmao); }
   .pend-box.critico{ background:#FBE9E5; border-left-color:var(--excluir); }
   .pend-topo{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .pend-titulo{ font-size:13.5px; font-weight:600; color:#7a5c14; line-height:1.4; }
@@ -1244,9 +1277,21 @@
       </div>
           <div class="header-alca" title="Arraste para ajustar a altura"></div>
     </header>
-    <div id="resumoSemana" class="hidden" style="margin:0 20px 4px; padding:12px 16px; background:var(--perola); border-radius:12px; font-size:13px; color:var(--verde-escuro);"></div>
     <div id="novidadesBanner" class="nov-banner hidden"></div>
+
+    <div class="home-secao hidden" id="homeTituloPrecisa">Precisa de você</div>
     <div id="pendenciasBanner" class="pend-box hidden"></div>
+    <div id="homeAvisos"></div>
+    <div class="home-limpo hidden" id="homeLimpo">
+      <span aria-hidden="true">&#10003;</span>
+      <b>Tudo em dia</b>
+      <i id="homeLimpoSub"></i>
+    </div>
+
+    <div class="home-secao hidden" id="homeTituloHoje">Hoje</div>
+    <div id="homeHoje"></div>
+
+    <div id="resumoSemana" class="hidden" style="margin:0 20px 4px; padding:12px 16px; background:var(--perola); border-radius:12px; font-size:13px; color:var(--verde-escuro);"></div>
         <div class="menu-opcoes" id="menuCards">
       <div class="sec-titulo" data-sec="Minhas aulas">Minhas aulas</div>
       <button class="menu-card" id="cardPresenca">
@@ -1733,6 +1778,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card hidden" id="recepCardNivelamento">
+        <div class="menu-card-icone">&#128218;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Nivelamento</span>
+          <span class="menu-card-sub">Prospecto que fez o teste, hor&aacute;rios e convers&atilde;o</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardRelAluno">
         <div class="menu-card-icone">&#128203;</div>
         <div class="menu-card-txt">
@@ -1869,6 +1922,14 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Valores x contratos</span>
           <span class="menu-card-sub">Conferir e sincronizar as mensalidades</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card hidden" id="recepCardConfig">
+        <div class="menu-card-icone">&#9881;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Configura&ccedil;&otilde;es</span>
+          <span class="menu-card-sub">Tempo de sess&atilde;o e ajustes do app</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -3097,6 +3158,26 @@
       <div class="assess-resultado" id="usrResultado"></div>
     </div>
 
+    <div class="recep-painel hidden" id="painelConfig">
+      <div class="nv-wrap">
+        <section class="nv-cartao">
+          <h3 class="nv-secao"><span>1</span> Sess&atilde;o</h3>
+          <div class="nv-grid">
+            <div class="nv-campo nv-full">
+              <label for="cfgInativo">Sair sozinho depois de quantos minutos parado</label>
+              <input type="number" id="cfgInativo" min="1" max="240" step="1">
+              <small class="nv-dica">Vale para todos os usu&aacute;rios. O app avisa 30 segundos antes
+                e qualquer toque na tela reinicia a contagem.</small>
+            </div>
+          </div>
+        </section>
+        <div id="cfgResultado"></div>
+        <div class="nv-acoes-fixas">
+          <button class="btn-principal" id="btnSalvarCfg">Salvar configura&ccedil;&otilde;es</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ 5.1.0 NIVELAMENTO ============ -->
     <div class="recep-painel hidden" id="painelNivelamento">
       <div class="menu-opcoes" id="nivSubcards">
@@ -3775,7 +3856,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.5.0';
+const APP_VERSAO = '5.6.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4517,6 +4598,7 @@ $btnEntrar.addEventListener('click', async ()=>{
       aplicarPermissoes();
       abrirRecepcao();
       carregarPendencias(nome);
+      carregarHome();
       return;
     }
     if(PERM.presenca){
@@ -4539,6 +4621,7 @@ $btnEntrar.addEventListener('click', async ()=>{
     aplicarPermissoes();
     mostrarNovidades(nome);
     carregarPendencias(nome);
+    carregarHome();
     ligarAutoAltura();
     if(PERM.presenca){
       carregarResumoSemana(nome);
@@ -10871,12 +10954,113 @@ async function voltarDaPendencia(){
 
 var PENDENCIAS = null;
 
+/* ==================== 5.5.0: HOME ====================
+   O menu deixa de ser so uma grade de cards e passa a responder "o que eu
+   preciso fazer agora". Uma chamada so ao servidor, e nada aqui e inventado:
+   presenca atrasada ja vem do banner que existia, o resto vem do homeResumo.
+   Licao de casa NAO entra: uma licao pode durar tres semanas, e cobrar isso
+   viraria acusacao de algo que nao e falha. */
+var HOME = null;
+
+async function carregarHome(){
+  var avisos = document.getElementById('homeAvisos');
+  var hojeBox = document.getElementById('homeHoje');
+  if(!avisos || !hojeBox) return;
+
+  try{
+    HOME = await chamarAPI({ acao:'homeResumo' });
+  }catch(e){ HOME = null; }
+  desenharHome();
+}
+
+function desenharHome(){
+  var avisos = document.getElementById('homeAvisos');
+  var hojeBox = document.getElementById('homeHoje');
+  var tPrecisa = document.getElementById('homeTituloPrecisa');
+  var tHoje = document.getElementById('homeTituloHoje');
+  var limpo = document.getElementById('homeLimpo');
+  var pend = document.getElementById('pendenciasBanner');
+  if(!avisos || !hojeBox) return;
+
+  var temPendencia = pend && !pend.classList.contains('hidden');
+  var html = '';
+
+  function aviso(cls, titulo, sub, acao){
+    return '<button class="home-aviso ' + cls + '"' + (acao ? ' data-ir="' + acao + '"' : '') + '>'
+      + '<span class="ha-txt"><b>' + titulo + '</b><i>' + sub + '</i></span>'
+      + '<span class="ha-seta">&rsaquo;</span></button>';
+  }
+
+  if(HOME && HOME.fechamento){
+    // o texto muda conforme o estado. Se parabenizasse sempre, viraria enfeite
+    // e o professor pararia de ler.
+    html += aviso('perto', HOME.fechamento.rotulo,
+      temPendencia ? 'Resolva as pendências acima antes de fechar'
+                   : 'Todos os lançamentos estão em dia! Parabéns',
+      'financeiro');
+  }
+
+  if(HOME && HOME.retornoNiv){
+    var r = HOME.retornoNiv;
+    html += aviso('info',
+      r.total === 1 ? '1 nivelamento aguardando retorno'
+                    : r.total + ' nivelamentos aguardando retorno',
+      r.primeiro.aluno + (r.primeiro.quando ? ' · retorno era ' + r.primeiro.quando : ''),
+      'nivelamento');
+  }
+
+  avisos.innerHTML = html;
+
+  var temAlgo = temPendencia || !!html;
+  if(tPrecisa) tPrecisa.classList.toggle('hidden', !temAlgo);
+
+  // estado limpo: so aparece quando nao ha nada mesmo. A maioria dos dias vai
+  // ser assim, e abrir o app num lugar calmo importa.
+  if(limpo){
+    var mostrarLimpo = !temAlgo;
+    limpo.classList.toggle('hidden', !mostrarLimpo);
+    if(mostrarLimpo){
+      var sub = document.getElementById('homeLimpoSub');
+      if(sub) sub.textContent = 'Nenhuma presença atrasada.';
+      if(tPrecisa) tPrecisa.classList.remove('hidden');
+    }
+  }
+
+  /* ---------- agenda de hoje ---------- */
+  var aulas = (HOME && HOME.hoje) ? HOME.hoje : [];
+  if(tHoje) tHoje.classList.toggle('hidden', !aulas.length);
+  hojeBox.innerHTML = aulas.length
+    ? '<div class="home-hoje">' + aulas.map(function(a){
+        var marca = a.situacao === 'lancada' ? '✓ lançada'
+                  : (a.situacao === 'cancelada' ? 'não houve aula' : a.horario);
+        var cls = a.situacao === 'lancada' ? ' feito' : '';
+        return '<div class="home-aula">'
+          + '<span class="home-aula-t">Turma ' + a.turmaId + ' · ' + a.nivel
+          + '<small>' + String(a.modalidade || '').toLowerCase()
+          + ' · ' + a.alunos + ' aluno(s)'
+          + (a.professor && !(PERM && PERM.presenca) ? ' · ' + a.professor : '')
+          + '</small></span>'
+          + '<span class="home-aula-h' + cls + '">' + marca + '</span>'
+          + '</div>';
+      }).join('') + '</div>'
+    : '';
+
+  Array.prototype.forEach.call(avisos.querySelectorAll('.home-aviso'), function(b){
+    b.addEventListener('click', function(){
+      var destino = this.dataset.ir;
+      var alvo = destino === 'nivelamento' ? document.getElementById('cardNivelamento')
+               : document.getElementById('cardFinanceiro');
+      if(alvo && !alvo.classList.contains('hidden')) alvo.click();
+    });
+  });
+}
+
 async function carregarPendencias(nome){
   var box = document.getElementById('pendenciasBanner');
   if(!box) return;
   try{
     var r = await chamarAPI({ acao:'pendenciasPresenca', professor: (PERM && PERM.presenca) ? nome : '' });
-    if(!r.sucesso || !r.total){ box.classList.add('hidden'); return; }
+    if(!r.sucesso || !r.total){ box.classList.add('hidden'); desenharHome(); return; }
     PENDENCIAS = r;
 
     // 3.6.8: o aviso passou a cobrir o mes inteiro
@@ -10900,6 +11084,8 @@ async function carregarPendencias(nome){
       + '</div><div class="pend-lista hidden" id="pendLista"></div>';
     box.classList.remove('hidden');
 
+    desenharHome();
+
     document.getElementById('pendToggle').addEventListener('click', function(){
       var lista = document.getElementById('pendLista');
       var aberto = !lista.classList.contains('hidden');
@@ -10909,6 +11095,7 @@ async function carregarPendencias(nome){
     });
   }catch(e){
     box.classList.add('hidden');
+    desenharHome();
   }
 }
 
@@ -11045,11 +11232,169 @@ function aplicarPermissoes(){
   // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
   // e Admin via o card da NR-1 solto, sem o titulo em cima.
 
+/* ==================== 5.6.0: EDITAR NIVELAMENTO ==================== */
+function editarNivelamento(i){
+  var x = _LISTA_NIV[i];
+  if(!x) return;
+
+  var fundo = document.createElement('div');
+  fundo.className = 'ap-fundo';
+  var campo = function(id, rot, valor, tipo){
+    return '<div class="nv-campo nv-full" style="margin-bottom:10px;">'
+      + '<label for="ed_' + id + '">' + rot + '</label>'
+      + '<input type="' + (tipo || 'text') + '" id="ed_' + id + '" value="'
+      + String(valor === null || valor === undefined ? '' : valor).replace(/"/g,'&quot;') + '">'
+      + '</div>';
+  };
+
+  fundo.innerHTML = '<div class="ap-cx" style="max-width:440px;">'
+    + '<div class="ap-topo"><b>Editar nivelamento nº ' + x.numero + '</b>'
+    + '<span>Número, data e quem aplicou não mudam</span></div>'
+    + '<div class="ap-lista">'
+    + campo('aluno','Nome do aluno', x.aluno)
+    + campo('telefone','Telefone', x.telefone, 'tel')
+    + campo('email','E-mail', x.email, 'email')
+    + campo('disponibilidade','Disponibilidade', x.disponibilidade)
+    + campo('mensalidade','Mensalidade cotada', x.mensalidade ? _brl(x.mensalidade) : '')
+    + campo('desconto','Desconto', x.desconto ? _brl(x.desconto) : '')
+    + campo('matricula','Matrícula', x.matricula ? _brl(x.matricula) : '')
+    + campo('formaPagamento','Forma de pagamento', x.formaPagamento)
+    + campo('obsOferta','Observação da oferta', x.obsOferta)
+    + campo('observacoes','Como chegou até a gente', x.observacoes)
+    + campo('retornarEm','Retornar em (dd/mm/aaaa)', x.retornarEm)
+    + '</div>'
+    + '<div class="ap-rod"><div style="flex:1;"></div>'
+    + '<button class="ren-btn sec" id="edCancelar">Cancelar</button>'
+    + '<button class="pend-acao" id="edOk">Salvar</button>'
+    + '</div></div>';
+  document.body.appendChild(fundo);
+
+  fundo.querySelector('#edCancelar').onclick = function(){ fundo.remove(); };
+  fundo.querySelector('#edOk').onclick = async function(){
+    var btn = this;
+    var v = function(id){ return (document.getElementById('ed_' + id) || {}).value || ''; };
+    if(!v('aluno').trim()){ mostrarToast('O nome não pode ficar vazio'); return; }
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try{
+      var r = await chamarAPI({ acao:'editarNivelamento', linha: x.linha,
+        aluno: v('aluno'), telefone: v('telefone'), email: v('email'),
+        disponibilidade: v('disponibilidade'),
+        mensalidade: v('mensalidade'), desconto: v('desconto'), matricula: v('matricula'),
+        formaPagamento: v('formaPagamento'), obsOferta: v('obsOferta'),
+        observacoes: v('observacoes'), retornarEm: v('retornarEm') });
+
+      if(!r.sucesso){ mostrarToast(r.erro || 'Erro ao salvar'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
+      fundo.remove();
+      mostrarToast('Nivelamento de ' + r.aluno + ' atualizado');
+      carregarListaNiv();
+    }catch(e){
+      mostrarToast('Falha ao salvar');
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  };
+}
+
+/* ==================== 5.6.0: CONFIGURACOES ==================== */
+document.getElementById('recepCardConfig').addEventListener('click', async function(){
+  abrirPainelRecep('painelConfig','Configurações');
+  document.getElementById('cfgResultado').innerHTML = '';
+  try{
+    var r = await chamarAPI({ acao:'lerConfig' });
+    document.getElementById('cfgInativo').value = r.minutosInatividade || 5;
+  }catch(e){}
+});
+
+document.getElementById('btnSalvarCfg').addEventListener('click', async function(){
+  var btn = this, box = document.getElementById('cfgResultado');
+  var min = Number(document.getElementById('cfgInativo').value);
+  if(!(min >= 1 && min <= 240)){
+    box.innerHTML = '<div class="assess-aviso">Informe de 1 a 240 minutos.</div>'; return;
+  }
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try{
+    var r = await chamarAPI({ acao:'salvarConfig', minutosInatividade: min });
+    box.innerHTML = r.sucesso
+      ? '<div class="niv-ok">Pronto. A sessão passa a fechar depois de ' + r.minutosInatividade + ' minutos parado.</div>'
+      : '<div class="assess-aviso">' + (r.erro || 'Erro') + '</div>';
+    if(r.sucesso){ MINUTOS_INATIVIDADE = r.minutosInatividade; reiniciarRelogioInatividade(); }
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>'; }
+  btn.disabled = false; btn.textContent = 'Salvar configurações';
+});
+
+/* ==================== 5.6.0: SAIR SOZINHO ====================
+   O app fica aberto no balcao e na sala. Deixar a sessao viva a noite toda
+   expoe contrato, valor e dado de aluno para quem passar. */
+var MINUTOS_INATIVIDADE = 5;
+var _relogioInat = null, _relogioAviso = null, _avisoInat = null;
+
+function _estouLogado(){
+  return !!professorLogado
+    && document.getElementById('telaLogin').classList.contains('hidden');
+}
+
+function encerrarPorInatividade(){
+  _fecharAvisoInat();
+  if(!_estouLogado()) return;
+  if(typeof _navLimpar === 'function') _navLimpar();
+  professorLogado = null;
+  $loginSenha.value = '';
+  ['telaMenu','telaApp','telaAula','telaNotas','telaAssessment','telaMateriais',
+   'telaFinanceiro','telaDashboard','telaRecepcao','telaHistorico','telaSenha'
+  ].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.add('hidden');
+  });
+  $telaLogin.classList.remove('hidden');
+  mostrarToast('Sessão encerrada por inatividade');
+}
+
+function _fecharAvisoInat(){
+  if(_avisoInat){ _avisoInat.remove(); _avisoInat = null; }
+}
+
+function _avisarInatividade(){
+  if(!_estouLogado()) return;
+  _fecharAvisoInat();
+  _avisoInat = document.createElement('div');
+  _avisoInat.className = 'ap-fundo';
+  _avisoInat.innerHTML = '<div class="ap-cx" style="max-width:340px;">'
+    + '<div class="sai-cx">'
+    + '<div class="sai-tit">Ainda está aí?</div>'
+    + '<div class="sai-sub">A sessão fecha em 30 segundos por inatividade.</div>'
+    + '<div class="sai-btns"><button class="sai-btn vai" id="inatFico">Continuar</button></div>'
+    + '</div></div>';
+  document.body.appendChild(_avisoInat);
+  _avisoInat.querySelector('#inatFico').onclick = function(){ reiniciarRelogioInatividade(); };
+}
+
+function reiniciarRelogioInatividade(){
+  _fecharAvisoInat();
+  clearTimeout(_relogioInat); clearTimeout(_relogioAviso);
+  if(!_estouLogado()) return;
+  var ms = Math.max(1, Number(MINUTOS_INATIVIDADE) || 5) * 60000;
+  _relogioAviso = setTimeout(_avisarInatividade, Math.max(1000, ms - 30000));
+  _relogioInat  = setTimeout(encerrarPorInatividade, ms);
+}
+
+['click','keydown','touchstart','scroll'].forEach(function(ev){
+  document.addEventListener(ev, function(){
+    // enquanto o aviso esta na tela, so o botao Continuar conta
+    if(_avisoInat) return;
+    if(_estouLogado()) reiniciarRelogioInatividade();
+  }, true);
+});
+
 /* ==================== 5.1.0 NIVELAMENTO ==================== */
 var _NIVEIS = [];
 var _TURMAS_NIV = [];
 var _LISTA_NIV = [];
 var _NIV_PODE_PDF = false;
+
+document.getElementById('recepCardNivelamento').addEventListener('click', function(){
+  abrirPainelRecep('painelNivelamento','Nivelamento');
+  mostrarSubcardsNiv();
+});
 
 document.getElementById('cardNivelamento').addEventListener('click', function(){
   // 5.0.1: o card mora no menu da gestao, mas o painel mora dentro da tela da
@@ -11309,6 +11654,7 @@ async function carregarListaNiv(){
     box.innerHTML = _LISTA_NIV.map(function(x,i){
       var cls = x.situacao === 'Fechou' ? 'ok' : (x.situacao === 'Não fechou' ? 'no' : 'av');
       var acoes = [];
+      acoes.push('<button class="ren-btn sec" onclick="editarNivelamento('+i+')">Editar</button>');
       if(_NIV_PODE_PDF) acoes.push('<button class="ren-btn" onclick="pdfNivelamento('+i+')">PDF</button>');
       if(x.situacao !== 'Fechou'){
         acoes.push('<button class="ren-btn" onclick="nivVirarContrato('+i+')">Gerar contrato</button>');
@@ -11513,8 +11859,7 @@ async function carregarKpiNiv(){
       + '<div class="kpi-bloco"><h4>Por nível de entrada</h4>'+barra(r.porNivel,'nivel')+'</div>'
       + ((r.porObjetivo && r.porObjetivo.length)
           ? '<div class="kpi-bloco"><h4>Por objetivo</h4>'+barra(r.porObjetivo,'objetivo')+'</div>' : '')
-      + (r.porOrigem.length
-          ? '<div class="kpi-bloco"><h4>Por origem</h4>'+barra(r.porOrigem,'texto')+'</div>' : '');
+      ;
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao calcular.</div>'; }
 }
 
@@ -11523,52 +11868,51 @@ async function pdfNivelamento(i){
   var x = _LISTA_NIV[i];
   if(!x) return;
   mostrarToast('Montando o PDF...');
-  var palco = document.getElementById('nivPalco');
-  palco.innerHTML =
-      '<div class="doc-pdf">'
-    + '<div class="doc-cab"><img src="' + LOGO_REL_COR + '" class="doc-logo">'
-    + '<div><h1>Nivelamento</h1><span>Espresso English · Sorocaba/SP</span></div></div>'
-    + '<div class="doc-num">Nivelamento nº '+x.numero+'</div>'
-    + '<table class="doc-tab">'
-    + '<tr><th>Aluno</th><td>'+x.aluno+'</td></tr>'
-    + '<tr><th>Resultado</th><td><b>'+x.nivel+'</b></td></tr>'
-    + '<tr><th>Data</th><td>'+x.data+(x.horaInicio ? ', das '+x.horaInicio+' às '+x.horaFim : '')+'</td></tr>'
-    + '<tr><th>Professor(a)</th><td>'+(x.professor||'—')+'</td></tr>'
-    + '<tr><th>Disponibilidade</th><td>'+(x.disponibilidade||'—')+'</td></tr>'
-    + '<tr><th>Horários sugeridos</th><td>'+(x.horarios ? x.horarios.split(' | ').join('<br>') : '—')+'</td></tr>'
-    + '<tr><th>Observações</th><td>'+(x.observacoes||'—')+'</td></tr>'
-    + '</table>'
-    + '<p class="doc-rodape">Documento gerado pelo AttendancePlus em '
-    + new Date().toLocaleDateString('pt-BR')+'.</p>'
-    + '</div>';
 
-  var nome = 'Nivelamento_'+x.numero+'_'+x.aluno.replace(/\s+/g,'_');
-  try{
-    var blob = await html2pdf().set({
-      margin:[10,10,10,10], filename:nome+'.pdf',
-      image:{type:'jpeg',quality:0.96}, html2canvas:{scale:2,useCORS:true},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    }).from(palco.firstElementChild).outputPdf('blob');
+  // 5.6.0: passa a usar nr1GerarPdf, o mesmo caminho do comprovante do
+  // freelancer, que ja funciona no app ha versoes. A minha versao anterior
+  // montava o html2pdf na mao e nao gerava.
+  var html = '<div class="rc-pag">'
+    + nr1Cabecalho('NIVELAMENTO', 'Nº ' + x.numero + ' · ' + x.data
+        + (x.horaInicio ? ' · das ' + x.horaInicio + ' às ' + x.horaFim : ''))
+    + '<table class="rc-tab">'
+    + '<tr><th>Aluno</th><td>' + x.aluno + '</td></tr>'
+    + '<tr><th>Resultado</th><td><b>Nível ' + x.nivel + '</b></td></tr>'
+    + (x.objetivo ? '<tr><th>Objetivo</th><td>' + x.objetivo + '</td></tr>' : '')
+    + (x.telefone ? '<tr><th>Telefone</th><td>' + x.telefone + '</td></tr>' : '')
+    + (x.email ? '<tr><th>E-mail</th><td>' + x.email + '</td></tr>' : '')
+    + '<tr><th>Professor(a)</th><td>' + (x.professor || '—') + '</td></tr>'
+    + '<tr><th>Disponibilidade</th><td>' + (x.disponibilidade || '—') + '</td></tr>'
+    + '<tr><th>Horários sugeridos</th><td>'
+    + (x.horarios ? x.horarios.split(' | ').join('<br>') : '—') + '</td></tr>'
+    + (x.observacoes ? '<tr><th>Observações</th><td>' + x.observacoes + '</td></tr>' : '')
+    + '</table>';
 
-    _baixarBlob(blob, nome+'.pdf');
-    var b64 = await _blobParaBase64(blob);
-    var g = await chamarAPI({ acao:'arquivarPdfNivelamento', base64:b64,
-      nomeArquivo:nome, numero:x.numero, linha:x.linha });
-    mostrarToast(g && g.sucesso ? 'PDF salvo no Drive' : 'PDF baixado');
-    if(g && g.sucesso) carregarListaNiv();
-  }catch(e){
-    // 5.4.2: antes so aparecia "Falha ao gerar o PDF" e sumia em 2 segundos.
-    // Sem o motivo na tela, nao dava para saber o que tinha quebrado.
-    mostrarToast('Falha ao gerar o PDF');
-    var box = document.getElementById('nivListaResultado');
-    if(box) box.insertAdjacentHTML('afterbegin',
-      '<div class="msg-bloqueio" style="margin-bottom:10px;">'
-      + '<b>Não consegui gerar o PDF do nivelamento nº ' + x.numero + '.</b><br>'
-      + (e && e.message ? e.message : e) + '</div>');
-    console.error('pdfNivelamento:', e);
+  if(x.mensalidade || x.matricula){
+    var fin = (x.mensalidade || 0) - (x.desconto || 0);
+    html += '<p style="font-size:11px;letter-spacing:1.4px;color:#5A7568;'
+      + 'font-weight:700;margin:18px 0 8px;">CONDIÇÕES APRESENTADAS</p>'
+      + '<table class="rc-tab">'
+      + '<tr><th>Mensalidade</th><td><b>' + _brl(fin) + '</b>'
+      + (x.desconto ? ' <span style="color:#666;">(' + _brl(x.mensalidade)
+          + ' menos ' + _brl(x.desconto) + ' de desconto)</span>' : '') + '</td></tr>'
+      + (x.matricula ? '<tr><th>Matrícula</th><td>' + _brl(x.matricula) + '</td></tr>' : '')
+      + (x.material ? '<tr><th>Material</th><td>' + x.material + '</td></tr>' : '')
+      + (x.formaPagamento ? '<tr><th>Pagamento</th><td>' + x.formaPagamento + '</td></tr>' : '')
+      + (x.obsOferta ? '<tr><th>Observação</th><td>' + x.obsOferta + '</td></tr>' : '')
+      + '</table>';
   }
-  palco.innerHTML = '';
+
+  html += '<p style="margin-top:20px;font-size:9.5px;color:#9a9a94;text-align:center;">'
+    + 'Documento gerado pelo AttendancePlus em '
+    + new Date().toLocaleDateString('pt-BR') + '.</p></div>'
+    // 5.6.0: sem o nr1CssPdf() o documento sai sem estilo nenhum. Era isso
+    // que faltava: todos os outros PDFs do app terminam com esta chamada.
+    + nr1CssPdf();
+
+  await nr1GerarPdf('Nivelamento_' + x.numero + '_' + x.aluno.replace(/\s+/g,'_'), html);
 }
+
 
 /* ---------- 5.0.0: helpers de PDF, para nao repetir o mesmo bloco ---------- */
 function _baixarBlob(blob, arquivo){
@@ -11927,6 +12271,8 @@ async function salvarFicha(btn){
     chamarAPI({ acao:'podeVerNivelamento' }).then(function(r){
       if(!r || !r.sucesso || !r.pode) return;
       card.classList.remove('hidden');
+      var naRecep = document.getElementById('recepCardNivelamento');
+      if(naRecep) naRecep.classList.remove('hidden');
       _montarNiveis(r.niveis);
       _montarListasNiv(r);
       // 5.1.0: Lidia e Guilherme aplicam o teste, mas nao levam PDF nem numero
@@ -11958,6 +12304,16 @@ async function salvarFicha(btn){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
+
+  // 5.6.0: configuracoes do app sao do dono, nao do perfil
+  chamarAPI({ acao:'lerConfig' }).then(function(r){
+    if(!r || !r.sucesso) return;
+    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
+    reiniciarRelogioInatividade();
+    var cfg = document.getElementById('recepCardConfig');
+    if(cfg) cfg.classList.toggle('hidden', !r.souAdmin);
+    _ajustarTitulosDeSecao();
+  }).catch(function(){});
 }
 
 /** Banner de novidades no menu, uma vez por versao. */
