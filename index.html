@@ -3856,7 +3856,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.6.0';
+const APP_VERSAO = '5.6.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -11232,6 +11232,69 @@ function aplicarPermissoes(){
   // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
   // e Admin via o card da NR-1 solto, sem o titulo em cima.
 
+  /* 5.0.0: o card de nivelamento tambem e nominal. Quem decide e o servidor. */
+  (function(){
+    var card = document.getElementById('cardNivelamento');
+    if(!card) return;
+    card.classList.add('hidden');
+    chamarAPI({ acao:'podeVerNivelamento' }).then(function(r){
+      if(!r || !r.sucesso || !r.pode) return;
+      card.classList.remove('hidden');
+      var naRecep = document.getElementById('recepCardNivelamento');
+      if(naRecep) naRecep.classList.remove('hidden');
+      _montarNiveis(r.niveis);
+      _montarListasNiv(r);
+      // 5.1.0: Lidia e Guilherme aplicam o teste, mas nao levam PDF nem numero
+      // de conversao para fora. Quem gera documento e Felipe e a recepcao.
+      _NIV_PODE_PDF = !!r.pdf;
+      var kpi = document.getElementById('nivSubKpi');
+      if(kpi) kpi.classList.toggle('hidden', !r.kpi);
+      _ajustarTitulosDeSecao();
+    }).catch(function(){});
+  })();
+
+  (function(){
+    var card = document.getElementById('cardNR1');
+    if(!card) return;
+    card.classList.add('hidden');
+    chamarAPI({ acao:'podeVerNR1' }).then(function(r){
+      if(r && r.sucesso && r.pode){
+        card.classList.remove('hidden');
+        _ajustarTitulosDeSecao();
+      }
+    }).catch(function(){});
+  })();
+  // titulo de secao sem nenhum card visivel some junto
+  setTimeout(function(){
+    _ajustarTitulosDeSecao();
+  }, 0);
+  ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
+   'recepCardRelatorio','cardFreela'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.classList.toggle('hidden', !adm);
+  });
+
+  // 5.6.0: configuracoes do app sao do dono, nao do perfil
+  chamarAPI({ acao:'lerConfig' }).then(function(r){
+    if(!r || !r.sucesso) return;
+    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
+    reiniciarRelogioInatividade();
+    var cfg = document.getElementById('recepCardConfig');
+    if(cfg) cfg.classList.toggle('hidden', !r.souAdmin);
+    _ajustarTitulosDeSecao();
+  }).catch(function(){});
+}
+
+/* ============================================================================
+ * 5.6.1: este bloco inteiro estava DENTRO de aplicarPermissoes desde a 5.0.0.
+ * Eu inseri o JS do nivelamento usando como ancora um comentario que ficava
+ * no meio daquela funcao, e a partir dali todas as funcoes viraram internas.
+ * Sintaxe continuava valida, entao node --check nao acusava nada. So que
+ * funcao interna nao vai para o window, e todo onclick="..." do nivelamento,
+ * do relatorio do aluno e da ficha ficou morto desde entao.
+ * Agora esta no nivel global, onde sempre deveria ter estado.
+ * ==========================================================================*/
+
 /* ==================== 5.6.0: EDITAR NIVELAMENTO ==================== */
 function editarNivelamento(i){
   var x = _LISTA_NIV[i];
@@ -11893,10 +11956,10 @@ async function pdfNivelamento(i){
     html += '<p style="font-size:11px;letter-spacing:1.4px;color:#5A7568;'
       + 'font-weight:700;margin:18px 0 8px;">CONDIÇÕES APRESENTADAS</p>'
       + '<table class="rc-tab">'
-      + '<tr><th>Mensalidade</th><td><b>' + _brl(fin) + '</b>'
-      + (x.desconto ? ' <span style="color:#666;">(' + _brl(x.mensalidade)
-          + ' menos ' + _brl(x.desconto) + ' de desconto)</span>' : '') + '</td></tr>'
-      + (x.matricula ? '<tr><th>Matrícula</th><td>' + _brl(x.matricula) + '</td></tr>' : '')
+      + '<tr><th>Mensalidade</th><td><b>R$ ' + _brl(fin) + '</b>'
+      + (x.desconto ? ' <span style="color:#666;">(R$ ' + _brl(x.mensalidade)
+          + ' menos R$ ' + _brl(x.desconto) + ' de desconto)</span>' : '') + '</td></tr>'
+      + (x.matricula ? '<tr><th>Matrícula</th><td>R$ ' + _brl(x.matricula) + '</td></tr>' : '')
       + (x.material ? '<tr><th>Material</th><td>' + x.material + '</td></tr>' : '')
       + (x.formaPagamento ? '<tr><th>Pagamento</th><td>' + x.formaPagamento + '</td></tr>' : '')
       + (x.obsOferta ? '<tr><th>Observação</th><td>' + x.obsOferta + '</td></tr>' : '')
@@ -12261,59 +12324,6 @@ async function salvarFicha(btn){
     if(g.sucesso) abrirFicha(r.aluno);
   }catch(e){ mostrarToast('Falha ao salvar'); }
   btn.disabled = false; btn.textContent = rot;
-}
-
-  /* 5.0.0: o card de nivelamento tambem e nominal. Quem decide e o servidor. */
-  (function(){
-    var card = document.getElementById('cardNivelamento');
-    if(!card) return;
-    card.classList.add('hidden');
-    chamarAPI({ acao:'podeVerNivelamento' }).then(function(r){
-      if(!r || !r.sucesso || !r.pode) return;
-      card.classList.remove('hidden');
-      var naRecep = document.getElementById('recepCardNivelamento');
-      if(naRecep) naRecep.classList.remove('hidden');
-      _montarNiveis(r.niveis);
-      _montarListasNiv(r);
-      // 5.1.0: Lidia e Guilherme aplicam o teste, mas nao levam PDF nem numero
-      // de conversao para fora. Quem gera documento e Felipe e a recepcao.
-      _NIV_PODE_PDF = !!r.pdf;
-      var kpi = document.getElementById('nivSubKpi');
-      if(kpi) kpi.classList.toggle('hidden', !r.kpi);
-      _ajustarTitulosDeSecao();
-    }).catch(function(){});
-  })();
-
-  (function(){
-    var card = document.getElementById('cardNR1');
-    if(!card) return;
-    card.classList.add('hidden');
-    chamarAPI({ acao:'podeVerNR1' }).then(function(r){
-      if(r && r.sucesso && r.pode){
-        card.classList.remove('hidden');
-        _ajustarTitulosDeSecao();
-      }
-    }).catch(function(){});
-  })();
-  // titulo de secao sem nenhum card visivel some junto
-  setTimeout(function(){
-    _ajustarTitulosDeSecao();
-  }, 0);
-  ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
-   'recepCardRelatorio','cardFreela'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.classList.toggle('hidden', !adm);
-  });
-
-  // 5.6.0: configuracoes do app sao do dono, nao do perfil
-  chamarAPI({ acao:'lerConfig' }).then(function(r){
-    if(!r || !r.sucesso) return;
-    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
-    reiniciarRelogioInatividade();
-    var cfg = document.getElementById('recepCardConfig');
-    if(cfg) cfg.classList.toggle('hidden', !r.souAdmin);
-    _ajustarTitulosDeSecao();
-  }).catch(function(){});
 }
 
 /** Banner de novidades no menu, uma vez por versao. */
