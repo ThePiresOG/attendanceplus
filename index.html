@@ -1191,6 +1191,8 @@
   .nv-chk{ flex:none; width:22px; height:22px; accent-color:var(--verde-escuro); cursor:pointer; }
 
 /* ===== 5.9.0: tela de permissoes ===== */
+.cfg-acao{ margin-top:14px; }
+.cfg-acao .btn-principal{ width:100%; }
 .perm-explica{ font-size:13px; color:var(--verde-medio); margin:0 0 14px; line-height:1.5; }
 .perm-carregando{ padding:24px; text-align:center; color:var(--verde-medio); font-size:14px; }
 .perm-nota{ background:var(--perola); border:1px solid var(--linha); border-radius:10px;
@@ -3269,11 +3271,11 @@
                 e qualquer toque na tela reinicia a contagem.</small>
             </div>
           </div>
+          <div id="cfgResultado"></div>
+          <div class="cfg-acao">
+            <button class="btn-principal" id="btnSalvarCfg">Salvar tempo de sess&atilde;o</button>
+          </div>
         </section>
-        <div id="cfgResultado"></div>
-        <div class="nv-acoes-fixas">
-          <button class="btn-principal" id="btnSalvarCfg">Salvar configura&ccedil;&otilde;es</button>
-        </div>
 
         <section class="nv-cartao" id="permCartao">
           <h3 class="nv-secao"><span>2</span> Quem alcan&ccedil;a o qu&ecirc;</h3>
@@ -3964,7 +3966,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.9.1';
+const APP_VERSAO = '5.9.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
