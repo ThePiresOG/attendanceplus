@@ -621,6 +621,38 @@
     /* assessment: skills em 2 colunas pra caber melhor */
     .assess-destaques{ max-width:520px; }
 
+    /* ============ 5.8.0: densidade de desktop ============
+       O app era um celular esticado: formulario de 1100px de largura, campo
+       de busca do tamanho da tela, lista em coluna unica gigante. A regra
+       agora e uma so: FORMULARIO E LEITURA vivem numa coluna central de ate
+       880px; LISTA DE CARTOES usa a largura em duas colunas. */
+
+    /* todo painel da recepcao vira coluna central */
+    .recep-painel{ max-width:880px; margin:0 auto; width:100%; }
+
+    /* telas de notas e assessment tambem */
+    #telaNotas .controls, #telaAssessment .controls,
+    #telaAssessment .assess-form, #listaNotas{ max-width:820px; margin-left:auto; margin-right:auto; }
+    #telaAssessment .assess-resultado{ max-width:860px; margin-left:auto; margin-right:auto; }
+
+    /* o topo do menu (precisa de voce, hoje, novidades) le melhor estreito */
+    #telaMenu .home-secao, #telaMenu .home-aviso, #telaMenu .home-limpo,
+    #telaMenu .home-hoje, #telaMenu .pend-box, #telaMenu .nov-banner,
+    #telaMenu #resumoSemana{
+      max-width:760px; margin-left:auto; margin-right:auto;
+    }
+    #telaMenu .home-aviso{ width:100%; }
+
+    /* listas de cartoes aproveitam a largura: duas colunas */
+    #nivListaResultado{ display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:start; }
+    #nivListaResultado .assess-aviso, #nivListaResultado .msg-bloqueio{ grid-column:1 / -1; }
+    .niv-item{ margin-bottom:0; }
+
+    /* menu com tres colunas quando ha espaco de sobra */
+    @media (min-width:1080px){
+      .menu-opcoes{ grid-template-columns:1fr 1fr 1fr; }
+    }
+
     /* recepção: turmas do dia em 2 colunas */
     #recepcaoResultado{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     #recepcaoResultado .assess-secao-titulo{ grid-column:1 / -1; }
@@ -3871,7 +3903,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.7.0';
+const APP_VERSAO = '5.8.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
