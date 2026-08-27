@@ -342,6 +342,21 @@
   .ren-resumo .r{ font-size:10.5px; color:var(--verde-medio); }
   .ren-resumo div.alerta{ background:#FBE9E5; }
   .ren-resumo div.alerta .n{ color:#8a3b2d; }
+  /* 5.6.4: .pend-acao e .fa-lista eram usadas desde a 3.9 e nunca tiveram
+     regra. Os botoes "Gerar recibo", "Gerar mensalidade" e "Check-in" saiam
+     com o visual padrao do navegador. A suite nova achou. */
+  .pend-acao{ font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:600;
+    padding:11px 16px; border-radius:10px; border:1.5px solid var(--verde-escuro);
+    background:var(--verde-escuro); color:#fff; cursor:pointer;
+    transition:filter .15s; }
+  .pend-acao:hover{ filter:brightness(1.08); }
+  .pend-acao:disabled{ opacity:.5; cursor:default; }
+  .fa-lista{ display:flex; flex-direction:column; gap:8px; }
+  .fa-lista>div{ display:flex; justify-content:space-between; align-items:baseline;
+    gap:12px; font-size:12.5px; }
+  .fa-lista span{ color:#8a8a82; flex-shrink:0; }
+  .fa-lista b{ color:var(--carvao); font-weight:600; text-align:right; }
+
   /* ---------- 5.5.0: home ---------- */
   .home-secao{ margin:14px 20px 8px; font-size:11px; letter-spacing:1.1px;
     text-transform:uppercase; color:#8a8a84; font-weight:600; }
@@ -3856,7 +3871,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.6.2';
+const APP_VERSAO = '5.6.4';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -3869,6 +3884,15 @@ async function checarVersao(){
   try{
     var jaTentei = '';
     try{ jaTentei = sessionStorage.getItem('ap_recarregou') || ''; }catch(e){}
+    // "5.6.1" vem antes de "5.6.2"? compara numero a numero, nao texto
+    var _versaoMenor = function(a, b){
+      var A = String(a).split('.').map(Number), B = String(b).split('.').map(Number);
+      for(var i = 0; i < 3; i++){
+        if((A[i]||0) < (B[i]||0)) return true;
+        if((A[i]||0) > (B[i]||0)) return false;
+      }
+      return false;
+    };
 
     const r = await chamarAPI({ acao: 'versaoApp' });
     if(!r.sucesso || !r.versao) return;
@@ -3878,6 +3902,26 @@ async function checarVersao(){
       const antigo = document.getElementById('bannerVersao');
       if(antigo) antigo.remove();
       try{ sessionStorage.removeItem('ap_recarregou'); }catch(e){}
+      return;
+    }
+
+    // 5.6.3: o caso que custou uma noite. Quando o Code.gs publicado esta
+    // ATRAS do index, o app pedia para recarregar a pagina, o que nunca
+    // resolve, e depois calava. Telas ficavam vazias sem explicacao nenhuma.
+    // Agora ele diz o que realmente aconteceu.
+    if(_versaoMenor(r.versao, APP_VERSAO)){
+      var av = document.getElementById('bannerVersao');
+      if(!av){
+        av = document.createElement('div');
+        av.id = 'bannerVersao';
+        av.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;'
+          + 'background:#8a6d1a;color:#fff;padding:9px 14px;font-size:12.5px;'
+          + 'text-align:center;line-height:1.45;';
+        document.body.appendChild(av);
+      }
+      av.innerHTML = 'O Apps Script publicado está na versão <b>' + r.versao
+        + '</b> e esta tela é a <b>' + APP_VERSAO + '</b>.<br>'
+        + 'Publique o Code.gs novo. Recarregar a página não resolve.';
       return;
     }
 
@@ -7985,6 +8029,16 @@ function nr1HtmlDossie(d){
 async function nr1GerarPdf(nomeArquivo, html){
   var palco = document.getElementById('recPalco');
   palco.innerHTML = html;
+
+  /* 5.6.4: o html2canvas media a altura do documento antes do <style> que vem
+     junto no final do html ter sido aplicado. Com a medida errada, ele
+     desenhava so um pedaco e o PDF saia cortado no meio, sem erro nenhum.
+     Duas voltas de frame resolvem: uma para o navegador aplicar o estilo,
+     outra para ele terminar o layout. Isso vale para TODOS os PDFs do app. */
+  await new Promise(function(r){
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTimeout(r, 60); }); });
+  });
+
   try{
     await html2pdf().set({
       margin: [13,13,13,13], filename: nomeArquivo + '.pdf',
@@ -11948,6 +12002,8 @@ async function pdfNivelamento(i){
     + '<tr><th>Disponibilidade</th><td>' + (x.disponibilidade || '—') + '</td></tr>'
     + '<tr><th>Horários sugeridos</th><td>'
     + (x.horarios ? x.horarios.split(' | ').join('<br>') : '—') + '</td></tr>'
+    // 5.6.4: voltou para dentro da tabela. Tirar dali foi palpite meu e
+    // piorou. O corte nao era da tabela, era de medicao (ver nr1GerarPdf).
     + (x.observacoes ? '<tr><th>Observações</th><td>' + x.observacoes + '</td></tr>' : '')
     + '</table>';
 
