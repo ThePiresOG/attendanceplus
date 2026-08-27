@@ -1208,8 +1208,17 @@
 .perm-td-nome{ text-align:left !important; }
 .perm-td-nome b{ display:block; color:var(--carvao); font-size:13px; }
 .perm-td-nome small{ display:block; color:var(--verde-medio); font-size:11px; line-height:1.35; margin-top:2px; }
-.perm-onde{ display:inline-block; font-style:normal; font-size:10px; color:var(--verde-claro);
-  background:var(--perola); border-radius:20px; padding:1px 7px; margin-top:4px; }
+.perm-onde{ display:inline-flex; align-items:center; gap:4px; font-size:10px;
+  color:var(--verde-claro); background:var(--perola); border:0; border-radius:20px;
+  padding:2px 8px; margin-top:4px; cursor:pointer; font-family:inherit; }
+.perm-onde:hover{ background:var(--azul-claro); color:var(--carvao); }
+.perm-onde-seta{ font-style:normal; transition:transform .15s; }
+.perm-onde.aberto .perm-onde-seta{ transform:rotate(180deg); }
+.perm-lista{ display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.perm-lista.hidden{ display:none; }
+.perm-lista-item{ font-size:11px; background:var(--branco); border:1px solid var(--linha);
+  border-radius:6px; padding:3px 7px; color:var(--carvao); }
+.perm-lista-item i{ display:block; font-style:normal; font-size:9.5px; color:var(--verde-medio); }
 .perm-chk{ display:inline-flex; cursor:pointer; }
 .perm-chk input{ position:absolute; opacity:0; width:0; height:0; }
 .perm-chk span{ width:22px; height:22px; border-radius:6px; border:2px solid var(--linha);
@@ -1243,6 +1252,28 @@
   #permCartao{ max-width:820px; margin-left:auto; margin-right:auto; }
   .perm-tab{ font-size:13.5px; }
 }
+
+/* ===== 5.10.0: organizador de botoes ===== */
+.org-grupo{ border:1px solid var(--linha); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+.org-cab{ background:var(--perola); padding:7px 12px; font-size:12px; font-weight:700;
+  color:var(--verde-escuro); display:flex; justify-content:space-between; align-items:center; }
+.org-cab span{ font-weight:400; color:var(--verde-medio); font-size:11px; }
+.org-item{ display:flex; align-items:center; gap:8px; padding:7px 12px;
+  border-top:1px solid var(--linha); }
+.org-nome{ flex:1; font-size:13px; color:var(--carvao); }
+.org-acoes{ display:flex; align-items:center; gap:4px; }
+.org-seta{ border:1px solid var(--linha); background:var(--branco); color:var(--verde-escuro);
+  width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:13px; line-height:1; padding:0; }
+.org-seta:hover{ background:var(--perola); }
+.org-select{ border:1px solid var(--linha); border-radius:6px; padding:4px 6px;
+  font-size:12px; font-family:inherit; color:var(--carvao); background:var(--branco);
+  max-width:180px; }
+@media (max-width:520px){
+  .org-item{ flex-wrap:wrap; }
+  .org-nome{ flex:1 0 100%; }
+  .org-select{ max-width:none; flex:1; }
+}
+@media (min-width:820px){ #orgCartao{ max-width:820px; margin-left:auto; margin-right:auto; } }
 </style>
 </head>
 <body>
@@ -3284,6 +3315,14 @@
             n&atilde;o &eacute; s&oacute; enfeite: bloqueia de verdade.</p>
           <div id="permCorpo"></div>
         </section>
+
+        <section class="nv-cartao" id="orgCartao">
+          <h3 class="nv-secao"><span>3</span> Onde cada bot&atilde;o fica</h3>
+          <p class="perm-explica">A se&ccedil;&atilde;o de cima decide <b>quem v&ecirc;</b>.
+            Esta decide <b>onde fica</b>. Mova um bot&atilde;o de tela ou de se&ccedil;&atilde;o,
+            ou mude a ordem dentro do grupo.</p>
+          <div id="orgCorpo"></div>
+        </section>
       </div>
     </div>
 
@@ -3966,7 +4005,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.9.2';
+const APP_VERSAO = '5.10.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -11435,6 +11474,10 @@ async function abrirMenuComTudo(nome){
   }catch(e){ boot = null; }
   window._BOOT = boot;
 
+  // 5.10.0: posiciona antes de revelar, senao os cartoes movidos apareceriam
+  // por um instante no lugar antigo.
+  if(boot && boot.layout && boot.layout.sucesso !== false) aplicarLayout(boot.layout.layout);
+  aplicarPermissoes();
   aplicarRevelacoes(boot);
   carregarPendencias(nome, boot ? boot.pendencias : null);
   carregarHome(boot ? boot.home : null);
@@ -11673,6 +11716,7 @@ document.getElementById('recepCardConfig').addEventListener('click', async funct
     document.getElementById('cfgInativo').value = r.minutosInatividade || 5;
   }catch(e){}
   abrirPermissoes();
+  abrirOrganizador();
 });
 
 document.getElementById('btnSalvarCfg').addEventListener('click', async function(){
@@ -11711,6 +11755,29 @@ function _quantosCartoes(chave){
   return MAPA_CARDS.filter(function(c){
     return String(c[1]).split('|').indexOf(chave) >= 0;
   }).length;
+}
+
+/**
+ * 5.10.0: "36 botoes no app" nao dizia quais, e era justamente o que faltava
+ * para confiar no que se esta marcando. Agora lista, com o lugar de cada um.
+ */
+function _botoesDaCapacidade(chave){
+  var onde = {};
+  ((_PERM_TELA && _PERM_TELA.cartoes) || []).forEach(function(c){
+    onde[c.id] = c.tela + (c.secao ? ' · ' + c.secao : '');
+  });
+  var nomes = {};
+  ((_PERM_TELA && _PERM_TELA.cartoes) || []).forEach(function(c){ nomes[c.id] = c.nome; });
+
+  var itens = MAPA_CARDS.filter(function(c){
+    return String(c[1]).split('|').indexOf(chave) >= 0;
+  }).map(function(c){
+    var nome = nomes[c[0]] || c[0];
+    var lugar = onde[c[0]];
+    return '<span class="perm-lista-item">' + _escPerm(nome)
+      + (lugar ? '<i>' + _escPerm(lugar) + '</i>' : '') + '</span>';
+  });
+  return itens.join('') || '<span class="perm-lista-item">nenhum</span>';
 }
 
 async function abrirPermissoes(){
@@ -11752,7 +11819,11 @@ function desenharPermissoes(){
     var qtd = _quantosCartoes(c.chave);
     h += '<tr><td class="perm-td-nome"><b>' + c.nome + '</b>'
       + '<small>' + c.oque + '</small>'
-      + (qtd ? '<em class="perm-onde">' + qtd + (qtd > 1 ? ' botões' : ' botão') + ' no app</em>' : '')
+      + (qtd ? '<button type="button" class="perm-onde" data-cap="' + c.chave + '">'
+             + qtd + (qtd > 1 ? ' botões' : ' botão') + ' no app'
+             + '<i class="perm-onde-seta">&#9662;</i></button>'
+             + '<span class="perm-lista hidden" id="quais_' + c.chave + '">'
+             + _botoesDaCapacidade(c.chave) + '</span>' : '')
       + '</td>';
     r.perfis.forEach(function(p, k){
       h += '<td><label class="perm-chk"><input type="checkbox" data-cap="' + c.chave
@@ -11799,6 +11870,13 @@ function desenharPermissoes(){
   });
   document.querySelectorAll('#permCorpo .perm-add').forEach(function(b){
     b.onclick = function(){ porNaPorta(b.getAttribute('data-porta')); };
+  });
+  document.querySelectorAll('#permCorpo .perm-onde').forEach(function(b){
+    b.onclick = function(){
+      var lista = document.getElementById('quais_' + b.getAttribute('data-cap'));
+      if(lista) lista.classList.toggle('hidden');
+      b.classList.toggle('aberto');
+    };
   });
 }
 
@@ -11890,6 +11968,201 @@ async function voltarPermissoesAoPadrao(){
   try{
     var r = await chamarAPI({ acao:'restaurarPermissoes' });
     if(r && r.sucesso){ mostrarToast('Voltou ao padrão'); abrirPermissoes(); }
+    else await apAviso('Não deu', (r && r.erro) || 'Erro.');
+  }catch(e){ await apAviso('Não deu', 'Falha de conexão.'); }
+}
+
+/* ==================== 5.10.0: ONDE CADA BOTAO FICA ====================
+   Os cartoes vivem em tres grades (#menuCards, #recepCards, #nivSubcards) e os
+   titulos de secao sao irmaos deles dentro da mesma grade. Mover um cartao,
+   entao, e so mover o no para depois do titulo certo. Nenhuma tela precisa ser
+   reescrita, e por isso da para fazer isso pela interface.
+====================================================================== */
+var GRADE_DA_TELA = {
+  'Menu principal': 'menuCards',
+  'Recepção':       'recepCards',
+  'Nivelamento':    'nivSubcards'
+};
+var _LAYOUT = null;
+
+/** Acha (ou cria) o titulo de uma secao dentro de uma grade. */
+function _tituloDaSecao(grade, nome){
+  if(!nome) return null;
+  var achado = null;
+  Array.prototype.forEach.call(grade.querySelectorAll('.sec-titulo'), function(t){
+    if(!achado && t.textContent.trim().toLowerCase() === nome.toLowerCase()) achado = t;
+  });
+  if(achado) return achado;
+  var novo = document.createElement('div');
+  novo.className = 'sec-titulo';
+  novo.textContent = nome;
+  grade.appendChild(novo);
+  return novo;
+}
+
+function aplicarLayout(layout){
+  if(!layout || !layout.cartoes || !layout.cartoes.length) return;
+  _LAYOUT = layout;
+
+  // Reposiciona na ordem que veio. Como cada cartao e inserido no fim do seu
+  // grupo, percorrer a lista ja ordenada deixa tudo na sequencia certa.
+  layout.cartoes.forEach(function(c){
+    var el = document.getElementById(c.id);
+    var grade = document.getElementById(GRADE_DA_TELA[c.tela] || '');
+    if(!el || !grade) return;
+
+    if(!c.secao){ grade.appendChild(el); return; }
+
+    var titulo = _tituloDaSecao(grade, c.secao);
+    // entra depois do titulo e depois dos cartoes que ja foram colocados nele
+    var ref = titulo.nextElementSibling;
+    while(ref && !ref.classList.contains('sec-titulo')) ref = ref.nextElementSibling;
+    grade.insertBefore(el, ref);
+  });
+
+  // titulo sem cartao visivel some
+  _ajustarTitulosDeSecao();
+}
+
+/* ---------- a tela: secao 3 de Configuracoes ---------- */
+var _ORG = null;
+
+async function abrirOrganizador(){
+  var box = document.getElementById('orgCorpo');
+  box.innerHTML = '<div class="perm-carregando">Carregando...</div>';
+  try{
+    var r = await chamarAPI({ acao:'layoutCartoes' });
+    if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">Não consegui abrir.</div>'; return; }
+    _ORG = r.layout.cartoes.map(function(c){ return { id:c.id, nome:c.nome, tela:c.tela, secao:c.secao }; });
+    desenharOrganizador();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao carregar.</div>'; }
+}
+
+/** Todos os destinos que existem hoje, mais os fixos. */
+function _destinos(){
+  var vistos = {}, lista = [];
+  _ORG.forEach(function(c){
+    var chave = c.tela + '||' + (c.secao || '');
+    if(vistos[chave]) return;
+    vistos[chave] = true;
+    lista.push({ tela:c.tela, secao:c.secao,
+      rotulo: c.tela + (c.secao ? ' · ' + c.secao : '') });
+  });
+  return lista;
+}
+
+function desenharOrganizador(){
+  var destinos = _destinos(), h = '';
+  var grupos = {};
+  _ORG.forEach(function(c){
+    var k = c.tela + '||' + (c.secao || '');
+    (grupos[k] = grupos[k] || []).push(c);
+  });
+
+  destinos.forEach(function(d){
+    var itens = grupos[d.tela + '||' + (d.secao || '')] || [];
+    h += '<div class="org-grupo"><div class="org-cab">' + _escPerm(d.rotulo)
+      + '<span>' + itens.length + '</span></div>';
+    itens.forEach(function(c){
+      var i = _ORG.indexOf(c);
+      h += '<div class="org-item" data-i="' + i + '">'
+        + '<span class="org-nome">' + _escPerm(c.nome) + '</span>'
+        + '<span class="org-acoes">'
+        + '<button type="button" class="org-seta" data-mover="' + i + '" data-dir="-1" title="Subir">&#8593;</button>'
+        + '<button type="button" class="org-seta" data-mover="' + i + '" data-dir="1" title="Descer">&#8595;</button>'
+        + '<select class="org-select" data-destino="' + i + '">'
+        + destinos.map(function(x){
+            var sel = (x.tela === c.tela && (x.secao || '') === (c.secao || '')) ? ' selected' : '';
+            return '<option value="' + _escPerm(x.tela + '||' + (x.secao || '')) + '"' + sel + '>'
+              + _escPerm(x.rotulo) + '</option>';
+          }).join('')
+        + '<option value="__nova__">+ nova seção...</option>'
+        + '</select></span></div>';
+    });
+    h += '</div>';
+  });
+
+  h += '<div class="perm-acoes">'
+    + '<button class="btn-principal" onclick="salvarOrganizador()">Salvar a organização</button>'
+    + '<button class="btn-secundario" onclick="voltarOrganizadorAoPadrao()">Voltar ao padrão</button>'
+    + '</div>';
+
+  var box = document.getElementById('orgCorpo');
+  box.innerHTML = h;
+
+  box.querySelectorAll('.org-seta').forEach(function(b){
+    b.onclick = function(){ _moverNaLista(Number(b.dataset.mover), Number(b.dataset.dir)); };
+  });
+  box.querySelectorAll('.org-select').forEach(function(s){
+    s.onchange = function(){ _trocarDestino(Number(s.dataset.destino), s.value); };
+  });
+}
+
+/** Sobe ou desce o cartao dentro do proprio grupo. */
+function _moverNaLista(i, dir){
+  var c = _ORG[i];
+  var irmaos = _ORG.filter(function(x){
+    return x.tela === c.tela && (x.secao || '') === (c.secao || '');
+  });
+  var pos = irmaos.indexOf(c) + dir;
+  if(pos < 0 || pos >= irmaos.length) return;
+  var alvo = irmaos[pos];
+  var a = _ORG.indexOf(c), b = _ORG.indexOf(alvo);
+  _ORG[a] = alvo; _ORG[b] = c;
+  desenharOrganizador();
+}
+
+async function _trocarDestino(i, valor){
+  var c = _ORG[i];
+  if(valor === '__nova__'){
+    var nome = await apTexto('Nova seção', 'Em que tela ela fica é a pergunta seguinte.', '', 'Ex.: Administração');
+    if(!nome){ desenharOrganizador(); return; }
+    var qual = await apEscolha('Em que tela?', _escPerm(nome) + ' vai aparecer onde?',
+      ['Menu principal','Recepção','Nivelamento'].map(function(t){ return { rotulo:t }; }));
+    if(qual === null || qual < 0){ desenharOrganizador(); return; }
+    c.tela = ['Menu principal','Recepção','Nivelamento'][qual];
+    c.secao = nome.trim();
+  } else {
+    var p = valor.split('||');
+    c.tela = p[0]; c.secao = p[1] || '';
+  }
+  // vai para o fim do grupo novo
+  _ORG.splice(_ORG.indexOf(c), 1);
+  var ultimo = -1;
+  _ORG.forEach(function(x, k){
+    if(x.tela === c.tela && (x.secao || '') === (c.secao || '')) ultimo = k;
+  });
+  _ORG.splice(ultimo + 1, 0, c);
+  desenharOrganizador();
+}
+
+async function salvarOrganizador(){
+  var box = document.getElementById('orgCorpo');
+  box.innerHTML = '<div class="perm-carregando">Salvando...</div>';
+  try{
+    var r = await chamarAPI({ acao:'salvarLayoutCartoes', cartoes: _ORG });
+    if(!r || !r.sucesso){
+      await apAviso('Não salvei', (r && r.erro) || 'Erro.');
+      desenharOrganizador(); return;
+    }
+    aplicarLayout({ cartoes: _ORG });
+    await apAviso('Pronto', 'Os botões já estão nos lugares novos.<br><br>'
+      + 'Quem estiver com o app aberto vê a mudança na próxima vez que entrar.');
+    abrirOrganizador();
+  }catch(e){
+    await apAviso('Não salvei', 'Falha de conexão. Nada mudou.');
+    desenharOrganizador();
+  }
+}
+
+async function voltarOrganizadorAoPadrao(){
+  var ok = await apEscolha('Voltar ao padrão',
+    'Todos os botões voltam para onde nasceram.',
+    [{ rotulo:'Voltar ao padrão', sub:'Dá para reorganizar depois' }]);
+  if(ok !== 0) return;
+  try{
+    var r = await chamarAPI({ acao:'restaurarLayoutCartoes' });
+    if(r && r.sucesso){ mostrarToast('Voltou ao padrão'); abrirOrganizador(); }
     else await apAviso('Não deu', (r && r.erro) || 'Erro.');
   }catch(e){ await apAviso('Não deu', 'Falha de conexão.'); }
 }
