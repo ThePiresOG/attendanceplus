@@ -1189,6 +1189,58 @@
   .nv-txt b{ display:block; font-size:13.5px; color:var(--carvao); }
   .nv-txt span{ display:block; font-size:11px; color:#8a8a84; }
   .nv-chk{ flex:none; width:22px; height:22px; accent-color:var(--verde-escuro); cursor:pointer; }
+
+/* ===== 5.9.0: tela de permissoes ===== */
+.perm-explica{ font-size:13px; color:var(--verde-medio); margin:0 0 14px; line-height:1.5; }
+.perm-carregando{ padding:24px; text-align:center; color:var(--verde-medio); font-size:14px; }
+.perm-nota{ background:var(--perola); border:1px solid var(--linha); border-radius:10px;
+  padding:10px 12px; font-size:13px; color:var(--carvao); margin-bottom:14px; }
+.perm-rolagem{ overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -4px; }
+.perm-tab{ width:100%; border-collapse:collapse; font-size:13px; min-width:440px; }
+.perm-tab th{ padding:8px 6px; text-align:center; vertical-align:bottom;
+  border-bottom:2px solid var(--linha); }
+.perm-tab th.perm-th-nome{ text-align:left; width:46%; }
+.perm-perfil{ display:block; font-weight:700; color:var(--verde-escuro); font-size:12px; }
+.perm-gente{ display:block; font-size:10px; color:var(--verde-medio); font-weight:400; margin-top:2px; }
+.perm-tab td{ padding:9px 6px; text-align:center; border-bottom:1px solid var(--linha); }
+.perm-td-nome{ text-align:left !important; }
+.perm-td-nome b{ display:block; color:var(--carvao); font-size:13px; }
+.perm-td-nome small{ display:block; color:var(--verde-medio); font-size:11px; line-height:1.35; margin-top:2px; }
+.perm-onde{ display:inline-block; font-style:normal; font-size:10px; color:var(--verde-claro);
+  background:var(--perola); border-radius:20px; padding:1px 7px; margin-top:4px; }
+.perm-chk{ display:inline-flex; cursor:pointer; }
+.perm-chk input{ position:absolute; opacity:0; width:0; height:0; }
+.perm-chk span{ width:22px; height:22px; border-radius:6px; border:2px solid var(--linha);
+  display:inline-block; background:var(--branco); transition:.12s; }
+.perm-chk input:checked + span{ background:var(--verde-escuro); border-color:var(--verde-escuro); }
+.perm-chk input:checked + span::after{ content:''; display:block; width:5px; height:10px;
+  border:solid var(--branco); border-width:0 2px 2px 0; transform:rotate(45deg);
+  margin:2px auto 0; }
+.perm-chk input:focus-visible + span{ outline:2px solid var(--salmao); outline-offset:2px; }
+.perm-sep{ margin:22px 0 6px; font-size:12px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--verde-escuro); }
+.perm-nominal{ border:1px solid var(--linha); border-radius:10px; padding:10px 12px; margin-bottom:10px; }
+.perm-nominal-cab b{ display:block; font-size:13px; color:var(--carvao); }
+.perm-nominal-cab small{ display:block; font-size:11px; color:var(--verde-medio); margin-bottom:8px; }
+.perm-chips{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.perm-chip{ display:inline-flex; align-items:center; gap:4px; background:var(--azul-claro);
+  color:var(--carvao); border-radius:20px; padding:3px 5px 3px 11px; font-size:12px; }
+.perm-chip-fixo{ background:var(--verde-escuro); color:var(--branco); padding-right:11px; }
+.perm-chip button{ border:0; background:rgba(0,0,0,.12); color:inherit; width:17px; height:17px;
+  border-radius:50%; cursor:pointer; font-size:13px; line-height:1; padding:0; }
+.perm-add{ border:1px dashed var(--verde-medio); background:none; color:var(--verde-escuro);
+  border-radius:20px; padding:3px 11px; font-size:12px; cursor:pointer; font-family:inherit; }
+.perm-hist{ list-style:none; padding:0; margin:0; }
+.perm-hist li{ border-left:3px solid var(--linha); padding:5px 0 5px 10px; margin-bottom:7px;
+  font-size:12px; color:var(--verde-medio); }
+.perm-hist li b{ color:var(--carvao); }
+.perm-hist li span{ color:var(--verde-medio); }
+.perm-acoes{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+.perm-acoes .btn-principal{ flex:1; min-width:200px; }
+@media (min-width:820px){
+  #permCartao{ max-width:820px; margin-left:auto; margin-right:auto; }
+  .perm-tab{ font-size:13.5px; }
+}
 </style>
 </head>
 <body>
@@ -3222,6 +3274,14 @@
         <div class="nv-acoes-fixas">
           <button class="btn-principal" id="btnSalvarCfg">Salvar configura&ccedil;&otilde;es</button>
         </div>
+
+        <section class="nv-cartao" id="permCartao">
+          <h3 class="nv-secao"><span>2</span> Quem alcan&ccedil;a o qu&ecirc;</h3>
+          <p class="perm-explica">Marque e o bot&atilde;o some para quem n&atilde;o tem acesso.
+            O servidor confere de novo a cada clique, ent&atilde;o esconder aqui
+            n&atilde;o &eacute; s&oacute; enfeite: bloqueia de verdade.</p>
+          <div id="permCorpo"></div>
+        </section>
       </div>
     </div>
 
@@ -3596,6 +3656,7 @@ function _sessaoExpirou(msg){
   try{ sessionStorage.removeItem('ap_token'); }catch(e){}
   professorLogado = null;
   PERM = null;
+  PORTAS = null;
   try{
     document.querySelectorAll('#telaMenu, #telaRecepcao, #telaApp, #telaNotas, #telaAssessment, #telaFinanceiro, #telaDashboard, #telaMateriais')
       .forEach(function(t){ t.classList.add('hidden'); });
@@ -3903,7 +3964,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.8.1';
+const APP_VERSAO = '5.9.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4663,12 +4724,15 @@ $btnEntrar.addEventListener('click', async ()=>{
     TOKEN_SESSAO = login.token || null;
     try{ if(TOKEN_SESSAO) sessionStorage.setItem('ap_token', TOKEN_SESSAO); }catch(e){}
     PERM = login.permissoes || null;
+    PORTAS = login.portas || null;   // 5.9.0: nr1, nivelamento e config
     PERFIL = login.perfil || 'PROFESSOR';
     // sem permissoes vindas do servidor: mantem o comportamento anterior a 2.2.0
     if(!PERM){
       const ehFelipeAntigo = String(nome).trim().toUpperCase() === 'FELIPE';
       PERM = { presenca:true, notas:true, assessment:true, materiais:true,
-               financeiro:ehFelipeAntigo, dashboard:ehFelipeAntigo, recepcao:false };
+               financeiro:ehFelipeAntigo, dashboard:ehFelipeAntigo, recepcao:false,
+               admin:ehFelipeAntigo };
+      PORTAS = { nr1:ehFelipeAntigo, nivelamento:ehFelipeAntigo, config:ehFelipeAntigo };
     }
     const ehRecepcao = login.recepcao || String(nome).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') === 'RECEPCAO';
     // perfil que so tem recepcao vai direto pra tela da recepcao
@@ -11337,6 +11401,7 @@ window.addEventListener('resize', function(){
 // ===== 2.2.0: PERFIS, RENOVACOES, VALORES E NOVIDADES =====
 
 var PERM = null;
+var PORTAS = null;   // 5.9.0: acessos que valem por nome, nao por perfil
 var PERFIL = 'PROFESSOR';
 
 function podeVer(o){ return !!(PERM && PERM[o]); }
@@ -11357,46 +11422,6 @@ function _ajustarTitulosDeSecao(){
 /* 5.7.0: aplica o que o servidor respondeu sobre nivelamento, NR-1 e
    configuracoes. Recebe o pacote da abertura do menu; sem pacote, busca
    sozinha (acontece so na troca de senha, que reaplica permissoes). */
-function aplicarRevelacoes(boot){
-  var usar = function(chave, acao, fn){
-    if(boot && boot[chave]){ fn(boot[chave]); return; }
-    chamarAPI({ acao: acao }).then(fn).catch(function(){});
-  };
-
-  var card = document.getElementById('cardNivelamento');
-  if(card) card.classList.add('hidden');
-  usar('nivelamento', 'podeVerNivelamento', function(r){
-    if(!r || !r.sucesso || !r.pode) return;
-    if(card) card.classList.remove('hidden');
-    var naRecep = document.getElementById('recepCardNivelamento');
-    if(naRecep) naRecep.classList.remove('hidden');
-    _montarNiveis(r.niveis);
-    _montarListasNiv(r);
-    _NIV_PODE_PDF = !!r.pdf;
-    var kpi = document.getElementById('nivSubKpi');
-    if(kpi) kpi.classList.toggle('hidden', !r.kpi);
-    _ajustarTitulosDeSecao();
-  });
-
-  var nr1 = document.getElementById('cardNR1');
-  if(nr1) nr1.classList.add('hidden');
-  usar('nr1', 'podeVerNR1', function(r){
-    if(r && r.sucesso && r.pode && nr1){
-      nr1.classList.remove('hidden');
-      _ajustarTitulosDeSecao();
-    }
-  });
-
-  usar('config', 'lerConfig', function(r){
-    if(!r || !r.sucesso) return;
-    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
-    reiniciarRelogioInatividade();
-    var cfg = document.getElementById('recepCardConfig');
-    if(cfg) cfg.classList.toggle('hidden', !r.souAdmin);
-    _ajustarTitulosDeSecao();
-  });
-}
-
 /* 5.7.0: uma ida so ao servidor no lugar de seis. Cada ida ao Apps Script
    custa de um a tres segundos; era essa a lentidao ao entrar. */
 async function abrirMenuComTudo(nome){
@@ -11414,61 +11439,154 @@ async function abrirMenuComTudo(nome){
   mostrarNovidades(nome, boot ? boot.novidades : null);
 }
 
+/* ============================================================================
+ * 5.9.0: UMA LISTA SO DE CARTOES
+ *
+ * Antes esta informacao estava em tres lugares diferentes dentro de
+ * aplicarPermissoes: um array "mapa", um array "soRecepcao" e uma variavel
+ * "adm" com o perfil escrito na mao. Cartao novo entrava em um deles e nao nos
+ * outros, e foi assim que uns trinta subcards acabaram sem regra nenhuma.
+ *
+ * Agora e uma lista so. Cada linha diz: id do botao, capacidade que ele exige.
+ * A mesma lista alimenta a tela de permissoes, entao o que voce marca la e
+ * exatamente o que some aqui.
+ *
+ * "ou" na segunda posicao significa que qualquer uma das capacidades serve.
+ * ==========================================================================*/
+var MAPA_CARDS = [
+  // menu principal
+  ['cardPresenca',        'presenca'],
+  ['cardNotas',           'notas'],
+  ['cardBoletim',         'assessment'],
+  ['cardMateriais',       'materiais'],
+  ['cardDashboard',       'dashboard'],
+  ['cardFinanceiro',      'financeiro'],
+  ['cardFechamento',      'financeiro'],
+  ['cardFreela',          'financeiro'],
+  ['cardFaltas',          'dashboard'],
+  ['cardRecepcao',        'recepcao'],
+  ['cardConversaProf',    'presenca'],
+
+  // painel da recepcao
+  ['recepCardContratos',   'recepcao'],
+  ['recepCardRenovacoes',  'recepcao'],
+  ['recepCardTurmas',      'recepcao'],
+  ['recepCardDesligar',    'recepcao'],
+  ['recepCardPresenca',    'recepcao'],
+  ['recepCardCalendario',  'recepcao'],
+  ['recepCardPanorama',    'recepcao'],
+  ['recepCardAfastamento', 'recepcao'],
+  ['recepCardBaixa',       'recepcao'],
+  ['recepCardRecibo',      'recepcao'],
+  ['recepCardMensalidade', 'recepcao'],
+  ['recepCardAluno',       'recepcao'],
+  ['recepCardNiver',       'recepcao'],
+  ['recepCardFaltas',      'recepcao'],
+  ['recepCardRelAluno',    'recepcao'],
+  ['recepCardFicha',       'recepcao'],
+  ['recepCardRelatorio',   'recepcao'],
+  ['subcardLivros',        'recepcao'],
+
+  // conversacao aparece nos dois lugares: e o mesmo recurso, uma regra so
+  ['recepCardConversa',    'recepcao|presenca'],
+
+  // gestao
+  ['recepCardValores',     'admin'],
+  ['recepCardNovidades',   'admin'],
+  ['recepCardUsuarios',    'admin'],
+  ['recepCardConexao',     'admin'],
+  ['recepCardConfig',      'config'],
+
+  // nivelamento: dois botoes, mesma porta
+  ['cardNivelamento',      'nivelamento'],
+  ['recepCardNivelamento', 'nivelamento'],
+  ['nivSubKpi',            'recepcao'],
+
+  // NR-1: assunto sensivel, porta nominal
+  ['cardNR1',              'nr1'],
+
+  /* Os subcards abaixo vivem dentro de paineis que ja sao protegidos, entao
+     na pratica ninguem chegava neles sem permissao. Mesmo assim estavam sem
+     regra nenhuma, e "esta escondido atras de outra porta" nao e o mesmo que
+     "tem tranca". Agora cada um declara de quem depende, e a auditoria
+     consegue afirmar que nao sobrou nada solto. */
+  ['subcardTurma',           'recepcao'],
+  ['subcardExtras',          'recepcao'],
+  ['subcard18',              'recepcao'],
+  ['subcardMenor',           'recepcao'],
+  ['subcardBuscarContrato',  'recepcao'],
+  ['subcardNovoAfast',       'recepcao'],
+  ['subcardRetornos',        'recepcao'],
+  ['subcardBuscarAfast',     'recepcao'],
+  ['subcardNovaBaixa',       'recepcao'],
+  ['subcardBuscarBaixa',     'recepcao'],
+  ['subcardNovoRecibo',      'recepcao'],
+  ['subcardBuscarRecibo',    'recepcao'],
+  ['subcardNovaTurma',       'recepcao'],
+  ['subcardListaTurmas',     'recepcao'],
+  ['subcardConsultarTurma',  'recepcao'],
+  ['subcardNR1Riscos',       'nr1'],
+  ['subcardNR1Conversa',     'nr1'],
+  ['subcardNR1Feitas',       'nr1'],
+  ['subcardNR1Acoes',        'nr1'],
+  ['subcardNR1Politica',     'nr1'],
+  ['subcardNR1Treino',       'nr1'],
+  ['subcardNR1Dossie',       'nr1'],
+  ['subcardNR1Docs',         'nr1'],
+  ['nivSubNovo',             'nivelamento'],
+  ['nivSubLista',            'nivelamento']
+];
+
+/* Estes dois sao de todo mundo que consegue entrar no app, de proposito.
+   Estao escritos aqui para a conferencia poder dizer que nenhum botao ficou
+   sem dono, em vez de simplesmente nao aparecer na lista. */
+var CARDS_DE_TODOS = ['cardNovidades', 'cardSenha'];
+
+/** Aceita "a|b": basta ter uma das duas. */
+function podeVerRegra(regra){
+  return String(regra).split('|').some(function(x){
+    return (PORTAS && PORTAS[x] !== undefined) ? !!PORTAS[x] : podeVer(x);
+  });
+}
+
 function aplicarPermissoes(){
-  var mapa = [
-    ['cardPresenca', 'presenca'],
-    ['cardNotas', 'notas'],
-    ['cardBoletim', 'assessment'],
-    ['cardMateriais', 'materiais'],
-    ['cardDashboard', 'dashboard'],
-    ['cardFinanceiro', 'financeiro'],
-    ['cardRecepcao', 'recepcao'],
-    ['cardConversaProf', 'presenca'],
-    ['cardFechamento', 'financeiro'],
-    ['cardFaltas', 'dashboard'],
-  ];
-  mapa.forEach(function(par){
+  MAPA_CARDS.forEach(function(par){
     var el = document.getElementById(par[0]);
-    if(el) el.classList.toggle('hidden', !podeVer(par[1]));
+    if(el) el.classList.toggle('hidden', !podeVerRegra(par[1]));
   });
-  // TODOS os cards da recepção passam a depender de permissão, não só os de gestão
-  var soRecepcao = ['recepCardContratos','recepCardRenovacoes','recepCardTurmas',
-    'recepCardDesligar','recepCardPresenca','recepCardCalendario','recepCardPanorama',
-    'recepCardAfastamento','recepCardBaixa','recepCardRecibo','recepCardMensalidade',
-    'recepCardAluno','recepCardNiver',
-    'recepCardFaltas'];
-  soRecepcao.forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.classList.toggle('hidden', !podeVer('recepcao'));
-  });
+
   // dica de arrastar so faz sentido para quem pode mexer na turma
   var dica = document.querySelector('#telaApp .dica-swipe');
   if(dica) dica.classList.toggle('hidden', !podeVer('recepcao'));
-  // conversação é a única que o professor alcança
-  var elConv = document.getElementById('recepCardConversa');
-  if(elConv) elConv.classList.toggle('hidden', !(podeVer('recepcao') || podeVer('presenca')));
-  // cadastro de licoes: so recepcao, Felipe e Thais
-  var elLv = document.getElementById('subcardLivros');
-  if(elLv) elLv.classList.toggle('hidden', !podeVer('recepcao'));
 
-  var adm = (PERFIL === 'ADMIN' || PERFIL === 'SOCIO');
-
-  // 3.8.0: a NR-1 guarda relato de assedio e de saude mental.
-  // O acesso e nominal, nao por perfil, e quem decide e o servidor.
-  // 3.8.1: a resposta chega depois da limpeza dos titulos, entao a secao
-  // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
-  // e Admin via o card da NR-1 solto, sem o titulo em cima.
-
-  // 5.7.0: os pedidos ao servidor sairam daqui. Quem os faz e a abertura do
-  // menu, numa chamada so. Esta funcao ficou apenas com o que e instantaneo.
+  // 5.9.0: aplicarRevelacoes nao esconde mais nada. Mostrar e esconder e
+  // trabalho daqui, so desta lista. La ficou apenas carregar dado.
   aplicarRevelacoes(window._BOOT || null);
   setTimeout(function(){ _ajustarTitulosDeSecao(); }, 0);
-  ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
-   'recepCardRelatorio','cardFreela'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.classList.toggle('hidden', !adm);
+}
+
+/* 5.9.0: esta funcao so carrega dado. Quem aparece e quem some e a
+   aplicarPermissoes, a partir do MAPA_CARDS. Enquanto as duas mexiam nos
+   mesmos cartoes dava para um mandar mostrar e o outro mandar esconder,
+   dependendo de qual respondesse primeiro. */
+function aplicarRevelacoes(boot){
+  var usar = function(chave, acao, fn){
+    if(boot && boot[chave]){ fn(boot[chave]); return; }
+    chamarAPI({ acao: acao }).then(fn).catch(function(){});
+  };
+
+  usar('nivelamento', 'podeVerNivelamento', function(r){
+    if(!r || !r.sucesso || !r.pode) return;
+    _montarNiveis(r.niveis);
+    _montarListasNiv(r);
+    _NIV_PODE_PDF = !!r.pdf;
   });
 
+  usar('config', 'lerConfig', function(r){
+    if(!r || !r.sucesso) return;
+    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
+    reiniciarRelogioInatividade();
+  });
 }
 
 /* ============================================================================
@@ -11552,6 +11670,7 @@ document.getElementById('recepCardConfig').addEventListener('click', async funct
     var r = await chamarAPI({ acao:'lerConfig' });
     document.getElementById('cfgInativo').value = r.minutosInatividade || 5;
   }catch(e){}
+  abrirPermissoes();
 });
 
 document.getElementById('btnSalvarCfg').addEventListener('click', async function(){
@@ -11570,6 +11689,208 @@ document.getElementById('btnSalvarCfg').addEventListener('click', async function
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>'; }
   btn.disabled = false; btn.textContent = 'Salvar configurações';
 });
+
+/* ==================== 5.9.0: TELA DE PERMISSOES ====================
+   Tres cuidados que valem mais que a tela em si:
+   1. o servidor confere de novo tudo que e marcado aqui. Esconder cartao e
+      conforto visual, nunca tranca.
+   2. nada e salvo sem voce ver antes, escrito, o que vai mudar.
+   3. o app se recusa a salvar uma configuracao que deixa ninguem com
+      Administracao, porque dai nao teria como voltar atras.
+================================================================== */
+var _PERM_TELA = null;
+
+function _escPerm(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _quantosCartoes(chave){
+  return MAPA_CARDS.filter(function(c){
+    return String(c[1]).split('|').indexOf(chave) >= 0;
+  }).length;
+}
+
+async function abrirPermissoes(){
+  var box = document.getElementById('permCorpo');
+  box.innerHTML = '<div class="perm-carregando">Carregando...</div>';
+  try{
+    var r = await chamarAPI({ acao:'permissoesParaTela' });
+    if(!r || !r.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + ((r && r.erro) || 'Não consegui abrir.') + '</div>';
+      return;
+    }
+    _PERM_TELA = r;
+    desenharPermissoes();
+  }catch(e){
+    box.innerHTML = '<div class="assess-aviso">Falha ao carregar.</div>';
+  }
+}
+
+function desenharPermissoes(){
+  var r = _PERM_TELA, h = '';
+
+  if(!r.veioDaAba){
+    h += '<div class="perm-nota">Primeira vez aqui. Estou mostrando o padrão de fábrica; '
+      + 'a aba <b>Permissões</b> da planilha é criada quando você salvar.</div>';
+  }
+
+  h += '<div class="perm-rolagem"><table class="perm-tab"><thead><tr>'
+    + '<th class="perm-th-nome">O que a pessoa alcança</th>';
+  r.perfis.forEach(function(p, k){
+    var gente = r.gente[p] || [];
+    h += '<th><span class="perm-perfil">' + r.rotulos[k] + '</span>'
+      + '<span class="perm-gente" title="' + _escPerm(gente.join(', ')) + '">'
+      + (gente.length ? gente.length + (gente.length > 1 ? ' pessoas' : ' pessoa') : 'ninguém')
+      + '</span></th>';
+  });
+  h += '</tr></thead><tbody>';
+
+  r.capacidades.forEach(function(c, i){
+    var qtd = _quantosCartoes(c.chave);
+    h += '<tr><td class="perm-td-nome"><b>' + c.nome + '</b>'
+      + '<small>' + c.oque + '</small>'
+      + (qtd ? '<em class="perm-onde">' + qtd + (qtd > 1 ? ' botões' : ' botão') + ' no app</em>' : '')
+      + '</td>';
+    r.perfis.forEach(function(p, k){
+      h += '<td><label class="perm-chk"><input type="checkbox" data-cap="' + c.chave
+        + '" data-perfil="' + p + '"' + (c.marcado[k] ? ' checked' : '') + '><span></span></label></td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+
+  h += '<div class="perm-sep">Acesso por pessoa, não por perfil</div>'
+    + '<p class="perm-explica">Assuntos delicados não seguem o cargo. Aqui você escreve nome por nome.</p>';
+  r.nominais.forEach(function(n){
+    h += '<div class="perm-nominal"><div class="perm-nominal-cab"><b>' + n.nome + '</b>'
+      + '<small>' + n.oque + '</small></div><div class="perm-chips" id="chips_' + n.chave + '">';
+    n.pessoas.forEach(function(nome){
+      var dono = (nome === r.dono), seg = _escPerm(nome);
+      h += '<span class="perm-chip' + (dono ? ' perm-chip-fixo' : '') + '">' + seg
+        + (dono ? '' : '<button type="button" data-porta="' + n.chave + '">&times;</button>')
+        + '</span>';
+    });
+    h += '<button type="button" class="perm-add" data-porta="' + n.chave + '">+ pessoa</button>';
+    h += '</div></div>';
+  });
+
+  if(r.historico && r.historico.length){
+    h += '<div class="perm-sep">Últimas mudanças</div><ul class="perm-hist">';
+    r.historico.forEach(function(x){
+      h += '<li><b>' + _escPerm(x.quando) + '</b> · ' + _escPerm(x.quem)
+        + '<br><span>' + _escPerm(x.oque) + '</span></li>';
+    });
+    h += '</ul>';
+  }
+
+  h += '<div class="perm-acoes">'
+    + '<button class="btn-principal" onclick="conferirPermissoes()">Ver o que muda e salvar</button>'
+    + '<button class="btn-secundario" onclick="voltarPermissoesAoPadrao()">Voltar ao padrão</button>'
+    + '</div>';
+
+  document.getElementById('permCorpo').innerHTML = h;
+  // 4.9.1: nome com apóstrofo (D'Aurizio) quebrava onclick montado em texto.
+  // Aqui o botão já nasce ligado ao próprio chip, sem passar o nome adiante.
+  document.querySelectorAll('#permCorpo .perm-chip button[data-porta]').forEach(function(b){
+    b.onclick = function(){ b.parentNode.remove(); };
+  });
+  document.querySelectorAll('#permCorpo .perm-add').forEach(function(b){
+    b.onclick = function(){ porNaPorta(b.getAttribute('data-porta')); };
+  });
+}
+
+/** Lê a tela do jeito que ela está agora. */
+function _lerTelaPermissoes(){
+  var caps = {};
+  _PERM_TELA.perfis.forEach(function(p){ caps[p] = {}; });
+  document.querySelectorAll('#permCorpo input[data-cap]').forEach(function(el){
+    caps[el.getAttribute('data-perfil')][el.getAttribute('data-cap')] = el.checked;
+  });
+  var noms = {};
+  _PERM_TELA.nominais.forEach(function(n){
+    noms[n.chave] = Array.prototype.map.call(
+      document.querySelectorAll('#chips_' + n.chave + ' .perm-chip'),
+      function(el){ return el.firstChild.nodeValue.trim(); });
+  });
+  return { capacidades: caps, nominais: noms };
+}
+
+async function porNaPorta(chave){
+  var nome = await apTexto('Dar acesso a quem?',
+    'Escreva o nome exatamente como está na aba Professores.', '', 'Ex.: Lídia');
+  if(!nome) return;
+  var alvo = document.getElementById('chips_' + chave);
+  var ja = Array.prototype.some.call(alvo.querySelectorAll('.perm-chip'), function(el){
+    return el.firstChild.nodeValue.trim().toUpperCase() === nome.trim().toUpperCase();
+  });
+  if(ja){ mostrarToast('Essa pessoa já está na lista'); return; }
+  var chip = document.createElement('span');
+  chip.className = 'perm-chip';
+  chip.appendChild(document.createTextNode(nome.trim()));
+  var x = document.createElement('button');
+  x.type = 'button'; x.innerHTML = '&times;';
+  x.onclick = function(){ chip.remove(); };
+  chip.appendChild(x);
+  alvo.insertBefore(chip, alvo.querySelector('.perm-add'));
+}
+
+/** Mostra o que vai mudar antes de gravar. Nada é salvo sem esta passagem. */
+async function conferirPermissoes(){
+  var novo = _lerTelaPermissoes(), r = _PERM_TELA, linhas = [];
+
+  r.capacidades.forEach(function(c){
+    r.perfis.forEach(function(p, k){
+      var de = c.marcado[k], para = !!novo.capacidades[p][c.chave];
+      if(de !== para){
+        var quem = (r.gente[p] || []);
+        linhas.push((para ? '+ ' : '- ') + r.rotulos[k] + (para ? ' passa a ver ' : ' deixa de ver ')
+          + c.nome + (quem.length ? ' (' + quem.join(', ') + ')' : ' (ninguém tem esse perfil hoje)'));
+      }
+    });
+  });
+  r.nominais.forEach(function(n){
+    var de = n.pessoas.join(', '), para = (novo.nominais[n.chave] || []).join(', ');
+    if(de !== para) linhas.push('· ' + n.nome + ': ' + (para || 'ninguém'));
+  });
+
+  if(!linhas.length){ mostrarToast('Nada mudou'); return; }
+
+  var ok = await apEscolha('Confirmar mudança de acesso',
+    'Confira antes:<br><br>' + linhas.map(_escPerm).join('<br>'),
+    [{ rotulo: 'Salvar assim', sub: linhas.length + ' mudança(s)' }]);
+  if(ok !== 0) return;
+
+  var box = document.getElementById('permCorpo');
+  box.innerHTML = '<div class="perm-carregando">Salvando...</div>';
+  try{
+    var res = await chamarAPI({ acao:'salvarPermissoes',
+      capacidades: novo.capacidades, nominais: novo.nominais });
+    if(!res || !res.sucesso){
+      await apAviso('Não salvei', (res && res.erro) || 'Erro ao salvar.');
+      desenharPermissoes();
+      return;
+    }
+    await apAviso('Pronto', 'Salvei ' + (res.mudancas || []).length + ' mudança(s).<br><br>'
+      + 'Quem já está com o app aberto continua vendo o de antes até sair e entrar de novo.');
+    abrirPermissoes();
+  }catch(e){
+    await apAviso('Não salvei', 'Falha de conexão. Nada foi alterado.');
+    desenharPermissoes();
+  }
+}
+
+async function voltarPermissoesAoPadrao(){
+  var ok = await apEscolha('Voltar ao padrão',
+    'Isso apaga suas marcações e volta tudo para o que o app traz de fábrica.',
+    [{ rotulo: 'Voltar ao padrão', sub: 'Dá para remarcar depois' }]);
+  if(ok !== 0) return;
+  try{
+    var r = await chamarAPI({ acao:'restaurarPermissoes' });
+    if(r && r.sucesso){ mostrarToast('Voltou ao padrão'); abrirPermissoes(); }
+    else await apAviso('Não deu', (r && r.erro) || 'Erro.');
+  }catch(e){ await apAviso('Não deu', 'Falha de conexão.'); }
+}
 
 /* ==================== 5.6.0: SAIR SOZINHO ====================
    O app fica aberto no balcao e na sala. Deixar a sessao viva a noite toda
