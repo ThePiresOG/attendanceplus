@@ -3871,7 +3871,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.6.4';
+const APP_VERSAO = '5.7.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4251,7 +4251,8 @@ function ativarEdicao(row, nomeAntigo, t){
           delete marcados[nomeAntigo];
         }
         mostrarToast('Nome atualizado');
-        setTimeout(()=> alert('Lembrete: você trocou o nome de um aluno. Confira o valor mensal dele na planilha (colunas S a X), pois o valor antigo continua na mesma posição.'), 400);
+        setTimeout(()=> apAviso('Você trocou o nome de um aluno',
+          'Confira o valor mensal dele na planilha (colunas S a X): o valor antigo continua na mesma posição.'), 400);
       } else {
         mostrarToast('Erro: ' + (r.erro || 'não deu pra editar'));
       }
@@ -4350,9 +4351,11 @@ function marcar(nome, status){
     const jaFeitas = remarcacoesSemestre[nome] || 0;
     const comEsta = jaFeitas + 1; // contando a que esta sendo marcada agora
     if(comEsta >= LIMITE_REMARCACOES){
-      alert(nome + ': esta e a 4a e ULTIMA remarcacao permitida no semestre. Nao havera mais reposicoes para este aluno ate o proximo semestre.');
+      apAviso('Última remarcação do semestre',
+        nome + ': esta é a 4ª e última remarcação permitida. Não haverá mais reposições para este aluno até o próximo semestre.');
     } else if(comEsta === LIMITE_REMARCACOES - 1){
-      alert(nome + ': 3a remarcacao do semestre. O aluno podera remarcar apenas mais 1 vez.');
+      apAviso('3ª remarcação do semestre',
+        nome + ' poderá remarcar apenas mais 1 vez.');
     }
   }
   const t = turmaAtual();
@@ -4641,8 +4644,7 @@ $btnEntrar.addEventListener('click', async ()=>{
       $telaLogin.classList.add('hidden');
       aplicarPermissoes();
       abrirRecepcao();
-      carregarPendencias(nome);
-      carregarHome();
+      abrirMenuComTudo(nome);
       return;
     }
     if(PERM.presenca){
@@ -4663,9 +4665,7 @@ $btnEntrar.addEventListener('click', async ()=>{
     sortearFraseLateral();
     // visibilidade dos cards vem do perfil na aba Professores
     aplicarPermissoes();
-    mostrarNovidades(nome);
-    carregarPendencias(nome);
-    carregarHome();
+    abrirMenuComTudo(nome);
     ligarAutoAltura();
     if(PERM.presenca){
       carregarResumoSemana(nome);
@@ -4733,6 +4733,84 @@ var _DESPEDIDAS = [
  * na tela de desligamento de aluno. A segunda apagava a primeira, e clicar em
  * Sair chamava a funcao errada, que quebrava. Por isso o botao nao respondia.
  */
+/* ============ 5.7.0: janelas do proprio app ============
+   prompt() e alert() mostram "thepiresog.github.io diz" no topo, que nao
+   significa nada para quem usa. Estas tres substituem quase todas.
+   (confirm() fica para a proxima versao: sao 19 pontos e varios moram no
+   fluxo de salvar presenca, que ja quebrou antes por mexida apressada.) */
+
+function apAviso(titulo, texto){
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.innerHTML = '<div class="ap-cx" style="max-width:380px;">'
+      + '<div class="sai-cx">'
+      + '<div class="sai-tit">' + titulo + '</div>'
+      + '<div class="disc-corpo">' + texto + '</div>'
+      + '<div class="sai-btns"><button class="sai-btn vai" id="avOk">Entendi</button></div>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+    fundo.querySelector('#avOk').onclick = function(){ fundo.remove(); resolve(); };
+  });
+}
+
+function apTexto(titulo, sub, inicial, placeholder){
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.innerHTML = '<div class="ap-cx" style="max-width:400px;">'
+      + '<div class="ap-topo"><b>' + titulo + '</b>'
+      + (sub ? '<span>' + sub + '</span>' : '') + '</div>'
+      + '<div class="ap-lista">'
+      + '<input type="text" class="mv-det" id="apTxtCampo" value="'
+      + String(inicial === null || inicial === undefined ? '' : inicial).replace(/"/g,'&quot;')
+      + '"' + (placeholder ? ' placeholder="' + placeholder.replace(/"/g,'&quot;') + '"' : '') + '>'
+      + '</div>'
+      + '<div class="ap-rod"><div style="flex:1;"></div>'
+      + '<button class="ren-btn sec" id="apTxtNao">Cancelar</button>'
+      + '<button class="pend-acao" id="apTxtSim">OK</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+    var campo = fundo.querySelector('#apTxtCampo');
+    campo.focus(); campo.select();
+    campo.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') fundo.querySelector('#apTxtSim').click();
+    });
+    fundo.querySelector('#apTxtNao').onclick = function(){ fundo.remove(); resolve(null); };
+    fundo.querySelector('#apTxtSim').onclick = function(){
+      var v = campo.value; fundo.remove(); resolve(v);
+    };
+  });
+}
+
+function apEscolha(titulo, sub, opcoes){
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.innerHTML = '<div class="ap-cx" style="max-width:420px;">'
+      + '<div class="ap-topo"><b>' + titulo + '</b>'
+      + (sub ? '<span>' + sub + '</span>' : '') + '</div>'
+      + '<div class="ap-lista">'
+      + opcoes.map(function(o, i){
+          return '<button class="ap-item" style="width:100%;text-align:left;'
+            + 'font-family:inherit;background:none;" data-i="' + i + '">'
+            + '<span><b>' + o.rotulo + '</b>'
+            + (o.sub ? '<i>' + o.sub + '</i>' : '') + '</span></button>';
+        }).join('')
+      + '</div>'
+      + '<div class="ap-rod"><div style="flex:1;"></div>'
+      + '<button class="ren-btn sec" id="apEscNao">Cancelar</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+    fundo.querySelector('#apEscNao').onclick = function(){ fundo.remove(); resolve(null); };
+    Array.prototype.forEach.call(fundo.querySelectorAll('.ap-item'), function(b){
+      b.addEventListener('click', function(){
+        var i = Number(this.dataset.i); fundo.remove(); resolve(i);
+      });
+    });
+  });
+}
+
 function perguntarAntesDeSair(){
   return new Promise(function(resolve){
     var d = _DESPEDIDAS[Math.floor(Math.random() * _DESPEDIDAS.length)];
@@ -5474,7 +5552,7 @@ async function carregarDashboard(){
                 const campo = document.getElementById('reaNovo_'+pos);
                 const novo = Number(String(campo.value).replace(/\./g,'').replace(',','.'));
                 if(!novo || novo <= 0){ mostrarToast('Digite o novo valor'); return; }
-                const motivo = prompt('Motivo do reajuste (opcional):', 'Reajuste anual') || '';
+                const motivo = (await apTexto('Motivo do reajuste', 'Opcional, fica no histórico', 'Reajuste anual')) || '';
                 btn.disabled = true;
                 try{
                   const res = await chamarAPI({ acao:'reajustarMensalidade', turmaId: tid, pos: pos, valorNovo: novo, motivo: motivo });
@@ -6668,7 +6746,7 @@ async function confirmarEncerramento(i){
 
   if(!dataBr){ mostrarToast('Informe a data'); return; }
   if(motivo === 'Outro'){
-    var livre = prompt('Qual o motivo?', '');
+    var livre = await apTexto('Qual o motivo?', 'Fica registrado na saída do aluno', '');
     if(livre === null) return;
     motivo = String(livre).trim() || 'Saída';
   }
@@ -8447,7 +8525,7 @@ async function frCarregarLista(){
 async function frRemover(linha){
   if(!confirm('Remover este dia da lista?')) return;
   var r = await chamarAPI({ acao:'freelaRemover', linha: linha });
-  if(!r.sucesso){ alert(r.erro || 'Não consegui remover.'); return; }
+  if(!r.sucesso){ apAviso('Não consegui remover', r.erro || 'Tente de novo.'); return; }
   frCarregarLista();
 }
 
@@ -8609,10 +8687,11 @@ async function nr1CarregarAcoes(){
 }
 
 async function nr1Concluir(linha){
-  var como = prompt('Como foi resolvido?\n\nEssa frase é a evidência que a fiscalização lê.');
+  var como = await apTexto('Como foi resolvido?',
+    'Essa frase é a evidência que a fiscalização lê.', '');
   if(!como || !como.trim()) return;
   var r = await chamarAPI({ acao:'nr1ConcluirAcao', linha: linha, comoResolveu: como.trim() });
-  if(!r.sucesso){ alert(r.erro || 'Não consegui concluir.'); return; }
+  if(!r.sucesso){ apAviso('Não consegui concluir', r.erro || 'Tente de novo.'); return; }
   nr1CarregarAcoes();
 }
 
@@ -9569,8 +9648,8 @@ document.getElementById('btnTrocarSenha').addEventListener('click', async functi
 
 async function redefinirSenhaUI(i){
   var u = window._USUARIOS[i];
-  var nova = prompt('Nova senha para ' + u.nome + ':\n\n'
-    + 'Ela vai poder trocar depois, pelo próprio app.', '');
+  var nova = await apTexto('Nova senha para ' + u.nome,
+    'Ela vai poder trocar depois, pelo próprio app.', '');
   if(nova === null) return;
   nova = String(nova).trim();
   if(nova.length < 4){ mostrarToast('Mínimo 4 caracteres'); return; }
@@ -10104,7 +10183,7 @@ async function salvarConversa(){
 
   mostrarToast(r.registrados + ' presença(s) registrada(s)');
   if(r.repetidos && r.repetidos.length){
-    alert('Já tinham presença nesse horário: ' + r.repetidos.join(', '));
+    apAviso('Presença repetida', 'Já tinham presença nesse horário: ' + r.repetidos.join(', '));
   }
 
   var p = r.pagamento;
@@ -10357,7 +10436,7 @@ async function desativarUsrUI(i){
   if(r.sucesso){
     mostrarToast('Acesso bloqueado');
     if(r.turmasOrfas && r.turmasOrfas.length){
-      alert('Atenção: as turmas ' + r.turmasOrfas.join(', ')
+      apAviso('Turmas sem professor', 'As turmas ' + r.turmasOrfas.join(', ')
         + ' ficaram sem professor ativo. Reatribua em Turmas → Editar.');
     }
     carregarUsuarios();
@@ -10562,13 +10641,13 @@ async function saidaAlunoUI(k){
   var a = window._ALUNOS_TURMA[k];
   var t = TURMA_ABERTA;
 
-  var opcao = prompt('O que houve com ' + a.nome + '?\n\n'
-    + '1 = Saiu da turma (guarda o histórico das aulas que teve)\n'
-    + '2 = Foi incluído por engano (apaga sem deixar rastro)\n\n'
-    + 'Digite 1 ou 2:', '1');
-  if(!opcao) return;
+  var esc = await apEscolha('O que houve com ' + a.nome + '?', 'Turma ' + t.turmaId, [
+    { rotulo: 'Saiu da turma', sub: 'Guarda o histórico das aulas que teve' },
+    { rotulo: 'Foi incluído por engano', sub: 'Apaga sem deixar rastro' }
+  ]);
+  if(esc === null) return;
 
-  if(opcao.trim() === '2'){
+  if(esc === 1){
     if(!confirm('Apagar ' + a.nome + ' da turma ' + t.turmaId + ' como se nunca tivesse entrado?')) return;
     var d = await chamarAPI({ acao:'desfazerInclusao', linha: t.linha, nome: a.nome, turmaId: t.turmaId });
     if(d.sucesso){ mostrarToast('Inclusão desfeita'); carregarAlunosTurma(); }
@@ -10576,10 +10655,11 @@ async function saidaAlunoUI(k){
     return;
   }
 
-  var dataBr = prompt('Último dia de aula de ' + a.nome + ' (dd/mm/aaaa):',
-                      _isoParaBr(_hojeIso()));
+  var dataBr = await apTexto('Último dia de aula', a.nome + ' · dd/mm/aaaa',
+    _isoParaBr(_hojeIso()));
   if(!dataBr) return;
-  var motivo = prompt('Motivo da saída:', 'Não renovou') || 'Saída';
+  var motivo = (await apTexto('Motivo da saída', 'Fica no histórico do aluno',
+    'Não renovou')) || 'Saída';
 
   var r = await chamarAPI({
     acao:'registrarSaida', aluno: a.nome, data: dataBr, motivo: motivo,
@@ -10601,19 +10681,19 @@ async function moverAlunoUI(k){
   });
   if(!outras.length){ mostrarToast('Nenhuma outra turma com vaga'); return; }
 
-  var lista = outras.map(function(x, i){
-    return (i+1) + ' = ' + x.turmaId + ' · ' + x.professor + ' · ' + x.dias + ' ' + x.horario
-      + ' (' + x.vagas + ' vaga' + (x.vagas>1?'s':'') + ')';
-  }).join('\n');
-
-  var esc = prompt('Mover ' + a.nome + ' para qual turma?\n\n' + lista + '\n\nDigite o número:');
-  if(!esc) return;
-  var idx = Number(esc) - 1;
-  if(isNaN(idx) || !outras[idx]){ mostrarToast('Opção inválida'); return; }
+  var idx = await apEscolha('Para onde você quer movimentar o aluno?',
+    a.nome + ' sai da turma ' + t.turmaId,
+    outras.map(function(x){
+      return { rotulo: 'Turma ' + x.turmaId + ' · ' + x.professor,
+               sub: x.dias + ' ' + x.horario + ' · '
+                 + x.vagas + ' vaga' + (x.vagas > 1 ? 's' : '') };
+    }));
+  if(idx === null) return;
   var destino = outras[idx];
 
-  var dataBr = prompt('A partir de quando ele assiste na turma ' + destino.turmaId + '? (dd/mm/aaaa)',
-                      _isoParaBr(_hojeIso()));
+  var dataBr = await apTexto('A partir de quando?',
+    a.nome + ' passa a assistir na turma ' + destino.turmaId + ' · dd/mm/aaaa',
+    _isoParaBr(_hojeIso()));
   if(!dataBr) return;
 
   var r = await chamarAPI({
@@ -10883,11 +10963,11 @@ async function arquivarTurmaUI(i){
   try{
     var r = await chamarAPI({ acao:'arquivarTurma', linha:t.linha, turmaId:t.turmaId,
                               usuario: (professorLogado || ''), confirmar:true });
-    if(!r.sucesso){ alert(r.erro || 'Nao foi possivel arquivar.'); return; }
-    alert(r.mensagem || 'Turma arquivada.');
+    if(!r.sucesso){ apAviso('Não foi possível arquivar', r.erro || 'Tente de novo.'); return; }
+    apAviso('Turma arquivada', r.mensagem || 'Ela sai das buscas, mas o histórico fica.');
     await carregarListaTurmas();
   }catch(e){
-    alert('Falha de conexao ao arquivar.');
+    apAviso('Falha de conexão', 'Não consegui falar com o servidor para arquivar. Tente de novo.');
   }
 }
 
@@ -11016,11 +11096,12 @@ var PENDENCIAS = null;
    viraria acusacao de algo que nao e falha. */
 var HOME = null;
 
-async function carregarHome(){
+async function carregarHome(pronto){
   var avisos = document.getElementById('homeAvisos');
   var hojeBox = document.getElementById('homeHoje');
   if(!avisos || !hojeBox) return;
 
+  if(pronto && pronto.sucesso !== false){ HOME = pronto; desenharHome(); return; }
   try{
     HOME = await chamarAPI({ acao:'homeResumo' });
   }catch(e){ HOME = null; }
@@ -11109,11 +11190,11 @@ function desenharHome(){
   });
 }
 
-async function carregarPendencias(nome){
+async function carregarPendencias(nome, pronto){
   var box = document.getElementById('pendenciasBanner');
   if(!box) return;
   try{
-    var r = await chamarAPI({ acao:'pendenciasPresenca', professor: (PERM && PERM.presenca) ? nome : '' });
+    var r = pronto || await chamarAPI({ acao:'pendenciasPresenca', professor: (PERM && PERM.presenca) ? nome : '' });
     if(!r.sucesso || !r.total){ box.classList.add('hidden'); desenharHome(); return; }
     PENDENCIAS = r;
 
@@ -11241,6 +11322,66 @@ function _ajustarTitulosDeSecao(){
   });
 }
 
+/* 5.7.0: aplica o que o servidor respondeu sobre nivelamento, NR-1 e
+   configuracoes. Recebe o pacote da abertura do menu; sem pacote, busca
+   sozinha (acontece so na troca de senha, que reaplica permissoes). */
+function aplicarRevelacoes(boot){
+  var usar = function(chave, acao, fn){
+    if(boot && boot[chave]){ fn(boot[chave]); return; }
+    chamarAPI({ acao: acao }).then(fn).catch(function(){});
+  };
+
+  var card = document.getElementById('cardNivelamento');
+  if(card) card.classList.add('hidden');
+  usar('nivelamento', 'podeVerNivelamento', function(r){
+    if(!r || !r.sucesso || !r.pode) return;
+    if(card) card.classList.remove('hidden');
+    var naRecep = document.getElementById('recepCardNivelamento');
+    if(naRecep) naRecep.classList.remove('hidden');
+    _montarNiveis(r.niveis);
+    _montarListasNiv(r);
+    _NIV_PODE_PDF = !!r.pdf;
+    var kpi = document.getElementById('nivSubKpi');
+    if(kpi) kpi.classList.toggle('hidden', !r.kpi);
+    _ajustarTitulosDeSecao();
+  });
+
+  var nr1 = document.getElementById('cardNR1');
+  if(nr1) nr1.classList.add('hidden');
+  usar('nr1', 'podeVerNR1', function(r){
+    if(r && r.sucesso && r.pode && nr1){
+      nr1.classList.remove('hidden');
+      _ajustarTitulosDeSecao();
+    }
+  });
+
+  usar('config', 'lerConfig', function(r){
+    if(!r || !r.sucesso) return;
+    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
+    reiniciarRelogioInatividade();
+    var cfg = document.getElementById('recepCardConfig');
+    if(cfg) cfg.classList.toggle('hidden', !r.souAdmin);
+    _ajustarTitulosDeSecao();
+  });
+}
+
+/* 5.7.0: uma ida so ao servidor no lugar de seis. Cada ida ao Apps Script
+   custa de um a tres segundos; era essa a lentidao ao entrar. */
+async function abrirMenuComTudo(nome){
+  var boot = null;
+  try{
+    boot = await chamarAPI({ acao:'aberturaDoMenu', nome: nome, perfil: PERFIL,
+      professorPendencias: (PERM && PERM.presenca) ? nome : '' });
+    if(!boot || !boot.sucesso) boot = null;
+  }catch(e){ boot = null; }
+  window._BOOT = boot;
+
+  aplicarRevelacoes(boot);
+  carregarPendencias(nome, boot ? boot.pendencias : null);
+  carregarHome(boot ? boot.home : null);
+  mostrarNovidades(nome, boot ? boot.novidades : null);
+}
+
 function aplicarPermissoes(){
   var mapa = [
     ['cardPresenca', 'presenca'],
@@ -11286,57 +11427,16 @@ function aplicarPermissoes(){
   // Gestao precisa ser reavaliada quando o card aparece. Sem isso, quem nao
   // e Admin via o card da NR-1 solto, sem o titulo em cima.
 
-  /* 5.0.0: o card de nivelamento tambem e nominal. Quem decide e o servidor. */
-  (function(){
-    var card = document.getElementById('cardNivelamento');
-    if(!card) return;
-    card.classList.add('hidden');
-    chamarAPI({ acao:'podeVerNivelamento' }).then(function(r){
-      if(!r || !r.sucesso || !r.pode) return;
-      card.classList.remove('hidden');
-      var naRecep = document.getElementById('recepCardNivelamento');
-      if(naRecep) naRecep.classList.remove('hidden');
-      _montarNiveis(r.niveis);
-      _montarListasNiv(r);
-      // 5.1.0: Lidia e Guilherme aplicam o teste, mas nao levam PDF nem numero
-      // de conversao para fora. Quem gera documento e Felipe e a recepcao.
-      _NIV_PODE_PDF = !!r.pdf;
-      var kpi = document.getElementById('nivSubKpi');
-      if(kpi) kpi.classList.toggle('hidden', !r.kpi);
-      _ajustarTitulosDeSecao();
-    }).catch(function(){});
-  })();
-
-  (function(){
-    var card = document.getElementById('cardNR1');
-    if(!card) return;
-    card.classList.add('hidden');
-    chamarAPI({ acao:'podeVerNR1' }).then(function(r){
-      if(r && r.sucesso && r.pode){
-        card.classList.remove('hidden');
-        _ajustarTitulosDeSecao();
-      }
-    }).catch(function(){});
-  })();
-  // titulo de secao sem nenhum card visivel some junto
-  setTimeout(function(){
-    _ajustarTitulosDeSecao();
-  }, 0);
+  // 5.7.0: os pedidos ao servidor sairam daqui. Quem os faz e a abertura do
+  // menu, numa chamada so. Esta funcao ficou apenas com o que e instantaneo.
+  aplicarRevelacoes(window._BOOT || null);
+  setTimeout(function(){ _ajustarTitulosDeSecao(); }, 0);
   ['recepCardValores','recepCardNovidades','recepCardUsuarios','recepCardConexao',
    'recepCardRelatorio','cardFreela'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', !adm);
   });
 
-  // 5.6.0: configuracoes do app sao do dono, nao do perfil
-  chamarAPI({ acao:'lerConfig' }).then(function(r){
-    if(!r || !r.sucesso) return;
-    MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
-    reiniciarRelogioInatividade();
-    var cfg = document.getElementById('recepCardConfig');
-    if(cfg) cfg.classList.toggle('hidden', !r.souAdmin);
-    _ajustarTitulosDeSecao();
-  }).catch(function(){});
 }
 
 /* ============================================================================
@@ -12383,7 +12483,7 @@ async function salvarFicha(btn){
 }
 
 /** Banner de novidades no menu, uma vez por versao. */
-async function mostrarNovidades(nome){
+async function mostrarNovidades(nome, pronto){
   try{
     // ja vi esta versao neste aparelho? entao nem pergunta ao servidor
     try{
@@ -12393,7 +12493,7 @@ async function mostrarNovidades(nome){
 
     // o servidor consulta a coluna F da aba Professores e so devolve o que a
     // pessoa ainda nao viu
-    var r = await chamarAPI({ acao:'novidadesApp', nome: nome, perfil: PERFIL });
+    var r = pronto || await chamarAPI({ acao:'novidadesApp', nome: nome, perfil: PERFIL });
     if(!r.sucesso || !r.novidades || !r.novidades.length) return;
 
     var n = r.novidades[0];
