@@ -1308,11 +1308,27 @@
   .desk-frase{ font-size:11.5px; font-style:italic; color:rgba(255,255,255,.62); line-height:1.5; }
   .desk-versao{ font-size:10.5px; color:rgba(255,255,255,.4); margin-top:8px; }
 
-  .desk-corpo{ flex:1; overflow-y:auto; background:var(--branco); }
+  .desk-corpo{ flex:1; overflow-y:auto; background:var(--branco); padding-bottom:24px; }
+  .desk-oculto{ display:none !important; }
+
+  /* A trava de 760px da 5.8.0 existe para o app SEM barra lateral, onde ela
+     evita formulario esticado de ponta a ponta. Aqui dentro ela so criava um
+     corredor estreito grudado na barra, entao e desfeita neste contexto. */
+  #deskCorpo .home-secao, #deskCorpo .home-aviso, #deskCorpo .home-limpo,
+  #deskCorpo .home-hoje, #deskCorpo .pend-box, #deskCorpo .nov-banner,
+  #deskCorpo #resumoSemana, #deskCorpo .desk-rosca-cx{
+    max-width:none; margin-left:0; margin-right:0; }
+
+  .desk-grade{ display:grid; grid-template-columns:1.35fr 1fr; gap:18px;
+    align-items:start; padding:0 20px; }
+  .desk-col{ min-width:0; display:flex; flex-direction:column; gap:10px; }
+  .desk-col > *{ margin-left:0 !important; margin-right:0 !important; }
+  @media (max-width:1180px){ .desk-grade{ grid-template-columns:1fr; } }
   /* o cabecalho antigo perde a logo, que agora mora na lateral */
   #telaMenu.desk-pronto header .header-logo{ display:none; }
+  #telaMenu.desk-pronto header{ padding:18px 20px 12px; border-bottom:0; }
 
-  .desk-kpis{ display:flex; flex-wrap:wrap; gap:12px; padding:4px 20px 12px; }
+  .desk-kpis{ display:flex; flex-wrap:wrap; gap:12px; padding:4px 20px 16px; }
   .desk-kpi-grupo{ display:contents; }
   .desk-kpi{ flex:1 1 190px; border:1px solid var(--linha); border-radius:14px;
     padding:14px 16px; background:var(--branco); }
@@ -1320,8 +1336,8 @@
   .desk-kpi-rot{ font-size:12.5px; color:var(--verde-escuro); margin-top:2px; }
   .desk-kpi-extra{ font-size:11px; color:var(--verde-medio); margin-top:5px; }
 
-  .desk-rosca-cx{ display:flex; align-items:center; gap:18px; margin:0 20px 10px;
-    padding:14px 18px; border:1px solid var(--linha); border-radius:14px; max-width:760px; }
+  .desk-rosca-cx{ display:flex; align-items:center; gap:18px; margin:0;
+    padding:14px 18px; border:1px solid var(--linha); border-radius:14px; }
   .desk-rosca{ width:118px; height:118px; flex:none; }
   .desk-rosca-num{ font-size:20px; font-weight:700; fill:var(--carvao); }
   .desk-rosca-rot{ font-size:10px; fill:var(--verde-medio); }
@@ -4062,7 +4078,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.12.1';
+const APP_VERSAO = '5.12.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -12273,22 +12289,53 @@ function montarDesktop(){
   menu.classList.add('desk-pronto');
   menu.insertBefore(lateral, menu.firstChild);
 
-  // tudo que ja existia vai para a coluna da direita, sem ser reescrito
+  /* 5.12.2: antes eu so empurrava tudo para a direita numa pilha so. Dava
+     nisto: o menu aparecia duas vezes (na lateral e na grade de cartoes), e os
+     blocos continuavam com a trava de 760px da 5.8.0, entao ficava um corredor
+     estreito e comprido colado na barra. Agora o conteudo e ARRANJADO. */
   var corpo = document.createElement('div');
   corpo.className = 'desk-corpo';
   corpo.id = 'deskCorpo';
-  var mover = [];
-  Array.prototype.forEach.call(menu.children, function(el){
-    if(el !== lateral) mover.push(el);
-  });
-  mover.forEach(function(el){ corpo.appendChild(el); });
   menu.appendChild(corpo);
 
-  // faixa de numeros, antes de tudo o que ja existia
+  var pega = function(id){ return document.getElementById(id); };
+
+  // 1. topo: saudacao, avisos e os numeros
   var faixa = document.createElement('div');
   faixa.className = 'desk-kpis hidden';
   faixa.id = 'deskKpis';
-  corpo.insertBefore(faixa, corpo.firstChild.nextSibling || null);
+  [menu.querySelector('header'), pega('novidadesBanner')].forEach(function(el){
+    if(el) corpo.appendChild(el);
+  });
+  corpo.appendChild(faixa);
+
+  // 2. duas colunas: a agenda de um lado, o que precisa de voce do outro
+  var grade = document.createElement('div');
+  grade.className = 'desk-grade';
+  var colA = document.createElement('div'); colA.className = 'desk-col';
+  var colB = document.createElement('div'); colB.className = 'desk-col';
+  ['homeTituloHoje','homeHoje','resumoSemana'].forEach(function(id){
+    var el = pega(id); if(el) colA.appendChild(el);
+  });
+  ['homeTituloPrecisa','pendenciasBanner','homeAvisos','homeLimpo'].forEach(function(id){
+    var el = pega(id); if(el) colB.appendChild(el);
+  });
+  grade.appendChild(colA); grade.appendChild(colB);
+  corpo.appendChild(grade);
+
+  /* 3. a grade de cartoes sai de cena. Ela virou o menu da lateral, e manter as
+     duas era o que estava poluindo: "Minhas aulas" aparecia duas vezes na
+     mesma tela. Ela continua no documento, so escondida, porque a lateral
+     depende dela para saber o que existe e o que esta liberado. */
+  var cartoes = pega('menuCards');
+  if(cartoes){ cartoes.classList.add('desk-oculto'); corpo.appendChild(cartoes); }
+
+  // o que sobrou (blocos que eu nao conheco) vai para o fim, sem sumir
+  var sobrou = [];
+  Array.prototype.forEach.call(menu.children, function(el){
+    if(el !== lateral && el !== corpo) sobrou.push(el);
+  });
+  sobrou.forEach(function(el){ corpo.appendChild(el); });
 
   montarNavLateral();
 }
@@ -12374,7 +12421,7 @@ function desenharKpis(boot){
 
 function _porRosca(sem){
   var alvo = document.getElementById('resumoSemana');
-  if(!alvo || alvo.classList.contains('hidden')) return;
+  if(!alvo) return;
   if(document.getElementById('deskRoscaCx')) return;
   var cx = document.createElement('div');
   cx.className = 'desk-rosca-cx';
