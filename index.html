@@ -1274,6 +1274,12 @@
   .org-select{ max-width:none; flex:1; }
 }
 @media (min-width:820px){ #orgCartao{ max-width:820px; margin-left:auto; margin-right:auto; } }
+
+.ct-acoes{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:flex-end; }
+.ct-anexar{ cursor:pointer; font-family:inherit; border:1px dashed var(--verde-medio);
+  background:none; color:var(--verde-escuro); }
+.ct-anexar:hover{ background:var(--perola); }
+.ct-assinado{ background:var(--verde-escuro); color:var(--branco); border-color:var(--verde-escuro); }
 </style>
 </head>
 <body>
@@ -4005,7 +4011,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.10.0';
+const APP_VERSAO = '5.11.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -14629,11 +14635,92 @@ async function carregarBuscaContratos(){
           ${linhaResp}
           ${linhaInicio}
         </div>
-        ${botaoPdf(c.pdfUrl, 'PDF', 'btn-material')}
+        <div class="ct-acoes">
+          ${botaoPdf(c.pdfUrl, 'PDF', 'btn-material')}
+          <button class="btn-material ct-anexar" data-num="${c.numeroContrato}"
+            data-aluno="${String(c.aluno).replace(/"/g,'&quot;')}">Anexar assinado</button>
+          ${(c.assinado||[]).map((u,k)=>
+            `<a class="btn-material ct-assinado" href="${u}" target="_blank" rel="noopener">`
+            + `Assinado${(c.assinado.length>1?' '+(k+1):'')}</a>`).join('')}
+        </div>
       </div>`;
     });
     $res.innerHTML = html;
+    // 4.9.1: nome com apostrofo (D'Aurizio) quebrava onclick montado em texto.
+    // Aqui os dados viajam por data-attribute, nunca dentro de codigo.
+    $res.querySelectorAll('.ct-anexar').forEach(function(b){
+      b.onclick = function(){ anexarAssinado(b.dataset.num, b.dataset.aluno); };
+    });
   } catch(e){ $res.innerHTML = '<div class="assess-aviso">Erro ao buscar.</div>'; }
+}
+
+/* ==================== 5.11.0: CONTRATO ASSINADO ====================
+   Quem escolhe a pasta e o servidor, pela coluna que diz se o contrato e
+   Menor ou 18+. Aqui a pessoa so escolhe o arquivo. Um lugar a menos para
+   o contrato de um menor acabar na pasta dos maiores.
+==================================================================== */
+var _ANEXO_INPUT = null;
+
+function anexarAssinado(numero, aluno){
+  if(!_ANEXO_INPUT){
+    _ANEXO_INPUT = document.createElement('input');
+    _ANEXO_INPUT.type = 'file';
+    _ANEXO_INPUT.accept = '.pdf,image/jpeg,image/png,image/heic';
+    _ANEXO_INPUT.style.display = 'none';
+    document.body.appendChild(_ANEXO_INPUT);
+  }
+  _ANEXO_INPUT.value = '';
+  _ANEXO_INPUT.onchange = function(){
+    var arq = _ANEXO_INPUT.files && _ANEXO_INPUT.files[0];
+    if(arq) _enviarAssinado(arq, numero, aluno);
+  };
+  _ANEXO_INPUT.click();
+}
+
+async function _enviarAssinado(arq, numero, aluno){
+  var mb = arq.size / (1024*1024);
+  if(mb > 15){
+    await apAviso('Arquivo grande demais',
+      'Esse arquivo tem ' + mb.toFixed(1) + ' MB e o limite é 15 MB.<br><br>'
+      + 'Se for foto, tire de novo em qualidade menor ou junte as páginas num PDF.');
+    return;
+  }
+
+  var ok = await apEscolha('Anexar contrato assinado',
+    'Contrato <b>' + _escPerm(numero) + '</b> &middot; ' + _escPerm(aluno) + '<br>'
+    + 'Arquivo: ' + _escPerm(arq.name) + ' (' + mb.toFixed(1) + ' MB)<br><br>'
+    + 'A pasta é escolhida pelo tipo do contrato, não por você.',
+    [{ rotulo:'Enviar para o Drive' }]);
+  if(ok !== 0) return;
+
+  mostrarToast('Enviando...');
+  try{
+    var base64 = await new Promise(function(res, rej){
+      var fr = new FileReader();
+      fr.onload = function(){ res(String(fr.result)); };
+      fr.onerror = function(){ rej(new Error('leitura')); };
+      fr.readAsDataURL(arq);
+    });
+    var r = await chamarAPI({ acao:'anexarContratoAssinado', numeroContrato: numero,
+      aluno: aluno, tipoArquivo: arq.type || 'application/pdf', base64: base64 });
+
+    if(!r || !r.sucesso){
+      await apAviso('Não subiu', (r && r.erro) || 'Erro ao enviar.');
+      return;
+    }
+    if(!r.gravou){
+      await apAviso('Subiu, mas confira',
+        'O arquivo está no Drive, mas o link não voltou da planilha na conferência.<br><br>'
+        + 'Rode <b>diagnosticarPastasAssinados()</b> no editor antes de confiar nesse contrato.');
+    } else {
+      await apAviso('Pronto',
+        _escPerm(r.nome) + '<br><br>Guardado em <b>' + _escPerm(r.pasta) + '</b>'
+        + (r.total > 1 ? '<br>Esse contrato agora tem ' + r.total + ' anexos.' : ''));
+    }
+    carregarBuscaContratos();
+  }catch(e){
+    await apAviso('Não subiu', 'Falha no envio. Nada foi gravado.');
+  }
 }
 
 function agendarBuscaContratos(){
