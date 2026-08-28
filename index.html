@@ -4088,7 +4088,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.12.5';
+const APP_VERSAO = '5.12.6';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -12112,6 +12112,33 @@ async function conferirPermissoes(){
       capacidades: novo.capacidades, nominais: novo.nominais });
     if(!res || !res.sucesso){
       await apAviso('Não salvei', (res && res.erro) || 'Erro ao salvar.');
+      desenharPermissoes();
+      return;
+    }
+    /* 5.12.6: conferencia de verdade. Em vez de acreditar no "sucesso", a tela
+       relê do servidor e compara com o que voce marcou. Se o que voltou for
+       diferente, ela AVISA em vez de mostrar tudo certo e reverter depois. */
+    var conf = null;
+    try{ conf = await chamarAPI({ acao:'permissoesParaTela' }); }catch(e){}
+    var divergiu = [];
+    if(conf && conf.sucesso){
+      conf.capacidades.forEach(function(c, li){
+        conf.perfis.forEach(function(p, k){
+          var pedi = !!(novo.capacidades[p] && novo.capacidades[p][c.chave]);
+          if(!!c.marcado[k] !== pedi){
+            divergiu.push(conf.rotulos[k] + ' / ' + c.nome +
+              ' (pedi ' + (pedi ? 'sim' : 'não') + ', voltou ' + (c.marcado[k] ? 'sim' : 'não') + ')');
+          }
+        });
+      });
+    }
+    if(divergiu.length){
+      await apAviso('Salvou pela metade',
+        'O servidor respondeu que salvou, mas ao reler estes vieram diferentes:<br><br>'
+        + divergiu.map(_escPerm).join('<br>')
+        + '<br><br>Rode <b>testarSalvarPermissao()</b> no editor do Apps Script '
+        + 'e me mande o texto.');
+      _PERM_TELA = conf;
       desenharPermissoes();
       return;
     }
