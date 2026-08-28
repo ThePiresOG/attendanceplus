@@ -4088,7 +4088,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.12.4';
+const APP_VERSAO = '5.12.5';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -6008,7 +6008,21 @@ function _hojeIso(){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
+/* 5.12.5: todo painel da recepcao mora DENTRO de #telaRecepcao. Enquanto os
+   botoes tambem moravam la, isso nunca foi problema. Quando voce moveu
+   Configuracoes e Usuarios para o menu principal, o clique passou a abrir um
+   painel dentro de uma tela escondida: nada acontecia, sem erro nenhum.
+   Agora a funcao garante a tela antes, e lembra de onde a pessoa veio para o
+   Voltar nao largar ela num lugar que ela nao escolheu. */
+var _PAINEL_VEIO_DO_MENU = false;
+
 function abrirPainelRecep(idPainel, titulo){
+  var telaR = document.getElementById('telaRecepcao');
+  if(telaR && telaR.classList.contains('hidden')){
+    _PAINEL_VEIO_DO_MENU = true;
+    if($telaMenu) $telaMenu.classList.add('hidden');
+    abrirRecepcao();
+  }
   if(idPainel !== 'painelContratos' && typeof _limparOrigemNiv === 'function') _limparOrigemNiv();
   document.getElementById('recepCards').classList.add('hidden');
   document.getElementById('recepAbasPresenca').classList.add('hidden');
@@ -13530,6 +13544,7 @@ async function mostrarNovidades(nome, pronto){
 // ---------- RENOVACOES ----------
 
 document.getElementById('cardRecepcao').addEventListener('click', function(){
+  _PAINEL_VEIO_DO_MENU = false;
   $telaMenu.classList.add('hidden');
   abrirRecepcao();
 });
@@ -14126,6 +14141,17 @@ function gerarPDFCobranca(rel){
 }
 
 document.getElementById('btnSairRecepcao').addEventListener('click', ()=>{
+  // 5.12.5: entrou pelo menu principal, volta para o menu principal. Sem isto
+  // a pessoa clicava em Configuracoes no menu e era largada nos cards da
+  // recepcao, uma tela que ela nem tinha aberto.
+  if(_PAINEL_VEIO_DO_MENU){
+    _PAINEL_VEIO_DO_MENU = false;
+    $telaRecepcao.classList.add('hidden');
+    $telaMenu.classList.remove('hidden');
+    document.getElementById('btnSairRecepcao').textContent = 'Sair';
+    if(typeof mostrarCardsRecepcao === 'function') mostrarCardsRecepcao();
+    return;
+  }
   // com historico, volta exatamente de onde veio
   if(typeof navVoltar === 'function' && navVoltar()) return;
   // quem não tem acesso à recepção nunca fica nos cards dela
