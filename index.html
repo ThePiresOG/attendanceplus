@@ -1347,6 +1347,16 @@
   .desk-rosca-leg .pt-feito{ background:var(--verde-escuro); }
   .desk-rosca-leg .pt-falta{ background:var(--linha); }
 }
+
+.perm-previa-bloco{ border:1px solid var(--linha); border-radius:10px; padding:9px 12px; margin-bottom:8px; }
+.perm-previa-cab{ display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  margin-bottom:6px; }
+.perm-previa-cab b{ font-size:13px; color:var(--carvao); }
+.perm-previa-cab span{ font-size:11px; color:var(--verde-medio); text-align:right; }
+.perm-previa-itens{ display:flex; flex-wrap:wrap; gap:4px; }
+.perm-previa-itens span{ font-size:11px; background:var(--perola); border-radius:6px;
+  padding:2px 7px; color:var(--carvao); }
+.perm-previa-vazio{ font-size:11.5px; color:var(--salmao); }
 </style>
 </head>
 <body>
@@ -4078,7 +4088,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.12.3';
+const APP_VERSAO = '5.12.4';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -11619,9 +11629,11 @@ var MAPA_CARDS = [
   ['recepCardConexao',     'admin'],
   ['recepCardConfig',      'config'],
 
-  // nivelamento: dois botoes, mesma porta
-  ['cardNivelamento',      'nivelamento'],
-  ['recepCardNivelamento', 'nivelamento'],
+  /* 5.12.4: "nivelamento OU recepcao". A recepcao precisa entrar para emitir o
+     PDF do prospecto, e e assim que o servidor sempre decidiu. Aqui estava so
+     'nivelamento', entao o botao sumia para ela mesmo com o acesso liberado. */
+  ['cardNivelamento',      'nivelamento|recepcao'],
+  ['recepCardNivelamento', 'nivelamento|recepcao'],
   ['nivSubKpi',            'recepcao'],
 
   // NR-1: assunto sensivel, porta nominal
@@ -11655,8 +11667,8 @@ var MAPA_CARDS = [
   ['subcardNR1Treino',       'nr1'],
   ['subcardNR1Dossie',       'nr1'],
   ['subcardNR1Docs',         'nr1'],
-  ['nivSubNovo',             'nivelamento'],
-  ['nivSubLista',            'nivelamento']
+  ['nivSubNovo',             'nivelamento|recepcao'],
+  ['nivSubLista',            'nivelamento|recepcao']
 ];
 
 /* Estes dois sao de todo mundo que consegue entrar no app, de proposito.
@@ -11934,6 +11946,11 @@ function desenharPermissoes(){
     h += '</ul>';
   }
 
+  h += '<div class="perm-sep">O que cada um vai ver</div>'
+    + '<p class="perm-explica">Muda uma caixinha acima e esta lista muda junto, antes de salvar. '
+    + 'Assim você confere sem precisar entrar com o usuário da outra pessoa.</p>'
+    + '<div class="perm-previa" id="permPrevia"></div>';
+
   h += '<div class="perm-acoes">'
     + '<button class="btn-principal" onclick="conferirPermissoes()">Ver o que muda e salvar</button>'
     + '<button class="btn-secundario" onclick="voltarPermissoesAoPadrao()">Voltar ao padrão</button>'
@@ -11948,6 +11965,10 @@ function desenharPermissoes(){
   document.querySelectorAll('#permCorpo .perm-add').forEach(function(b){
     b.onclick = function(){ porNaPorta(b.getAttribute('data-porta')); };
   });
+  document.querySelectorAll('#permCorpo input[data-cap]').forEach(function(el){
+    el.addEventListener('change', desenharPrevia);
+  });
+  desenharPrevia();
   document.querySelectorAll('#permCorpo .perm-onde').forEach(function(b){
     b.onclick = function(){
       var lista = document.getElementById('quais_' + b.getAttribute('data-cap'));
@@ -11955,6 +11976,58 @@ function desenharPermissoes(){
       b.classList.toggle('aberto');
     };
   });
+}
+
+/**
+ * 5.12.4: a queixa era "mudo e nao atualiza". Nao era a planilha: PERM e PORTAS
+ * chegam no login, entao mexer no acesso da recepcao nao muda nada na SUA tela.
+ * Esta previa resolve isso mostrando, ao vivo, o que cada perfil passa a ver.
+ */
+function desenharPrevia(){
+  var alvo = document.getElementById('permPrevia');
+  if(!alvo || !_PERM_TELA) return;
+  var estado = _lerTelaPermissoes();
+  var nomes = {};
+  (_PERM_TELA.cartoes || []).forEach(function(c){ nomes[c.id] = c.nome; });
+
+  var html = '';
+  _PERM_TELA.perfis.forEach(function(p, k){
+    var caps = estado.capacidades[p] || {};
+    var gente = _PERM_TELA.gente[p] || [];
+
+    var vistos = {}, lista = [];
+    MAPA_CARDS.forEach(function(c){
+      var pode = String(c[1]).split('|').some(function(x){
+        if(caps[x] !== undefined) return !!caps[x];
+        // porta nominal: vale por pessoa, entao aqui so cabe "alguem deste
+        // perfil esta na lista?" e o nivelamento ainda entra pela recepcao
+        var na = (estado.nominais[x] || []).some(function(n){
+          return gente.some(function(g){ return _semAcentoTela(g) === _semAcentoTela(n); });
+        });
+        if(x === 'nivelamento' && caps.recepcao) return true;
+        return na;
+      });
+      if(!pode) return;
+      var nome = nomes[c[0]] || c[0];
+      if(vistos[nome]) return;      // mesmo recurso em dois lugares conta uma vez
+      vistos[nome] = true; lista.push(nome);
+    });
+
+    html += '<div class="perm-previa-bloco"><div class="perm-previa-cab">'
+      + '<b>' + _escPerm(_PERM_TELA.rotulos[k]) + '</b>'
+      + '<span>' + (gente.length ? _escPerm(gente.join(', ')) : 'ninguém tem este perfil')
+      + '</span></div>'
+      + (lista.length
+          ? '<div class="perm-previa-itens">' + lista.map(function(x){
+              return '<span>' + _escPerm(x) + '</span>'; }).join('') + '</div>'
+          : '<div class="perm-previa-vazio">Não veria nenhum botão. Confira as marcações.</div>')
+      + '</div>';
+  });
+  alvo.innerHTML = html;
+}
+
+function _semAcentoTela(s){
+  return String(s||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
 
 /** Lê a tela do jeito que ela está agora. */
