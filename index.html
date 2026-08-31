@@ -4233,7 +4233,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.15.1';
+const APP_VERSAO = '5.15.2';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4431,9 +4431,16 @@ function popularTurmas(){
   TURMAS.forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t.id;
-    opt.textContent = `${t.nivel} · ${t.dias.join('/')} · ${t.horario}`;
+    opt.textContent = rotuloTurma(t);
     $turma.appendChild(opt);
   });
+}
+
+/* 5.15.2: o numero da turma na frente. Ele e o que a equipe usa para falar
+   ("a 58", "a 120"), aparece no cabecalho da presenca e no relatorio, mas
+   faltava justamente na lista de escolher. */
+function rotuloTurma(t){
+  return `${t.turmaId} · ${t.nivel} · ${t.dias.join('/')} · ${t.horario}`;
 }
 
 function turmaAtual(){ return TURMAS.find(t=>t.id===$turma.value); }
@@ -5236,7 +5243,7 @@ function popularTurmasNotas(){
   TURMAS.forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t.id;
-    opt.textContent = `${t.nivel} · ${t.dias.join('/')} · ${t.horario}`;
+    opt.textContent = rotuloTurma(t);
     $turmaNotas.appendChild(opt);
   });
 }
@@ -5401,7 +5408,7 @@ function popularTurmasAssess(){
   TURMAS.forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t.id;
-    opt.textContent = `${t.nivel} · ${t.dias.join('/')} · ${t.horario}`;
+    opt.textContent = rotuloTurma(t);
     $turmaAssess.appendChild(opt);
   });
   popularAlunosAssess();
@@ -14921,7 +14928,7 @@ async function carregarMateriais(){
       html += `
         <div class="skill-linha" style="align-items:flex-start;">
           <div style="flex:1;">
-            <span class="skill-nome">${t.nivel} · ${t.dias.join('/')} · ${t.horario}</span>
+            <span class="skill-nome">${rotuloTurma(t)}</span>
             <div class="recep-extra">Livro: ${livro || '—'}</div>
           </div>
           ${temLink
