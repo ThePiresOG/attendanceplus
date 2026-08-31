@@ -1357,6 +1357,31 @@
 .perm-previa-itens span{ font-size:11px; background:var(--perola); border-radius:6px;
   padding:2px 7px; color:var(--carvao); }
 .perm-previa-vazio{ font-size:11.5px; color:var(--salmao); }
+
+/* ===== 5.14.0: prospectos ===== */
+.pr-kpi{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+.pr-kpi span{ font-size:11.5px; background:var(--perola); border-radius:20px;
+  padding:3px 10px; color:var(--carvao); }
+.pr-kpi span b{ color:var(--verde-escuro); }
+.pr-kpi .pr-vencido{ background:var(--salmao-claro); }
+.pr-kpi .pr-vencido b{ color:var(--carvao); }
+.pr-item{ border:1px solid var(--linha); border-radius:12px; padding:11px 13px; margin-bottom:9px; }
+.pr-item-vence{ border-left:3px solid var(--salmao); }
+.pr-cab{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.pr-cab b{ font-size:14px; color:var(--carvao); }
+.pr-sit{ font-size:11px; background:var(--azul-claro); border-radius:20px;
+  padding:2px 9px; color:var(--carvao); white-space:nowrap; }
+.pr-meta{ font-size:11.5px; color:var(--verde-medio); margin-top:3px; }
+.pr-meta.pr-vence{ color:var(--salmao); font-weight:600; }
+.pr-acoes{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+.pr-acoes .btn-material{ cursor:pointer; font-family:inherit; }
+.pr-hist{ margin-top:9px; border-top:1px solid var(--linha); padding-top:8px; }
+.pr-hist.hidden{ display:none; }
+.pr-hist-item{ font-size:11.5px; color:var(--carvao); border-left:2px solid var(--linha);
+  padding:4px 0 4px 9px; margin-bottom:6px; line-height:1.45; }
+.pr-hist-item i{ color:var(--verde-medio); }
+@media (min-width:820px){ #prResultadoLista{ display:grid; grid-template-columns:1fr 1fr;
+  gap:9px; align-items:start; } #prResultadoLista .pr-item{ margin-bottom:0; } }
 </style>
 </head>
 <body>
@@ -1990,6 +2015,14 @@
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Aluno</span>
           <span class="menu-card-sub">Ficha completa: turma, contrato, livros e contatos</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <button class="menu-card" id="recepCardProspectos">
+        <div class="menu-card-icone">&#128278;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Prospectos</span>
+          <span class="menu-card-sub">Quem chegou perto e ainda n&atilde;o fechou</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -3384,6 +3417,19 @@
               <small class="nv-dica">Vale para todos os usu&aacute;rios. O app avisa 30 segundos antes
                 e qualquer toque na tela reinicia a contagem.</small>
             </div>
+            <div class="nv-campo">
+              <label for="cfgAnoIni">Primeiro ano das listas</label>
+              <input type="number" id="cfgAnoIni" min="2000" max="2100" step="1">
+            </div>
+            <div class="nv-campo">
+              <label for="cfgAnoFim">&Uacute;ltimo ano das listas</label>
+              <input type="number" id="cfgAnoFim" min="2000" max="2100" step="1">
+            </div>
+            <div class="nv-campo nv-full">
+              <small class="nv-dica">Vale para toda tela que pede ano: fechamento dos professores,
+                freelancer, faltas e relat&oacute;rios. Nada de hist&oacute;rico se perde ao mudar
+                isto, s&oacute; muda o que aparece na lista.</small>
+            </div>
           </div>
           <div id="cfgResultado"></div>
           <div class="cfg-acao">
@@ -3406,6 +3452,105 @@
             ou mude a ordem dentro do grupo.</p>
           <div id="orgCorpo"></div>
         </section>
+      </div>
+    </div>
+
+
+    <!-- ============ 5.14.0 PROSPECTOS ============ -->
+    <div class="recep-painel hidden" id="painelProspectos">
+      <div class="menu-opcoes" id="prospSubcards">
+        <button class="menu-card" id="prospSubNovo">
+          <div class="menu-card-icone">&#10133;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Novo prospecto</span>
+            <span class="menu-card-sub">Quem entrou em contato e ainda n&atilde;o fechou</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="prospSubLista">
+          <div class="menu-card-icone">&#128203;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Lista de prospectos</span>
+            <span class="menu-card-sub">Buscar, ver hist&oacute;rico e registrar conversa</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+        <button class="menu-card" id="prospSubRetorno">
+          <div class="menu-card-icone">&#9200;</div>
+          <div class="menu-card-txt">
+            <span class="menu-card-titulo">Retornar hoje</span>
+            <span class="menu-card-sub">Quem voc&ecirc; combinou de procurar e j&aacute; venceu</span>
+          </div>
+          <span class="menu-card-seta">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="hidden" id="formProspecto">
+        <div class="nv-wrap">
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>1</span> Quem &eacute;</h3>
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="prNome">Nome</label>
+                <input type="text" id="prNome" placeholder="Nome de quem procurou a escola">
+              </div>
+              <div class="nv-campo">
+                <label for="prTel">Telefone</label>
+                <input type="tel" id="prTel" inputmode="numeric" placeholder="(15) 99999-9999">
+              </div>
+              <div class="nv-campo">
+                <label for="prEmail">E-mail</label>
+                <input type="email" id="prEmail" placeholder="opcional">
+              </div>
+              <div class="nv-campo">
+                <label for="prOrigem">Como chegou at&eacute; n&oacute;s</label>
+                <select id="prOrigem"></select>
+              </div>
+              <div class="nv-campo">
+                <label for="prSituacao">Situa&ccedil;&atilde;o</label>
+                <select id="prSituacao"></select>
+              </div>
+            </div>
+          </section>
+
+          <section class="nv-cartao">
+            <h3 class="nv-secao"><span>2</span> O que ele quer</h3>
+            <div class="nv-grid">
+              <div class="nv-campo nv-full">
+                <label for="prInteresse">Interesse</label>
+                <input type="text" id="prInteresse" placeholder="Ex.: ingl&ecirc;s para viagem, filho de 9 anos, conversa&ccedil;&atilde;o">
+              </div>
+              <div class="nv-campo">
+                <label for="prRetorno">Retornar em</label>
+                <input type="date" id="prRetorno">
+              </div>
+              <div class="nv-campo nv-full">
+                <label for="prObs">Observa&ccedil;&otilde;es</label>
+                <textarea id="prObs" rows="3" placeholder="O que foi conversado, condi&ccedil;&otilde;es faladas, hor&aacute;rios que serviriam"></textarea>
+              </div>
+            </div>
+          </section>
+
+          <div id="prResultado"></div>
+          <div class="nv-acoes-fixas">
+            <button class="btn-principal" id="btnSalvarProspecto">Salvar prospecto</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hidden" id="listaProspectos">
+        <div class="controls">
+          <div class="campo">
+            <label for="prBusca">Nome ou telefone</label>
+            <input type="text" id="prBusca" placeholder="Digite para buscar">
+          </div>
+          <div class="campo">
+            <label for="prFiltroSit">Situa&ccedil;&atilde;o</label>
+            <select id="prFiltroSit"><option value="">Todas</option></select>
+          </div>
+        </div>
+        <div id="prKpi"></div>
+        <div id="prResultadoLista"></div>
       </div>
     </div>
 
@@ -4088,7 +4233,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.13.0';
+const APP_VERSAO = '5.14.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4167,21 +4312,43 @@ async function checarVersao(){
 setTimeout(checarVersao, 3000);
 setInterval(checarVersao, 30*60*1000); // rechecagem a cada 30 min
 
-// ===== ANOS DINÂMICOS =====
-(function(){
-  const anoAtual = new Date().getFullYear();
-  ['anoFin','relAno'].forEach(id=>{
-    const sel = document.getElementById(id);
-    if(!sel) return;
-    sel.innerHTML = '';
-    for(let a = anoAtual - 1; a <= anoAtual + 1; a++){
-      const o = document.createElement('option');
-      o.value = a; o.textContent = a;
-      if(a === anoAtual) o.selected = true;
-      sel.appendChild(o);
-    }
+/* ===== ANOS =====
+   5.14.0: existiam CINCO trechos montando lista de ano, cada um com a propria
+   regra. Um fazia atual-1 a atual+1, os outros atual a atual-2. Era por isso
+   que o fechamento oferecia 2024, anterior ao sistema. Agora e uma funcao so,
+   e o intervalo vem das Configuracoes, sem mexer em codigo. */
+var ANO_INICIO = 2026;
+var ANO_FIM = 2027;
+
+/** Preenche um <select> com os anos configurados, do mais novo para o mais velho. */
+function montarAnos(sel, selecionado){
+  if(typeof sel === 'string') sel = document.getElementById(sel);
+  if(!sel) return;
+  var ini = Number(ANO_INICIO) || 2026;
+  var fim = Math.max(Number(ANO_FIM) || ini, ini);
+  var alvo = Number(selecionado) || new Date().getFullYear();
+  if(alvo < ini) alvo = ini;
+  if(alvo > fim) alvo = fim;
+  sel.innerHTML = '';
+  for(var a = fim; a >= ini; a--){
+    var o = document.createElement('option');
+    o.value = a; o.textContent = a;
+    if(a === alvo) o.selected = true;
+    sel.appendChild(o);
+  }
+  sel.value = String(alvo);
+}
+
+/** Refaz todas as listas de ano da tela. Chamada quando a configuracao muda. */
+function refazerTodosOsAnos(){
+  ['anoFin','relAno','frAno','fecAno','fltAno'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el && el.tagName === 'SELECT') montarAnos(el, el.value);
   });
-})();
+}
+
+montarAnos('anoFin');
+montarAnos('relAno');
 
 const $telaLogin = document.getElementById('telaLogin');
 const $telaApp = document.getElementById('telaApp');
@@ -8622,11 +8789,7 @@ function frMontarPeriodo(){
   });
   var hoje = new Date();
   mSel.value = hoje.getMonth()+1;
-  for(var a = hoje.getFullYear()+1; a >= hoje.getFullYear()-2; a--){
-    var o2 = document.createElement('option');
-    o2.value = a; o2.textContent = a; aSel.appendChild(o2);
-  }
-  aSel.value = hoje.getFullYear();
+  montarAnos(aSel, hoje.getFullYear());
   [mSel, aSel].forEach(function(el){ el.addEventListener('change', frCarregarLista); });
 }
 
@@ -9905,12 +10068,9 @@ function _mesAnoPadrao(idMes, idAno){
   MESES_NOME.forEach(function(m,i){
     var o=document.createElement('option'); o.value=i+1; o.textContent=m; mes.appendChild(o);
   });
-  for(var a=hoje.getFullYear(); a>=hoje.getFullYear()-2; a--){
-    var o2=document.createElement('option'); o2.value=a; o2.textContent=a; ano.appendChild(o2);
-  }
   var m0=hoje.getMonth();
   mes.value = m0===0 ? 12 : m0;
-  ano.value = m0===0 ? hoje.getFullYear()-1 : hoje.getFullYear();
+  montarAnos(ano, m0===0 ? hoje.getFullYear()-1 : hoje.getFullYear());
 }
 
 /** Período escolhido nos campos, ou null para usar mês/ano. */
@@ -10060,13 +10220,10 @@ document.getElementById('recepCardRelatorio').addEventListener('click', function
     MESES_NOME.forEach(function(m, i){
       var o = document.createElement('option'); o.value = i+1; o.textContent = m; mes.appendChild(o);
     });
-    for(var a = hoje.getFullYear(); a >= hoje.getFullYear()-2; a--){
-      var o2 = document.createElement('option'); o2.value = a; o2.textContent = a; ano.appendChild(o2);
-    }
     // por padrao, o mes que acabou de fechar
     var m0 = hoje.getMonth();
     mes.value = m0 === 0 ? 12 : m0;
-    ano.value = m0 === 0 ? hoje.getFullYear()-1 : hoje.getFullYear();
+    montarAnos(ano, m0 === 0 ? hoje.getFullYear()-1 : hoje.getFullYear());
   }
   var selP = document.getElementById('relAulasProf');
   if(selP.options.length <= 1){
@@ -11627,6 +11784,10 @@ var MAPA_CARDS = [
   ['recepCardMensalidade', 'recepcao'],
   ['recepCardAluno',       'recepcao'],
   ['recepCardNiver',       'recepcao'],
+  ['recepCardProspectos',  'recepcao'],
+  ['prospSubNovo',         'recepcao'],
+  ['prospSubLista',        'recepcao'],
+  ['prospSubRetorno',      'recepcao'],
   ['recepCardFaltas',      'recepcao'],
   ['recepCardRelAluno',    'recepcao'],
   ['recepCardFicha',       'recepcao'],
@@ -11739,6 +11900,9 @@ function aplicarRevelacoes(boot){
     if(!r || !r.sucesso) return;
     MINUTOS_INATIVIDADE = r.minutosInatividade || 5;
     reiniciarRelogioInatividade();
+    // 5.14.0: os anos vem daqui. Refaz as listas que ja estao na tela.
+    if(r.anoInicio){ ANO_INICIO = r.anoInicio; ANO_FIM = r.anoFim || r.anoInicio; }
+    refazerTodosOsAnos();
   });
 }
 
@@ -11822,6 +11986,8 @@ document.getElementById('recepCardConfig').addEventListener('click', async funct
   try{
     var r = await chamarAPI({ acao:'lerConfig' });
     document.getElementById('cfgInativo').value = r.minutosInatividade || 5;
+    document.getElementById('cfgAnoIni').value = r.anoInicio || ANO_INICIO;
+    document.getElementById('cfgAnoFim').value = r.anoFim || ANO_FIM;
   }catch(e){}
   abrirPermissoes();
   abrirOrganizador();
@@ -11833,15 +11999,23 @@ document.getElementById('btnSalvarCfg').addEventListener('click', async function
   if(!(min >= 1 && min <= 240)){
     box.innerHTML = '<div class="assess-aviso">Informe de 1 a 240 minutos.</div>'; return;
   }
+  var ini = Number(document.getElementById('cfgAnoIni').value);
+  var fim = Number(document.getElementById('cfgAnoFim').value);
   btn.disabled = true; btn.textContent = 'Salvando...';
   try{
-    var r = await chamarAPI({ acao:'salvarConfig', minutosInatividade: min });
+    var r = await chamarAPI({ acao:'salvarConfig', minutosInatividade: min,
+      anoInicio: ini, anoFim: fim });
     box.innerHTML = r.sucesso
-      ? '<div class="niv-ok">Pronto. A sessão passa a fechar depois de ' + r.minutosInatividade + ' minutos parado.</div>'
+      ? '<div class="niv-ok">Pronto. Sessão fecha em ' + r.minutosInatividade
+        + ' minutos parado, e as listas de ano vão de ' + r.anoInicio + ' a ' + r.anoFim + '.</div>'
       : '<div class="assess-aviso">' + (r.erro || 'Erro') + '</div>';
-    if(r.sucesso){ MINUTOS_INATIVIDADE = r.minutosInatividade; reiniciarRelogioInatividade(); }
+    if(r.sucesso){
+      MINUTOS_INATIVIDADE = r.minutosInatividade; reiniciarRelogioInatividade();
+      ANO_INICIO = r.anoInicio; ANO_FIM = r.anoFim;
+      refazerTodosOsAnos();   // vale na hora, sem precisar sair e entrar
+    }
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>'; }
-  btn.disabled = false; btn.textContent = 'Salvar configurações';
+  btn.disabled = false; btn.textContent = 'Salvar tempo de sessão';
 });
 
 /* ==================== 5.9.0: TELA DE PERMISSOES ====================
@@ -12177,7 +12351,8 @@ async function voltarPermissoesAoPadrao(){
 var GRADE_DA_TELA = {
   'Menu principal': 'menuCards',
   'Recepção':       'recepCards',
-  'Nivelamento':    'nivSubcards'
+  'Nivelamento':    'nivSubcards',
+  'Prospectos':     'prospSubcards'
 };
 var _LAYOUT = null;
 
@@ -12585,6 +12760,263 @@ async function carregarKpisPesados(){
     var faixa = document.getElementById('deskKpis');
     if(html && faixa) faixa.classList.remove('hidden');
   }catch(e){ /* silencioso: KPI e enfeite, nao pode derrubar a tela */ }
+}
+
+/* ==================== 5.14.0: PROSPECTOS ====================
+   Quem chegou perto e nao fechou. O valor aqui nao esta no cadastro, esta no
+   RETORNO: o app precisa dizer quem voce combinou de procurar e ja venceu.
+   Sem isso vira mais uma lista que ninguem abre.
+============================================================== */
+var _PROSP = { situacoes: [], origens: [], canais: [], lista: [], eu: '' };
+
+document.getElementById('recepCardProspectos').addEventListener('click', function(){
+  abrirPainelRecep('painelProspectos','Prospectos');
+  mostrarSubcardsProsp();
+  carregarListasProsp();
+});
+
+function mostrarSubcardsProsp(){
+  ['prospSubcards','formProspecto','listaProspectos'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', id !== 'prospSubcards');
+  });
+}
+
+function _soUmProsp(qual){
+  ['prospSubcards','formProspecto','listaProspectos'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.classList.toggle('hidden', id !== qual);
+  });
+}
+
+async function carregarListasProsp(){
+  if(_PROSP.situacoes.length) return;
+  try{
+    var r = await chamarAPI({ acao:'listasProspecto' });
+    if(!r || !r.sucesso) return;
+    _PROSP.situacoes = r.situacoes; _PROSP.origens = r.origens;
+    _PROSP.canais = r.canais; _PROSP.eu = r.eu || '';
+    _encher('prOrigem', r.origens);
+    _encher('prSituacao', r.situacoes);
+    var f = document.getElementById('prFiltroSit');
+    f.innerHTML = '<option value="">Todas</option>';
+    r.situacoes.forEach(function(s){
+      var o = document.createElement('option'); o.value = s; o.textContent = s; f.appendChild(o);
+    });
+  }catch(e){}
+}
+
+function _encher(id, itens){
+  var sel = document.getElementById(id);
+  if(!sel) return;
+  sel.innerHTML = '';
+  itens.forEach(function(x){
+    var o = document.createElement('option'); o.value = x; o.textContent = x; sel.appendChild(o);
+  });
+}
+
+document.getElementById('prospSubNovo').addEventListener('click', function(){
+  _soUmProsp('formProspecto');
+  _limparFormProsp();
+});
+document.getElementById('prospSubLista').addEventListener('click', function(){
+  _soUmProsp('listaProspectos');
+  document.getElementById('prBusca').value = '';
+  document.getElementById('prFiltroSit').value = '';
+  carregarProspectos(false);
+});
+document.getElementById('prospSubRetorno').addEventListener('click', function(){
+  _soUmProsp('listaProspectos');
+  document.getElementById('prBusca').value = '';
+  document.getElementById('prFiltroSit').value = '';
+  carregarProspectos(true);
+});
+
+var _PROSP_EDITANDO = 0;
+
+function _limparFormProsp(){
+  _PROSP_EDITANDO = 0;
+  ['prNome','prTel','prEmail','prInteresse','prRetorno','prObs'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('prSituacao').value = 'Novo';
+  document.getElementById('prResultado').innerHTML = '';
+  document.getElementById('btnSalvarProspecto').textContent = 'Salvar prospecto';
+}
+
+document.getElementById('btnSalvarProspecto').addEventListener('click', async function(){
+  var btn = this, box = document.getElementById('prResultado');
+  var nome = document.getElementById('prNome').value.trim();
+  if(!nome){ box.innerHTML = '<div class="assess-aviso">O nome é obrigatório.</div>'; return; }
+
+  var dados = {
+    acao:'salvarProspecto',
+    linha: _PROSP_EDITANDO || undefined,
+    nome: nome,
+    telefone: document.getElementById('prTel').value,
+    email: document.getElementById('prEmail').value.trim(),
+    origem: document.getElementById('prOrigem').value,
+    situacao: document.getElementById('prSituacao').value,
+    interesse: document.getElementById('prInteresse').value.trim(),
+    retorno: document.getElementById('prRetorno').value,
+    observacoes: document.getElementById('prObs').value.trim()
+  };
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try{
+    var r = await chamarAPI(dados);
+    if(r && r.duplicado){
+      var ok = await apEscolha('Já existe', _escPerm(r.erro),
+        [{ rotulo:'Abrir o que já existe' }, { rotulo:'Cadastrar mesmo assim', sub:'São pessoas diferentes' }]);
+      btn.disabled = false; btn.textContent = 'Salvar prospecto';
+      if(ok === 0){ _soUmProsp('listaProspectos');
+        document.getElementById('prBusca').value = nome; carregarProspectos(false); return; }
+      if(ok === 1){ dados.confirmarDuplicado = true; r = await chamarAPI(dados); }
+      else return;
+    }
+    if(!r || !r.sucesso){
+      box.innerHTML = '<div class="assess-aviso">' + ((r && r.erro) || 'Erro ao salvar.') + '</div>';
+    } else if(!r.gravou){
+      box.innerHTML = '<div class="assess-aviso">Gravei, mas ao reler a planilha o nome voltou '
+        + 'diferente. Confira a aba Prospectos antes de confiar neste cadastro.</div>';
+    } else {
+      box.innerHTML = '<div class="niv-ok">' + (r.editou ? 'Atualizado' : 'Prospecto nº ' + r.numero + ' cadastrado')
+        + '. ' + _escPerm(nome) + '</div>';
+      if(!r.editou) setTimeout(_limparFormProsp, 1200);
+    }
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>'; }
+  btn.disabled = false;
+  btn.textContent = _PROSP_EDITANDO ? 'Salvar alterações' : 'Salvar prospecto';
+});
+
+var _prospTimer = null;
+['prBusca'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', function(){
+    clearTimeout(_prospTimer);
+    _prospTimer = setTimeout(function(){ carregarProspectos(false); }, 400);
+  });
+});
+document.getElementById('prFiltroSit').addEventListener('change', function(){ carregarProspectos(false); });
+
+async function carregarProspectos(soRetorno){
+  var box = document.getElementById('prResultadoLista');
+  box.innerHTML = '<div class="perm-carregando">Carregando...</div>';
+  try{
+    var r = await chamarAPI({ acao:'listarProspectos',
+      termo: document.getElementById('prBusca').value.trim(),
+      situacao: document.getElementById('prFiltroSit').value,
+      soRetorno: !!soRetorno });
+    if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">Erro ao buscar.</div>'; return; }
+    _PROSP.lista = r.prospectos;
+
+    var kpi = document.getElementById('prKpi');
+    kpi.innerHTML = r.total
+      ? '<div class="pr-kpi">' + Object.keys(r.porSituacao).filter(function(s){ return r.porSituacao[s]; })
+          .map(function(s){ return '<span><b>' + r.porSituacao[s] + '</b> ' + _escPerm(s) + '</span>'; }).join('')
+        + (r.vencidos ? '<span class="pr-vencido"><b>' + r.vencidos + '</b> para retornar</span>' : '')
+        + '</div>'
+      : '';
+
+    if(!r.total){
+      box.innerHTML = '<div class="assess-aviso">'
+        + (soRetorno ? 'Ninguém para retornar hoje.' : 'Nenhum prospecto encontrado.') + '</div>';
+      return;
+    }
+    box.innerHTML = r.prospectos.map(function(p, i){
+      return '<div class="pr-item' + (p.venceu ? ' pr-item-vence' : '') + '">'
+        + '<div class="pr-cab"><b>' + _escPerm(p.nome) + '</b>'
+        + '<span class="pr-sit">' + _escPerm(p.situacao) + '</span></div>'
+        + '<div class="pr-meta">nº ' + p.numero
+        + (p.origem ? ' · ' + _escPerm(p.origem) : '')
+        + (p.interesse ? ' · ' + _escPerm(p.interesse) : '') + '</div>'
+        + (p.ultimo ? '<div class="pr-meta">último contato: ' + _escPerm(p.ultimo) + '</div>' : '')
+        + (p.retorno ? '<div class="pr-meta' + (p.venceu ? ' pr-vence' : '') + '">retornar em '
+            + _escPerm(p.retorno) + (p.venceu ? ' · venceu' : '') + '</div>' : '')
+        + '<div class="pr-acoes">'
+        + (p.telefone ? '<button class="btn-material" data-zap="' + i + '">WhatsApp</button>' : '')
+        + '<button class="btn-material" data-contato="' + i + '">Registrar conversa</button>'
+        + '<button class="btn-material" data-hist="' + i + '">Histórico</button>'
+        + '<button class="btn-material" data-edit="' + i + '">Editar</button>'
+        + '</div><div class="pr-hist hidden" id="prHist' + i + '"></div></div>';
+    }).join('');
+
+    box.querySelectorAll('[data-zap]').forEach(function(b){
+      b.onclick = function(){ _zapProspecto(_PROSP.lista[Number(b.dataset.zap)]); };
+    });
+    box.querySelectorAll('[data-contato]').forEach(function(b){
+      b.onclick = function(){ registrarConversa(_PROSP.lista[Number(b.dataset.contato)]); };
+    });
+    box.querySelectorAll('[data-hist]').forEach(function(b){
+      b.onclick = function(){ verHistorico(Number(b.dataset.hist)); };
+    });
+    box.querySelectorAll('[data-edit]').forEach(function(b){
+      b.onclick = function(){ editarProspecto(_PROSP.lista[Number(b.dataset.edit)]); };
+    });
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar.</div>'; }
+}
+
+function _zapProspecto(p){
+  var tel = String(p.telefone || '').replace(/\D/g,'');
+  if(!tel) return;
+  if(tel.length <= 11) tel = '55' + tel;
+  window.open('https://wa.me/' + tel, '_blank');
+}
+
+async function registrarConversa(p){
+  var canal = await apEscolha('Como foi a conversa com ' + _escPerm(p.nome) + '?', '',
+    _PROSP.canais.map(function(c){ return { rotulo:c }; }));
+  if(canal === null || canal < 0) return;
+
+  var resumo = await apTexto('O que foi conversado', 'Uma linha basta.', '', 'Ex.: pediu para ligar depois do dia 10');
+  if(resumo === null) return;
+
+  var sit = await apEscolha('E agora, como fica?', 'Situação do prospecto depois desta conversa.',
+    _PROSP.situacoes.map(function(s){ return { rotulo:s }; }));
+  if(sit === null || sit < 0) return;
+
+  var quando = await apTexto('Retornar em', 'Deixe em branco se não há retorno combinado.',
+    p.retorno || '', 'dd/mm/aaaa');
+
+  try{
+    var r = await chamarAPI({ acao:'registrarContatoProspecto', linha: p.linha,
+      canal: _PROSP.canais[canal], resumo: resumo,
+      situacao: _PROSP.situacoes[sit], retorno: quando || '' });
+    if(r && r.sucesso){ mostrarToast('Conversa registrada'); carregarProspectos(false); }
+    else await apAviso('Não registrei', (r && r.erro) || 'Erro.');
+  }catch(e){ await apAviso('Não registrei', 'Falha de conexão.'); }
+}
+
+async function verHistorico(i){
+  var p = _PROSP.lista[i];
+  var alvo = document.getElementById('prHist' + i);
+  if(!alvo.classList.contains('hidden')){ alvo.classList.add('hidden'); return; }
+  alvo.classList.remove('hidden');
+  alvo.innerHTML = '<div class="perm-carregando">Carregando...</div>';
+  try{
+    var r = await chamarAPI({ acao:'historicoProspecto', numero: p.numero });
+    alvo.innerHTML = (r && r.sucesso && r.contatos.length)
+      ? r.contatos.map(function(c){
+          return '<div class="pr-hist-item"><b>' + _escPerm(c.quando) + '</b> · '
+            + _escPerm(c.quem) + ' · ' + _escPerm(c.canal)
+            + '<br>' + _escPerm(c.resumo)
+            + (c.proximo ? '<br><i>próximo: ' + _escPerm(c.proximo) + '</i>' : '') + '</div>';
+        }).join('')
+      : '<div class="pr-hist-item">Nenhuma conversa registrada ainda.</div>';
+  }catch(e){ alvo.innerHTML = '<div class="pr-hist-item">Falha ao carregar.</div>'; }
+}
+
+function editarProspecto(p){
+  _soUmProsp('formProspecto');
+  _PROSP_EDITANDO = p.linha;
+  document.getElementById('prNome').value = p.nome;
+  document.getElementById('prTel').value = p.telefone;
+  document.getElementById('prEmail').value = p.email;
+  document.getElementById('prOrigem').value = p.origem || _PROSP.origens[0];
+  document.getElementById('prSituacao').value = p.situacao;
+  document.getElementById('prInteresse').value = p.interesse;
+  document.getElementById('prObs').value = p.observacoes;
+  document.getElementById('prResultado').innerHTML = '';
+  document.getElementById('btnSalvarProspecto').textContent = 'Salvar alterações';
 }
 
 /* ==================== 5.6.0: SAIR SOZINHO ====================
