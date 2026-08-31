@@ -4088,7 +4088,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.12.6';
+const APP_VERSAO = '5.13.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -11658,8 +11658,13 @@ var MAPA_CARDS = [
      regra nenhuma, e "esta escondido atras de outra porta" nao e o mesmo que
      "tem tranca". Agora cada um declara de quem depende, e a auditoria
      consegue afirmar que nao sobrou nada solto. */
-  ['subcardTurma',           'recepcao'],
-  ['subcardExtras',          'recepcao'],
+  /* 5.13.0: estes dois vivem na tela de Materiais e eu os classifiquei como
+     'recepcao' junto com os outros orfaos. Professor tem materiais e nao tem
+     recepcao, entao os tres subcards sumiam e a tela abria em branco. Agora
+     cada um pede a permissao da tela onde mora. subcardLivros continua em
+     'recepcao' de proposito: e o cadastro de licoes, nao e material de aula. */
+  ['subcardTurma',           'materiais'],
+  ['subcardExtras',          'materiais'],
   ['subcard18',              'recepcao'],
   ['subcardMenor',           'recepcao'],
   ['subcardBuscarContrato',  'recepcao'],
