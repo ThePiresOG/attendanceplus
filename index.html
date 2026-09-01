@@ -4092,6 +4092,14 @@ async function buscarTurmas(professor){
     turmaId: t.turmaId,
     professor: t.professor,
     modalidade: t.modalidade,
+    /* 5.18.0: A CAUSA DAS 9 TURMAS COM DURACAO ERRADA.
+       O servidor sempre mandou duracaoPadrao, e este mapa nunca copiou. Entao
+       t.duracaoPadrao era undefined, o "|| 1" transformava em 1, e o cliente
+       mandava duracao:1 ao salvar. No servidor, "Number(body.duracao) ||
+       _duracaoPadraoTurma()" nunca chegava a consultar a coluna Y, porque 1 ja
+       e um numero valido. Toda aula do app virava 1h, inclusive as de 2h de
+       sabado e a de 30 minutos. */
+    duracaoPadrao: Number(t.duracaoPadrao) || 1,
     capacidade: t.capacidade || 6,
     tipo: t.tipo || 'Grupo',
     dias: String(t.dias).split('/'),
@@ -4254,7 +4262,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.17.1';
+const APP_VERSAO = '5.18.1';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -4973,8 +4981,10 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
       }));
   mostrarToast('Salvando...');
   try{
+    // o campo campoDuracao nao existe na tela: quem manda e o cadastro da turma
     const $dur = document.getElementById('campoDuracao');
-    const duracaoAula = $dur ? (Number($dur.value) || 1) : (t.duracaoPadrao || 1);
+    const duracaoAula = ($dur && Number($dur.value)) ? Number($dur.value)
+                      : (Number(t.duracaoPadrao) || 1);
     const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: duracaoAula,
       livro: t.livro || '', comentario: $campoComentario.value.trim(),
       homework: $campoHomework.value.trim(),
@@ -5020,6 +5030,14 @@ document.getElementById('btnExportar').addEventListener('click', ()=>{
 });
 
 $turma.addEventListener('change', function(){
+  // some com a lista da turma anterior antes mesmo de pedir a nova
+  _LICOES_TURMA = null;
+  var lst = document.getElementById('licLista');
+  if(lst) lst.innerHTML = '<p class="lic-vazio">Carregando as li&ccedil;&otilde;es...</p>';
+  var tt = document.getElementById('licTitulo');
+  if(tt) tt.textContent = 'Lição da aula';
+  var pg = document.getElementById('licProgresso');
+  if(pg) pg.textContent = '';
   renderLista();
   setTimeout(function(){ ajustarAltura($campoComentario); ajustarAltura($campoHomework); }, 400);
 });
@@ -7400,7 +7418,23 @@ async function filtrarTurmasConsulta(){
  * 3.4.0 - LICOES DO LIVRO
  * ========================================================================== */
 
-var _LICOES_TURMA = null;   // resposta de licoesDaTurma da turma aberta agora
+/* 5.18.1: esta variavel guardava a resposta de licoesDaTurma sem dizer DE QUAL
+   turma. O cabecalho da tela le a turma atual na hora; a lista de licoes lia
+   daqui. Entre trocar de turma e o servidor responder (1 a 3 segundos no
+   celular) as duas discordavam, e a lista mostrava o livro da turma anterior.
+   Pior que o visual: marcar uma licao nessa janela gravava, na turma certa, a
+   licao de outro livro.
+
+   Agora ela carrega a turma a que pertence, e quem le confere antes de usar. */
+var _LICOES_TURMA = null;
+
+/** A resposta guardada, mas so se for mesmo da turma aberta agora. */
+function _licoesDaTurmaAtual(){
+  var t = (typeof turmaAtual === 'function') ? turmaAtual() : null;
+  if(!t || !_LICOES_TURMA) return null;
+  if(String(_LICOES_TURMA.turmaId) !== String(t.turmaId)) return null;
+  return _LICOES_TURMA;
+}
 
 /** Carrega e desenha as licoes do livro da turma selecionada. */
 async function carregarLicoes(){
@@ -7418,8 +7452,13 @@ async function carregarLicoes(){
   prog.textContent = '';
 
   try{
-    var r = await chamarAPI({ acao:'licoesDaTurma', turmaId: t.turmaId, data: $data.value });
+    var pedidoPara = t.turmaId;
+    var r = await chamarAPI({ acao:'licoesDaTurma', turmaId: pedidoPara, data: $data.value });
+    // trocou de turma enquanto a resposta vinha: esta resposta ja nao serve
+    var agora = turmaAtual();
+    if(!agora || String(agora.turmaId) !== String(pedidoPara)) return;
     if(!r.sucesso){ bloco.classList.add('hidden'); return; }
+    r.turmaId = pedidoPara;
     _LICOES_TURMA = r;
 
     if(r.semLivro){
@@ -7446,7 +7485,7 @@ async function carregarLicoes(){
 }
 
 function desenharLicoes(destino){
-  var r = _LICOES_TURMA;
+  var r = _licoesDaTurmaAtual();
   var lista = document.getElementById(destino || 'licLista');
   if(!r || !r.licoes || !lista) return;
 
@@ -7475,8 +7514,15 @@ function desenharLicoes(destino){
 }
 
 async function alternarLicao(n, cb){
-  var r = _LICOES_TURMA;
-  if(!r) return;
+  /* 5.18.1: sem esta checagem, marcar uma licao logo depois de trocar de turma
+     gravava a licao do livro anterior. Dado errado, silencioso, no historico
+     do aluno. */
+  var r = _licoesDaTurmaAtual();
+  if(!r){
+    cb.checked = !cb.checked;
+    mostrarToast('Espere as lições desta turma carregarem');
+    return;
+  }
   var atual = null;
   r.licoes.forEach(function(l){ if(l.n === n) atual = l; });
   if(!atual) return;
@@ -7677,7 +7723,7 @@ function abrirAulaDeHoje(){
 
   // lista de licoes: reaproveita o que ja foi carregado para esta turma
   var bloco = document.getElementById('aulaBlocoLicoes');
-  var r = _LICOES_TURMA;
+  var r = _licoesDaTurmaAtual();
   if(r && r.licoes && r.licoes.length){
     bloco.classList.remove('hidden');
     document.getElementById('aulaLicTitulo').textContent = r.livro;
