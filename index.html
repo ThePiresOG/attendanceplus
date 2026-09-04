@@ -1392,6 +1392,23 @@
   background:#FBF3E2; border-left:3px solid #8a6d1a; color:#6b5410;
   font-size:12.5px; line-height:1.5; }
 .mn-aviso-venc.hidden{ display:none; }
+
+.rc-form{ display:flex; flex-direction:column; gap:12px; }
+.rc-campo{ display:flex; flex-direction:column; gap:5px; }
+.rc-campo span{ font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--verde-escuro); font-weight:600; }
+.rc-campo input{ font-family:inherit; font-size:15px; padding:10px 12px;
+  border:1px solid var(--linha); border-radius:9px; background:var(--branco); color:var(--carvao); }
+.rc-campo input:focus{ outline:2px solid var(--verde-claro); outline-offset:1px; }
+.rc-previa{ font-size:12.5px; color:var(--carvao); background:var(--perola);
+  border-radius:9px; padding:10px 12px; line-height:1.6; }
+.mn-barra{ display:flex; justify-content:space-between; align-items:center; gap:10px;
+  margin:0 20px 10px; padding:9px 13px; background:var(--perola); border-radius:10px;
+  font-size:12.5px; color:var(--carvao); }
+.mn-barra.hidden{ display:none; }
+.mn-link{ border:0; background:none; color:var(--verde-escuro); font-family:inherit;
+  font-size:12.5px; font-weight:600; cursor:pointer; text-decoration:underline; padding:0; }
+.mn-cancelado{ padding:0 20px; font-size:13px; color:var(--verde-medio); }
 </style>
 </head>
 <body>
@@ -2707,7 +2724,10 @@
         </div>
       </div>
 
-      <div class="mn-aviso-venc hidden" id="mnAvisoVenc"></div>
+      <div class="mn-barra hidden" id="mnBarraAjuste">
+        <span id="mnResumoParcelas"></span>
+        <button type="button" class="mn-link" id="btnAjustarRecibo">Ajustar</button>
+      </div>
       <div id="mnMeses"></div>
 
       <div class="controls" style="padding-top:0;">
@@ -4291,7 +4311,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.19.0';
+const APP_VERSAO = '5.20.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -8233,7 +8253,58 @@ async function nr1CarregarRiscos(){
  * ========================================================================== */
 
 var _MESES_CONTRATO = [];
-var _MENS_ORIGEM = 'contrato';
+var _MENS_SUGESTAO = null;
+var _MENS_PAGOS = {};
+
+/** 'dd/mm/aaaa' -> 'aaaa-mm-dd', que e o formato do <input type="date">. */
+function _brParaISO(br){
+  var p = String(br || '').split('/');
+  if(p.length !== 3) return '';
+  return p[2] + '-' + p[1] + '-' + p[0];
+}
+
+/**
+ * Abre o pop-up de confirmacao e monta os meses com o que foi confirmado.
+ * Usada ao escolher o contrato e pelo botao Ajustar.
+ */
+async function mnPerguntarEMontar(){
+  if(!_MENS_SUGESTAO) return;
+  var selC = document.getElementById('mnContrato');
+  var aluno = (selC && selC.selectedIndex >= 0) ? selC.options[selC.selectedIndex].textContent : '';
+  var r = await apRecibo(aluno, _MENS_SUGESTAO);
+  if(!r){
+    // cancelou: nao monta nada, para nao sobrar lista de outro contrato na tela
+    _MESES_CONTRATO = [];
+    document.getElementById('mnMeses').innerHTML =
+      '<p class="mn-cancelado">Confirmação cancelada. '
+      + '<button type="button" class="mn-link" id="mnReabrir">Informar os dados</button></p>';
+    var rb = document.getElementById('mnReabrir');
+    if(rb) rb.onclick = mnPerguntarEMontar;
+    mnAtualizarTotal();
+    return;
+  }
+
+  _MENS_SUGESTAO.parcelas = r.parcelas;
+  _MENS_SUGESTAO.valor = r.valor;
+  _MENS_SUGESTAO.vencISO = _brParaISO(r.primeiroVenc);
+
+  _MESES_CONTRATO = mnMontarMeses(r.parcelas, r.primeiroVenc).map(function(m){
+    m.jaPago = _MENS_PAGOS['Mensalidade ' + m.rotulo] || 0;
+    return m;
+  });
+  if(_num(r.valor) > 0) document.getElementById('mnValor').value = r.valor;
+  mnDesenharMeses();
+  mnAtualizarTotal();
+
+  var barra = document.getElementById('mnBarraAjuste');
+  var resumo = document.getElementById('mnResumoParcelas');
+  if(barra && resumo && _MESES_CONTRATO.length){
+    barra.classList.remove('hidden');
+    resumo.innerHTML = '<b>' + _MESES_CONTRATO.length + '</b> parcela(s) de <b>'
+      + _reais(_num(r.valor) || 0) + '</b>, de ' + _escPerm(_MESES_CONTRATO[0].rotulo)
+      + ' a ' + _escPerm(_MESES_CONTRATO[_MESES_CONTRATO.length - 1].rotulo);
+  }
+}
 var _CONTRATOS_MENS = [];
 
 document.getElementById('recepCardMensalidade').addEventListener('click', function(){
@@ -8287,6 +8358,8 @@ document.getElementById('mnContrato').addEventListener('change', mnCarregarMeses
 async function mnCarregarMeses(){
   var num = document.getElementById('mnContrato').value;
   var box = document.getElementById('mnMeses');
+  var barraA = document.getElementById('mnBarraAjuste');
+  if(barraA) barraA.classList.add('hidden');
   if(!num){ box.innerHTML = ''; _MESES_CONTRATO = []; mnAtualizarTotal(); return; }
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando os meses...</p>';
   try{
@@ -8310,24 +8383,19 @@ async function mnCarregarMeses(){
     if(r.mensalidade > 0 && !_num(document.getElementById('mnValor').value)){
       document.getElementById('mnValor').value = r.mensalidadeTexto.replace('R$ ','');
     }
-    /* 5.19.0: quando a coluna L do contrato esta vazia, o servidor deduz o dia
-       de vencimento pela data de inicio. Antes isso era silencioso, e o recibo
-       da Mirian saiu com dia 23 (o dia da assinatura) num contrato que diz
-       "vencimento no dia 01". Agora a tela avisa antes de gerar o PDF. */
-    _MENS_ORIGEM = r.origemVencimento || 'contrato';
-    var alerta = document.getElementById('mnAvisoVenc');
-    if(alerta){
-      var deduzido = _MENS_ORIGEM === 'deduzido';
-      alerta.classList.toggle('hidden', !deduzido);
-      if(deduzido){
-        alerta.innerHTML = 'O contrato n&atilde;o tem o dia de vencimento preenchido. '
-          + 'Estou usando <b>dia ' + r.diaVencimento + '</b>, deduzido da data de in&iacute;cio ('
-          + _escPerm(r.inicioContrato || '') + ').<br>'
-          + 'Se o vencimento for outro dia, corrija a <b>coluna L</b> do contrato n&ordm; '
-          + _escPerm(r.numContrato || '') + ' na aba Contratos antes de emitir.';
-      }
-    }
-    mnDesenharMeses();
+    /* 5.20.0: em vez de montar direto, o app PERGUNTA. O contrato tem duas datas
+       diferentes (inicio do curso e primeiro vencimento) e o app so conhece a
+       primeira. Vem preenchido com o que ele sabe; quem emite corrige. */
+    _MENS_PAGOS = pagos;
+    _MENS_SUGESTAO = {
+      parcelas: r.parcelas,
+      valor: (r.mensalidadeTexto || '').replace('R$ ', ''),
+      vencISO: _brParaISO(r.meses && r.meses[0] ? r.meses[0].vencimento : ''),
+      deduzido: (r.origemVencimento === 'deduzido'),
+      inicioContrato: r.inicioContrato || '',
+      numContrato: r.numContrato || ''
+    };
+    await mnPerguntarEMontar();
   }catch(e){
     box.innerHTML = '<div class="assess-aviso">Não consegui carregar os meses.</div>';
   }
@@ -8389,6 +8457,11 @@ function mnAtualizarTotal(){
   el.addEventListener('input', mnAtualizarTotal);
   el.addEventListener('change', mnAtualizarTotal);
 });
+
+(function(){
+  var b = document.getElementById('btnAjustarRecibo');
+  if(b) b.addEventListener('click', mnPerguntarEMontar);
+})();
 
 document.getElementById('btnGerarMensalidade').addEventListener('click', async function(ev){
   var btn = ev.currentTarget;
@@ -13232,6 +13305,122 @@ async function _sincronizarProspecto(nome){
         confirmarDuplicado: false });
     }
   }catch(e){ /* o nivelamento ja foi salvo; isto e complemento */ }
+}
+
+/* ==================== 5.20.0: CONFIRMAR ANTES DE MONTAR O RECIBO ====================
+   O app montava os meses a partir do inicio do CURSO. Mas contrato tem duas
+   datas diferentes: quando a aula comeca e quando a primeira parcela vence. O
+   do Andre comeca em agosto e a primeira parcela vence em 15/12. Nao da para
+   deduzir isso do inicio do curso, e tentar adivinhar em cada contrato seria
+   caçar caso a caso para sempre.
+
+   Entao o app pergunta. Vem preenchido com o que o contrato diz, e quem emite
+   corrige o que estiver diferente antes de gerar qualquer PDF.
+==================================================================================== */
+
+/** Ultimo dia do mes. Dia 31 em fevereiro vira 28 (ou 29), nao 3 de marco. */
+function _ultimoDiaDoMes(ano, mes){
+  return new Date(ano, mes + 1, 0).getDate();
+}
+
+var _MES_NOME_BR = ['janeiro','fevereiro','março','abril','maio','junho',
+                    'julho','agosto','setembro','outubro','novembro','dezembro'];
+
+/**
+ * Monta a lista de meses a partir de: quantas parcelas e quando vence a
+ * primeira. Sem consultar o servidor, para o ajuste ser instantaneo.
+ */
+function mnMontarMeses(parcelas, primeiroVenc){
+  var p = String(primeiroVenc || '').split('/');
+  var dia = Number(p[0]), mes = Number(p[1]) - 1, ano = Number(p[2]);
+  if(!(dia >= 1 && dia <= 31) || !(mes >= 0 && mes <= 11) || !(ano > 2000)) return [];
+
+  var out = [];
+  for(var n = 0; n < Math.max(1, parcelas); n++){
+    var d = new Date(ano, mes + n, 1);
+    var diaFinal = Math.min(dia, _ultimoDiaDoMes(d.getFullYear(), d.getMonth()));
+    out.push({
+      chave: d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2),
+      rotulo: _MES_NOME_BR[d.getMonth()] + '/' + d.getFullYear(),
+      parcela: n + 1,
+      total: Math.max(1, parcelas),
+      vencimento: ('0' + diaFinal).slice(-2) + '/'
+        + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear()
+    });
+  }
+  return out;
+}
+
+/**
+ * O pop-up. Devolve {parcelas, valor, primeiroVenc} ou null se cancelar.
+ * Os tres campos vem preenchidos com o que o contrato diz.
+ */
+function apRecibo(aluno, sugestao){
+  return new Promise(function(resolve){
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    var v = sugestao || {};
+    fundo.innerHTML = '<div class="ap-cx" style="max-width:420px;">'
+      + '<div class="ap-topo"><b>Confirma as informações abaixo?</b>'
+      + '<span>' + _escPerm(aluno || '') + '</span></div>'
+      + '<div class="ap-lista rc-form">'
+      +   '<label class="rc-campo"><span>Quantas mensalidades</span>'
+      +     '<input type="number" id="rcParcelas" min="1" max="48" step="1" value="'
+      +       (Number(v.parcelas) || 6) + '"></label>'
+      +   '<label class="rc-campo"><span>Valor pago por mês</span>'
+      +     '<input type="text" inputmode="decimal" id="rcValor" value="'
+      +       _escPerm(v.valor || '') + '" placeholder="360,00"></label>'
+      +   '<label class="rc-campo"><span>Vencimento da primeira parcela</span>'
+      +     '<input type="date" id="rcVenc" value="' + _escPerm(v.vencISO || '') + '"></label>'
+      +   '<div class="rc-previa" id="rcPrevia"></div>'
+      + '</div>'
+      + '<div class="ap-rod"><div style="flex:1;"></div>'
+      + '<button class="ren-btn sec" id="rcNao">Cancelar</button>'
+      + '<button class="pend-acao" id="rcSim">Confirmar</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+
+    var $p = fundo.querySelector('#rcParcelas');
+    var $v = fundo.querySelector('#rcValor');
+    var $d = fundo.querySelector('#rcVenc');
+    var $pv = fundo.querySelector('#rcPrevia');
+
+    // a previa e o que evita gerar um recibo errado: mostra o primeiro e o
+    // ultimo mes antes de confirmar
+    function previa(){
+      var iso = $d.value;
+      if(!iso){ $pv.textContent = 'Escolha a data do primeiro vencimento.'; return; }
+      var pt = iso.split('-');
+      var lista = mnMontarMeses(Number($p.value) || 1,
+        pt[2] + '/' + pt[1] + '/' + pt[0]);
+      if(!lista.length){ $pv.textContent = ''; return; }
+      var total = (_num($v.value) || 0) * lista.length;
+      $pv.innerHTML = '<b>' + lista.length + '</b> parcela(s), de <b>'
+        + _escPerm(lista[0].rotulo) + '</b> a <b>' + _escPerm(lista[lista.length-1].rotulo) + '</b>'
+        + '<br>primeiro vencimento em ' + lista[0].vencimento
+        + ' &middot; último em ' + lista[lista.length-1].vencimento
+        + (total > 0 ? '<br>total do contrato: <b>' + _reais(total) + '</b>' : '');
+    }
+    [$p, $v, $d].forEach(function(el){
+      el.addEventListener('input', previa);
+      el.addEventListener('change', previa);
+    });
+    previa();
+
+    function fechar(r){ fundo.remove(); resolve(r); }
+    fundo.querySelector('#rcNao').onclick = function(){ fechar(null); };
+    fundo.querySelector('#rcSim').onclick = function(){
+      var iso = $d.value;
+      if(!iso){ $pv.textContent = 'Escolha a data do primeiro vencimento.'; return; }
+      var n = Number($p.value) || 0;
+      if(!(n >= 1 && n <= 48)){ $pv.textContent = 'Informe de 1 a 48 mensalidades.'; return; }
+      var pt = iso.split('-');
+      fechar({ parcelas: n, valor: $v.value,
+               primeiroVenc: pt[2] + '/' + pt[1] + '/' + pt[0] });
+    };
+    fundo.addEventListener('click', function(e){ if(e.target === fundo) fechar(null); });
+    setTimeout(function(){ $p.focus(); $p.select(); }, 80);
+  });
 }
 
 /* ==================== 5.19.0: FECHAMENTO TEACHERS ====================
