@@ -1409,6 +1409,13 @@
 .mn-link{ border:0; background:none; color:var(--verde-escuro); font-family:inherit;
   font-size:12.5px; font-weight:600; cursor:pointer; text-decoration:underline; padding:0; }
 .mn-cancelado{ padding:0 20px; font-size:13px; color:var(--verde-medio); }
+
+.lv-acoes{ display:flex; flex-wrap:wrap; gap:8px; padding:0 20px 12px; }
+.lv-acoes .btn-material{ cursor:pointer; font-family:inherit; }
+.lv-acoes .btn-material.hidden{ display:none; }
+#btnNovoLivro{ border:1px dashed var(--verde-medio); background:none; color:var(--verde-escuro); }
+.visor-caixa{ flex:1; background:var(--carvao); display:flex; }
+.visor-caixa iframe{ flex:1; width:100%; height:100%; border:0; }
 </style>
 </head>
 <body>
@@ -1864,6 +1871,22 @@
   </div>
 
   <!-- TELA MATERIAIS -->
+  <!-- ============ 5.21.0 VISUALIZADOR ============ -->
+  <div id="telaVisor" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+    <header>
+      <div class="header-textos">
+        <div class="top-row">
+          <h1 id="visorTitulo">Livro</h1>
+          <button class="sair" id="btnFecharVisor">Fechar</button>
+        </div>
+        <p class="sub" id="visorSub">Aberto dentro do app</p>
+      </div>
+    </header>
+    <div class="visor-caixa">
+      <iframe id="visorFrame" title="Visualizador"></iframe>
+    </div>
+  </div>
+
   <!-- ============ 5.19.0 FECHAMENTO TEACHERS ============ -->
   <div id="telaFechaTeachers" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow-y:auto;">
     <header>
@@ -1925,6 +1948,11 @@
           <label for="lvSelect">Livro</label>
           <select id="lvSelect"><option value="">Carregando...</option></select>
         </div>
+      </div>
+      <div class="lv-acoes">
+        <button type="button" class="btn-material" id="btnNovoLivro">+ Novo livro</button>
+        <button type="button" class="btn-material hidden" id="btnSubirLivro">Subir arquivo</button>
+        <button type="button" class="btn-material hidden" id="btnVerLivro">Abrir o livro</button>
       </div>
       <div class="assess-resultado" id="lvEditor"></div>
     </div>
@@ -4311,7 +4339,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.20.0';
+const APP_VERSAO = '5.21.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -7632,13 +7660,17 @@ async function carregarSelectLivros(){
   var ed = document.getElementById('lvEditor');
   ed.innerHTML = '<p class="lic-vazio">Escolha um livro acima.</p>';
   try{
-    var r = await chamarAPI({ acao:'listarLivros' });
+    // 5.21.0: livrosParaTela traz tambem o arquivo de cada livro
+    var r = await chamarAPI({ acao:'livrosParaTela' });
     if(!r.sucesso){ sel.innerHTML = '<option value="">Erro ao carregar</option>'; return; }
+    _LIVROS_TELA = r.livros || [];
     sel.innerHTML = '<option value="">Selecione o livro</option>'
-      + r.livros.map(function(l){
-          return '<option value="' + l.livro + '">' + l.livro
-            + ' — ' + l.licoes + ' lição(ões) · ' + l.turmas + ' turma(s)</option>';
+      + _LIVROS_TELA.map(function(l){
+          return '<option value="' + _escPerm(l.livro) + '">' + _escPerm(l.livro)
+            + ' — ' + l.licoes + ' lição(ões) · ' + l.turmas + ' turma(s)'
+            + (l.arquivo ? ' · com arquivo' : ' · sem arquivo') + '</option>';
         }).join('');
+    lvAtualizarBotoes();
   }catch(e){
     sel.innerHTML = '<option value="">Erro de conexão</option>';
   }
@@ -13305,6 +13337,156 @@ async function _sincronizarProspecto(nome){
         confirmarDuplicado: false });
     }
   }catch(e){ /* o nivelamento ja foi salvo; isto e complemento */ }
+}
+
+(function(){
+  var n = document.getElementById('btnNovoLivro');
+  if(n) n.addEventListener('click', lvNovoLivro);
+  var s = document.getElementById('btnSubirLivro');
+  if(s) s.addEventListener('click', lvSubirArquivo);
+  var v = document.getElementById('btnVerLivro');
+  if(v) v.addEventListener('click', function(){
+    var l = _livroSelecionado();
+    if(l && l.idArquivo) abrirVisor(l.livro, l.idArquivo, l.licoes + ' lição(ões) cadastrada(s)');
+  });
+  var f = document.getElementById('btnFecharVisor');
+  if(f) f.addEventListener('click', fecharVisor);
+  var sel = document.getElementById('lvSelect');
+  if(sel) sel.addEventListener('change', lvAtualizarBotoes);
+})();
+
+/* ==================== 5.21.0: LIVROS PELO APP ====================
+   Criar livro, subir o arquivo e abrir o PDF sem sair da tela.
+
+   Sobre o visualizador: ele usa a URL /preview do Drive, que abre o PDF sem
+   levar a pessoa para outra aba. Isso e conforto de uso, NAO protecao: quem
+   ve o arquivo na tela ja tem os bytes no aparelho. Quem barra o caminho
+   facil e a trava do Drive, feita pelo travarCopiaDosLivros() no editor.
+=================================================================== */
+var _LIVROS_TELA = [];
+
+function _livroSelecionado(){
+  var sel = document.getElementById('lvSelect');
+  if(!sel || !sel.value) return null;
+  var achado = null;
+  _LIVROS_TELA.forEach(function(l){ if(l.livro === sel.value) achado = l; });
+  return achado;
+}
+
+/** Liga e desliga os botoes conforme o livro escolhido tem arquivo ou nao. */
+function lvAtualizarBotoes(){
+  var l = _livroSelecionado();
+  var subir = document.getElementById('btnSubirLivro');
+  var ver = document.getElementById('btnVerLivro');
+  if(subir) subir.classList.toggle('hidden', !l);
+  if(subir && l) subir.textContent = l.arquivo ? 'Trocar arquivo' : 'Subir arquivo';
+  if(ver) ver.classList.toggle('hidden', !(l && l.idArquivo));
+}
+
+async function lvNovoLivro(){
+  var nome = await apTexto('Novo livro',
+    'Escreva exatamente como deve aparecer nas turmas.', '', 'Ex.: Functional English 4');
+  if(!nome) return;
+  try{
+    var r = await chamarAPI({ acao:'criarLivro', livro: nome.trim() });
+    if(!r || !r.sucesso){ await apAviso('Não criei', (r && r.erro) || 'Erro.'); return; }
+    if(!r.gravou){
+      await apAviso('Criei, mas confira',
+        'O livro foi para a planilha, mas ao reler o nome voltou diferente. '
+        + 'Confira a aba Materiais antes de cadastrar as lições.');
+    }
+    mostrarToast('Livro "' + nome.trim() + '" criado');
+    await carregarSelectLivros();
+    var sel = document.getElementById('lvSelect');
+    sel.value = nome.trim();
+    lvAtualizarBotoes();
+    abrirLivroParaEditar();
+  }catch(e){ await apAviso('Não criei', 'Falha de conexão.'); }
+}
+
+var _LV_INPUT = null;
+
+function lvSubirArquivo(){
+  var l = _livroSelecionado();
+  if(!l) return;
+  if(!_LV_INPUT){
+    _LV_INPUT = document.createElement('input');
+    _LV_INPUT.type = 'file';
+    _LV_INPUT.accept = '.pdf,image/jpeg,image/png';
+    _LV_INPUT.style.display = 'none';
+    document.body.appendChild(_LV_INPUT);
+  }
+  _LV_INPUT.value = '';
+  _LV_INPUT.onchange = function(){
+    var arq = _LV_INPUT.files && _LV_INPUT.files[0];
+    if(arq) _lvEnviar(arq, l);
+  };
+  _LV_INPUT.click();
+}
+
+async function _lvEnviar(arq, livro){
+  var mb = arq.size / (1024*1024);
+  if(mb > 25){
+    await apAviso('Arquivo grande demais',
+      'Esse arquivo tem ' + mb.toFixed(1) + ' MB e o limite é 25 MB.');
+    return;
+  }
+  var ok = await apEscolha('Subir o arquivo do livro',
+    '<b>' + _escPerm(livro.livro) + '</b><br>' + _escPerm(arq.name)
+    + ' (' + mb.toFixed(1) + ' MB)'
+    + (livro.arquivo ? '<br><br>Já existe um arquivo neste livro. O anterior vai para a lixeira.' : ''),
+    [{ rotulo: livro.arquivo ? 'Substituir' : 'Enviar' }]);
+  if(ok !== 0) return;
+
+  mostrarToast('Enviando...');
+  try{
+    var base64 = await new Promise(function(res, rej){
+      var fr = new FileReader();
+      fr.onload = function(){ res(String(fr.result)); };
+      fr.onerror = function(){ rej(new Error('leitura')); };
+      fr.readAsDataURL(arq);
+    });
+    var r = await chamarAPI({ acao:'subirArquivoLivro', livro: livro.livro,
+      tipoArquivo: arq.type || 'application/pdf', base64: base64 });
+    if(!r || !r.sucesso){ await apAviso('Não subiu', (r && r.erro) || 'Erro.'); return; }
+    if(!r.gravou){
+      await apAviso('Subiu, mas confira',
+        'O arquivo está no Drive, mas o link não voltou da planilha na conferência. '
+        + 'Confira a aba Materiais.');
+    } else {
+      await apAviso('Pronto', _escPerm(livro.livro) + ' &middot; ' + r.tamanhoMB + ' MB'
+        + (r.substituiu ? '<br><br>O arquivo anterior foi para a lixeira.' : ''));
+    }
+    await carregarSelectLivros();
+    document.getElementById('lvSelect').value = livro.livro;
+    lvAtualizarBotoes();
+  }catch(e){ await apAviso('Não subiu', 'Falha no envio. Nada foi gravado.'); }
+}
+
+/** Abre o PDF dentro do app. Conforto de uso, nao protecao. */
+function abrirVisor(titulo, idDrive, sub){
+  if(!idDrive) return;
+  document.getElementById('visorTitulo').textContent = titulo || 'Documento';
+  document.getElementById('visorSub').textContent = sub || 'Aberto dentro do app';
+  document.getElementById('visorFrame').src =
+    'https://drive.google.com/file/d/' + encodeURIComponent(idDrive) + '/preview';
+  document.querySelectorAll('[id^=tela]').forEach(function(t){
+    if(t.id !== 'telaVisor' && !t.classList.contains('hidden')){
+      t.dataset.visorVoltar = '1';
+      t.classList.add('hidden');
+    }
+  });
+  document.getElementById('telaVisor').classList.remove('hidden');
+}
+
+function fecharVisor(){
+  document.getElementById('telaVisor').classList.add('hidden');
+  // descarrega o PDF: iframe aberto em segundo plano continua consumindo dados
+  document.getElementById('visorFrame').src = 'about:blank';
+  document.querySelectorAll('[data-visor-voltar]').forEach(function(t){
+    t.classList.remove('hidden');
+    delete t.dataset.visorVoltar;
+  });
 }
 
 /* ==================== 5.20.0: CONFIRMAR ANTES DE MONTAR O RECIBO ====================
