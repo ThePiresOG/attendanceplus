@@ -1423,6 +1423,13 @@
   user-select:none; flex:none; padding-right:2px; }
 .org-pegando{ opacity:.45; }
 .org-alvo{ box-shadow:inset 0 2px 0 var(--verde-escuro); }
+.org-alerta{ background:#FFF4E5; border:1px solid #E8B366; border-radius:10px;
+  padding:10px 12px; margin-bottom:10px; font-size:12.5px; color:#7A4A00; line-height:1.5; }
+.org-alerta b{ color:#5C3800; }
+.org-alerta ul{ margin:6px 0 0; padding-left:18px; }
+.org-item.org-perigo{ background:#FFF4E5; }
+.org-marca{ font-size:11px; color:#A35B00; border:1px solid #E8B366; border-radius:5px;
+  padding:1px 5px; white-space:nowrap; }
 .org-fim{ font-size:11px; color:var(--verde-medio); padding:7px 12px; border-top:1px dashed var(--linha);
   text-align:center; }
 .org-alvo-fim{ background:var(--azul-claro); color:var(--carvao); }
@@ -2096,23 +2103,9 @@
           <div class="header-alca" title="Arraste para ajustar a altura"></div>
     </header>
         <div class="menu-opcoes" id="recepCards">
-      <div class="sec-titulo" data-sec="Atendimento">Atendimento</div>
-      <button class="menu-card" id="recepCardContratos">
-        <div class="menu-card-icone">C</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Contratos</span>
-          <span class="menu-card-sub">Gerar contrato novo e buscar contratos</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
-      <button class="menu-card" id="recepCardAluno">
-        <div class="menu-card-icone">&#128100;</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Aluno</span>
-          <span class="menu-card-sub">Ficha completa: turma, contrato, livros e contatos</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
+            <!-- 5.24.0: Atendimento tinha 11 botoes e nenhum assunto comum.
+           Virou o ciclo do aluno: entra, cadastra, acompanha, renova ou sai. -->
+      <div class="sec-titulo" data-sec="Novo aluno">Novo aluno</div>
       <button class="menu-card" id="recepCardProspectos">
         <div class="menu-card-icone">&#128278;</div>
         <div class="menu-card-txt">
@@ -2129,11 +2122,20 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
-      <button class="menu-card" id="recepCardRelAluno">
-        <div class="menu-card-icone">&#128203;</div>
+      <button class="menu-card" id="recepCardContratos">
+        <div class="menu-card-icone">C</div>
         <div class="menu-card-txt">
-          <span class="menu-card-titulo">Relat&oacute;rio do aluno</span>
-          <span class="menu-card-sub">Frequ&ecirc;ncia, livros e coment&aacute;rios em PDF para empresa ou fam&iacute;lia</span>
+          <span class="menu-card-titulo">Contratos</span>
+          <span class="menu-card-sub">Gerar contrato novo e buscar contratos</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <div class="sec-titulo" data-sec="Cadastro">Cadastro</div>
+      <button class="menu-card" id="recepCardAluno">
+        <div class="menu-card-icone">&#128100;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Aluno</span>
+          <span class="menu-card-sub">Ficha completa: turma, contrato, livros e contatos</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -2145,6 +2147,23 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardTurmas">
+        <div class="menu-card-icone">&#9783;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Turmas</span>
+          <span class="menu-card-sub">Criar, editar e ver ocupa&ccedil;&atilde;o das turmas</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
+      <div class="sec-titulo" data-sec="Acompanhamento">Acompanhamento</div>
+      <button class="menu-card" id="recepCardRelAluno">
+        <div class="menu-card-icone">&#128203;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Relat&oacute;rio do aluno</span>
+          <span class="menu-card-sub">Frequ&ecirc;ncia, livros e coment&aacute;rios em PDF para empresa ou fam&iacute;lia</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardNiver">
         <div class="menu-card-icone">&#127874;</div>
         <div class="menu-card-txt">
@@ -2153,19 +2172,12 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <div class="sec-titulo" data-sec="Renovar e desligar">Renovar e desligar</div>
       <button class="menu-card" id="recepCardRenovacoes">
         <div class="menu-card-icone">&#8635;</div>
         <div class="menu-card-txt">
           <span class="menu-card-titulo">Renova&ccedil;&otilde;es</span>
           <span class="menu-card-sub">Contratos vencendo, por ordem de urg&ecirc;ncia</span>
-        </div>
-        <span class="menu-card-seta">&rarr;</span>
-      </button>
-      <button class="menu-card" id="recepCardTurmas">
-        <div class="menu-card-icone">&#9783;</div>
-        <div class="menu-card-txt">
-          <span class="menu-card-titulo">Turmas</span>
-          <span class="menu-card-sub">Criar, editar e ver ocupa&ccedil;&atilde;o das turmas</span>
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
@@ -2177,7 +2189,7 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
-      <div class="sec-titulo" data-sec="No dia a dia">No dia a dia</div>
+<div class="sec-titulo" data-sec="No dia a dia">No dia a dia</div>
       <button class="menu-card" id="recepCardPresenca">
         <div class="menu-card-icone">P</div>
         <div class="menu-card-txt">
@@ -4356,7 +4368,7 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.23.0';
+const APP_VERSAO = '5.24.0';
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
   if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
@@ -12602,6 +12614,90 @@ var GRADE_DA_TELA = {
      que e exatamente para isso que ele existe. */
   'Fechamento Teachers': 'fechaSubcards'
 };
+/* 5.24.0 - QUE CAPACIDADE ABRE CADA TELA
+   Espelha GATE_DA_TELA do Code.gs. Sao dois lugares, sim, e dado repetido em
+   dois lugares foi o que criou os bugs de permissao antigos. Por isso o
+   testar-menus.js compara os dois mapas e reprova se discordarem. */
+var GATE_DA_TELA = {
+  'Menu principal':      '',
+  'Recepção':            'recepcao',
+  'Prospectos':          'recepcao',
+  'Nivelamento':         'nivelamento|recepcao',
+  'Fechamento Teachers': 'financeiro'
+};
+
+function _capDoCartao(id){
+  for(var i=0;i<MAPA_CARDS.length;i++) if(MAPA_CARDS[i][0]===id) return MAPA_CARDS[i][1];
+  return '';
+}
+function _capOkCli(caps, expr){
+  if(!expr) return true;
+  return String(expr).split('|').some(function(x){ return !!caps[x]; });
+}
+var _NOMINAIS = ['nr1','nivelamento','config'];
+function _ehNominal(expr){
+  return String(expr||'').split('|').some(function(x){ return _NOMINAIS.indexOf(x) !== -1; });
+}
+
+/* Preenchido pelo servidor quando o organizador abre. Enquanto nao vier, a
+   tela nao acusa nada: melhor ficar quieta do que chutar. */
+var _CAPS_POR_PERFIL = null;
+
+/**
+ * Quem fica fora de alcance com a lista dada. Roda na hora, sem ir ao
+ * servidor, para o aviso aparecer no mesmo instante em que voce solta o botao.
+ *
+ * E a MESMA conta que o Code.gs faz em _alcancePerdido, com a mesma tabela de
+ * permissoes, porque o servidor a manda junto. Tentei antes deduzir sem a
+ * tabela, so olhando as regras, e dava alarme falso: pelas regras "Avisar a
+ * equipe" exige admin e mora numa tela que exige recepcao, entao pareceria
+ * perdido. Na pratica quem e admin tambem tem recepcao. Regra nao sabe disso;
+ * a tabela sabe.
+ *
+ * A excecao do gemeo continua: "Conversação" existe em dois botoes que abrem o
+ * MESMO painel. Se um esta ao alcance, ninguem perdeu nada. Gemeo e nome igual,
+ * e desde a 5.23.0 isso e regra, entao a lista se mantem sozinha.
+ */
+function _avisosDeAlcance(lista){
+  if(!_CAPS_POR_PERFIL) return [];
+  var perfis = Object.keys(_CAPS_POR_PERFIL);
+
+  var porNome = {};
+  lista.forEach(function(c){
+    var n = String(c.nome||'').trim().toUpperCase();
+    (porNome[n] = porNome[n] || []).push(c);
+  });
+  function gemeoAoAlcance(c, caps){
+    var irmaos = porNome[String(c.nome||'').trim().toUpperCase()] || [];
+    return irmaos.some(function(g){
+      if(g.id === c.id) return false;
+      var gate = GATE_DA_TELA[g.tela];
+      if(gate === undefined) return false;
+      return _capOkCli(caps, gate) && _capOkCli(caps, _capDoCartao(g.id));
+    });
+  }
+
+  var out = [];
+  lista.forEach(function(c){
+    var cap  = _capDoCartao(c.id);
+    var gate = GATE_DA_TELA[c.tela];
+    if(!cap || gate === undefined || gate === '') return;
+    if(_ehNominal(gate)) return;              // porta nominal: nao da para decidir por cargo
+
+    var perdem = [];
+    perfis.forEach(function(p){
+      var caps = _CAPS_POR_PERFIL[p] || {};
+      if(!_capOkCli(caps, cap)) return;
+      if(_capOkCli(caps, gate)) return;
+      if(gemeoAoAlcance(c, caps)) return;
+      perdem.push(p);
+    });
+    if(perdem.length) out.push({ id:c.id, nome:c.nome, tela:c.tela, secao:c.secao,
+                                 cap:cap, gate:gate, perfis:perdem });
+  });
+  return out;
+}
+
 var _LAYOUT = null;
 
 /** Acha (ou cria) o titulo de uma secao dentro de uma grade. */
@@ -12652,6 +12748,8 @@ async function abrirOrganizador(){
   try{
     var r = await chamarAPI({ acao:'layoutCartoes' });
     if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">Não consegui abrir.</div>'; return; }
+    _CAPS_POR_PERFIL = r.capsPorPerfil || null;
+    if(r.gates) GATE_DA_TELA = r.gates;   // o servidor manda; a copia daqui e so o plano B
     _ORG = r.layout.cartoes.map(function(c){ return { id:c.id, nome:c.nome, tela:c.tela, secao:c.secao }; });
     desenharOrganizador();
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao carregar.</div>'; }
@@ -12673,6 +12771,27 @@ function _destinos(){
 function desenharOrganizador(){
   var destinos = _destinos(), h = '';
   var grupos = {};
+
+  /* 5.24.0: o aviso vem antes da lista, e nao depois de salvar. Foi assim que
+     o Materiais sumiu para os professores: o app deixou arrastar e nao falou
+     nada. Agora fala na hora, mas nao proibe: as vezes esconder e a intencao. */
+  var perigo = {};
+  var avisos = _avisosDeAlcance(_ORG);
+  if(avisos.length){
+    h += '<div class="org-alerta"><b>Atenção: '
+      + (avisos.length === 1 ? 'um botão ficou' : avisos.length + ' botões ficaram')
+      + ' fora de alcance.</b><ul>';
+    avisos.forEach(function(a){
+      perigo[a.id] = a.perfis.join(', ') + ' não abre a tela ' + a.tela;
+      h += '<li><b>' + _escPerm(a.nome) + '</b> está em <b>' + _escPerm(a.tela)
+        + (a.secao ? ' / ' + _escPerm(a.secao) : '') + '</b>, que só abre para quem tem "'
+        + _escPerm(a.gate) + '". Perde(m) o botão: <b>' + _escPerm(a.perfis.join(', '))
+        + '</b>.</li>';
+    });
+    h += '</ul>Arraste de volta para uma tela que essas pessoas abrem, ou libere '
+      + 'a capacidade em <b>Quem alcança o quê</b>.</div>';
+  }
+
   _ORG.forEach(function(c){
     var k = c.tela + '||' + (c.secao || '');
     (grupos[k] = grupos[k] || []).push(c);
@@ -12684,9 +12803,12 @@ function desenharOrganizador(){
       + '<span>' + itens.length + '</span></div>';
     itens.forEach(function(c){
       var i = _ORG.indexOf(c);
-      h += '<div class="org-item" data-i="' + i + '" draggable="true">'
+      h += '<div class="org-item' + (perigo[c.id] ? ' org-perigo' : '')
+        + '" data-i="' + i + '" draggable="true">'
         + '<span class="org-pega" title="Arraste para mover">&#8942;&#8942;</span>'
         + '<span class="org-nome">' + _escPerm(c.nome) + '</span>'
+        + (perigo[c.id] ? '<span class="org-marca" title="' + _escPerm(perigo[c.id])
+             + '">fora de alcance</span>' : '')
         + '<span class="org-acoes">'
         + '<button type="button" class="org-seta" data-mover="' + i + '" data-dir="-1" title="Subir">&#8593;</button>'
         + '<button type="button" class="org-seta" data-mover="' + i + '" data-dir="1" title="Descer">&#8595;</button>'
@@ -12850,8 +12972,21 @@ async function salvarOrganizador(){
       desenharOrganizador(); return;
     }
     aplicarLayout({ cartoes: _ORG });
-    await apAviso('Pronto', 'Os botões já estão nos lugares novos.<br><br>'
-      + 'Quem estiver com o app aberto vê a mudança na próxima vez que entrar.');
+
+    /* 5.24.0: o servidor confere de novo, com a lista de permissoes de
+       verdade, e diz o CARGO de quem perdeu. O aviso da tela nao sabe disso,
+       ele so sabe qual capacidade ficou orfa. Os dois juntos fecham a conta. */
+    var av = (r.avisos || []);
+    if(av.length){
+      await apAviso('Salvei, mas atenção',
+        '<b>' + (av.length === 1 ? 'Um botão ficou' : av.length + ' botões ficaram')
+        + ' fora de alcance:</b><br><br>'
+        + av.map(function(a){ return '• ' + _escPerm(a.texto); }).join('<br>')
+        + '<br><br>Se não era essa a intenção, arraste de volta para o Menu principal.');
+    }else{
+      await apAviso('Pronto', 'Os botões já estão nos lugares novos.<br><br>'
+        + 'Quem estiver com o app aberto vê a mudança na próxima vez que entrar.');
+    }
     abrirOrganizador();
   }catch(e){
     await apAviso('Não salvei', 'Falha de conexão. Nada mudou.');
