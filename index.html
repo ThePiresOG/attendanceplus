@@ -91,11 +91,39 @@
   }
 
   /* CONTROLS */
-  .controls{ padding:18px 20px 6px; display:flex; gap:10px; }
-  .field{ flex:1; display:flex; flex-direction:column; gap:6px; }
+  /* ------------------------------------------------------------------------
+     5.24.0 - A BARRA DE ROLAGEM LATERAL DA FICHA
+
+     .controls nasceu para 2 ou 3 campos (mes, ano, professor) e era um flex
+     numa linha so, sem quebra. A tela "Completar ficha" joga 12 campos aqui
+     dentro. Cada um continuava pedindo a largura minima do proprio input, a
+     linha estourava a tela e nascia aquela barra de rolagem para o lado.
+
+     Rolagem horizontal em formulario e ruim em qualquer tela e inviavel no
+     celular: voce nao ve metade dos campos e nao sabe que eles existem.
+
+     Virou grade que quebra sozinha. 2 ou 3 campos continuam lado a lado como
+     sempre; 12 campos viram varias linhas. Sem media query, sem contar campos,
+     e sem eu precisar lembrar de ajustar quando um campo novo entrar.
+     ---------------------------------------------------------------------- */
+  .controls{ padding:18px 20px 6px; display:grid; gap:10px 12px;
+    grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
+  /* min-width:0 e o que deixa o campo encolher. Sem isso o input impoe a
+     largura dele e a grade estoura igual ao flex estourava. */
+  .field{ flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .controls input, .controls select, .controls textarea{ width:100%; box-sizing:border-box; }
+  /* endereco e e-mail nao cabem em 190px sem ficar ridiculo */
+  .field.largo{ grid-column:span 2; }
+  @media (max-width:420px){ .field.largo{ grid-column:span 1; } }
   label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--verde-escuro); font-weight:600; }
   select, input[type=date]{ font-family:'Poppins',sans-serif; font-size:13.5px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--linha); background:var(--perola); color:var(--carvao); appearance:none; }
   select:focus, input:focus{ outline:2px solid var(--salmao); outline-offset:1px; }
+  /* 5.24.0 - rede de seguranca contra rolagem lateral.
+     Nao esconde nada: so impede que um campo, uma imagem ou uma tabela fique
+     mais larga que o espaco que tem. O que precisa MESMO de largura (a tabela
+     de permissoes) continua com a rolagem propria dela, dentro de .perm-rolagem. */
+  input, select, textarea{ max-width:100%; }
+  .recep-painel img, .recep-painel table:not(.perm-tab){ max-width:100%; }
   .prof-tag{ margin:12px 20px 0; font-size:12.5px; color:var(--verde-escuro); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .prof-tag b{ color:var(--carvao); }
   .badge{ font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:var(--azul-claro); color:var(--verde-escuro); }
@@ -725,8 +753,11 @@
     .deco-sub{ font-size:10.5px; letter-spacing:.22em; }
   }
   /* ===== 3.3.0: BUSCA E CONSULTA DE TURMA ===== */
-  .busca-linha{ display:flex; gap:10px; align-items:flex-end; padding:14px 20px 4px; }
-  .busca-linha .campo{ flex:1; }
+  /* 5.24.0:mesma historia do .controls, em escala menor. Campo de busca mais
+     botao numa linha sem quebra: em tela estreita o botao era empurrado para
+     fora. Agora desce para a linha de baixo em vez de sair pelo lado. */
+  .busca-linha{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; padding:14px 20px 4px; }
+  .busca-linha .campo{ flex:1 1 200px; min-width:0; }
   .busca-linha .campo label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em;
     color:#9a9a94; font-weight:600; display:block; margin-bottom:5px; }
   .busca-linha input{ width:100%; box-sizing:border-box; font-family:'Poppins',sans-serif;
@@ -1423,6 +1454,33 @@
   user-select:none; flex:none; padding-right:2px; }
 .org-pegando{ opacity:.45; }
 .org-alvo{ box-shadow:inset 0 2px 0 var(--verde-escuro); }
+/* ---------------------------------------------------------------------------
+   5.24.0 - BALAOZINHO DE AJUDA NO CARTAO
+
+   "Materiais" nao diz se e o livro da turma ou o audio do aluno. "Panorama da
+   escola" nao diz nada. O subtitulo do cartao ajuda, mas e curto de proposito,
+   porque disputa espaco com o resto da tela.
+
+   O balao nao disputa espaco com nada: aparece so quando o ponteiro PARA em
+   cima e some sozinho quando sai. E so aparece em aparelho com mouse de
+   verdade: no celular nao existe "parar em cima", o toque ja e o clique, e um
+   balao la atrapalharia em vez de ajudar.
+   ------------------------------------------------------------------------- */
+.dica-balao{ position:fixed; z-index:9999; max-width:290px;
+  background:var(--verde-escuro); color:#fff; border-radius:10px;
+  padding:9px 12px; font-size:12.5px; line-height:1.45;
+  box-shadow:0 10px 28px rgba(0,0,0,.22); pointer-events:none;
+  opacity:0; transform:translateY(4px);
+  transition:opacity .14s ease, transform .14s ease; }
+.dica-balao.on{ opacity:1; transform:translateY(0); }
+.dica-balao b{ display:block; margin-bottom:3px; color:#fff; font-weight:600; }
+.dica-balao i{ display:block; margin-top:5px; font-style:normal; font-size:11px;
+  color:#CBDACF; }
+.dica-seta{ position:fixed; z-index:9999; width:0; height:0; pointer-events:none;
+  border-left:7px solid transparent; border-right:7px solid transparent;
+  opacity:0; transition:opacity .14s ease; }
+.dica-seta.on{ opacity:1; }
+
 .org-alerta{ background:#FFF4E5; border:1px solid #E8B366; border-radius:10px;
   padding:10px 12px; margin-bottom:10px; font-size:12.5px; color:#7A4A00; line-height:1.5; }
 .org-alerta b{ color:#5C3800; }
@@ -2419,7 +2477,7 @@
             <input type="text" id="contratoBusca" placeholder="Ex: Maria">
           </div>
         </div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="controls">
           <div class="field">
             <label for="contratoBuscaNum">N&ordm; do contrato</label>
             <input type="text" inputmode="numeric" id="contratoBuscaNum" placeholder="Ex: 42">
@@ -2429,7 +2487,7 @@
             <input type="text" inputmode="numeric" id="contratoBuscaMat" placeholder="Ex: 42">
           </div>
         </div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="controls">
           <div class="field">
             <label for="contratoBuscaMes">Mês de início</label>
             <select id="contratoBuscaMes">
@@ -2501,7 +2559,7 @@
             <select id="afastContrato"><option value="">Busque o aluno primeiro</option></select>
           </div>
         </div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+        <div class="controls" style="padding-top:0;">
           <div class="field">
             <label for="afastInicio">In&iacute;cio</label>
             <input type="date" id="afastInicio">
@@ -2588,7 +2646,7 @@
             <select id="baixaContrato"><option value="">Busque o aluno primeiro</option></select>
           </div>
         </div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+        <div class="controls" style="padding-top:0;">
           <div class="field">
             <label for="baixaData">Data do cancelamento</label>
             <input type="date" id="baixaData">
@@ -2606,7 +2664,7 @@
             </select>
           </div>
         </div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+        <div class="controls" style="padding-top:0;">
           <div class="field">
             <label for="baixaValorTotal">Valor total do contrato (R$)</label>
             <input type="text" inputmode="decimal" id="baixaValorTotal" placeholder="Ex: 8124,00">
@@ -2616,7 +2674,7 @@
             <input type="text" inputmode="numeric" id="baixaParcelasTotal" placeholder="Ex: 12">
           </div>
         </div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+        <div class="controls" style="padding-top:0;">
           <div class="field">
             <label for="baixaParcelasPagas">Parcelas pagas</label>
             <input type="text" inputmode="numeric" id="baixaParcelasPagas" placeholder="Ex: 9">
@@ -2627,7 +2685,7 @@
           </div>
         </div>
         <div style="padding:0 20px;" id="baixaCalculo"></div>
-        <div class="controls" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:0;">
+        <div class="controls" style="padding-top:0;">
           <div class="field">
             <label for="baixaForma">Forma de pagamento</label>
             <select id="baixaForma">
@@ -12726,6 +12784,11 @@ function aplicarLayout(layout){
     var grade = document.getElementById(GRADE_DA_TELA[c.tela] || '');
     if(!el || !grade) return;
 
+    /* 5.24.0: a explicacao do balaozinho vem com o cartao. Fica junto da
+       posicao e do nome, entao renomear ou mover um botao nao deixa a
+       explicacao orfa em outro arquivo. */
+    if(c.dica) el.setAttribute('data-dica', c.dica);
+
     if(!c.secao){ grade.appendChild(el); return; }
 
     var titulo = _tituloDaSecao(grade, c.secao);
@@ -12738,6 +12801,109 @@ function aplicarLayout(layout){
   // titulo sem cartao visivel some
   _ajustarTitulosDeSecao();
 }
+
+/* ===========================================================================
+ * 5.24.0 - O BALAOZINHO DE AJUDA
+ *
+ * Aparece quando o ponteiro para em cima de um cartao e some quando sai.
+ *
+ * Tres decisoes que valem estar escritas:
+ *
+ * 1. So em aparelho com mouse de verdade. No celular nao existe "parar em
+ *    cima": o toque ja e o clique, e o balao abriria junto com a tela que o
+ *    cartao abre. Por isso o (hover:hover) e o (pointer:fine).
+ * 2. Tem atraso de 380ms. Sem atraso, passar o mouse pela lista para chegar
+ *    no ultimo cartao piscava um balao em cada um pelo caminho.
+ * 3. pointer-events:none no balao. Se ele capturasse o mouse, ficaria por
+ *    cima do proprio cartao e o clique nao chegaria.
+ * =========================================================================*/
+var _DICA_EL = null, _DICA_SETA = null, _DICA_T = null, _DICA_ALVO = null;
+
+function _dicaLigada(){
+  try{ return window.matchMedia('(hover:hover) and (pointer:fine)').matches; }
+  catch(e){ return false; }
+}
+
+function _dicaTexto(card){
+  var d = card.getAttribute('data-dica');
+  if(d) return d;
+  // cartao que o servidor ainda nao descreveu: usa o subtitulo que ja esta na tela
+  var sub = card.querySelector('.menu-card-sub');
+  return sub ? sub.textContent.trim() : '';
+}
+
+function _dicaMostrar(card){
+  var texto = _dicaTexto(card);
+  if(!texto) return;
+  var tituloEl = card.querySelector('.menu-card-titulo');
+  var titulo = tituloEl ? tituloEl.textContent.trim() : '';
+
+  if(!_DICA_EL){
+    _DICA_EL = document.createElement('div');
+    _DICA_EL.className = 'dica-balao';
+    _DICA_SETA = document.createElement('div');
+    _DICA_SETA.className = 'dica-seta';
+    document.body.appendChild(_DICA_EL);
+    document.body.appendChild(_DICA_SETA);
+  }
+  _DICA_EL.innerHTML = (titulo ? '<b>' + _escPerm(titulo) + '</b>' : '') + _escPerm(texto);
+
+  var r = card.getBoundingClientRect();
+  // mede antes de posicionar, senao a largura vem zerada na primeira vez
+  _DICA_EL.style.left = '-9999px'; _DICA_EL.style.top = '0';
+  _DICA_EL.classList.add('on');
+  var b = _DICA_EL.getBoundingClientRect();
+
+  var acima = r.top > b.height + 14;
+  var topo = acima ? (r.top - b.height - 10) : (r.bottom + 10);
+  var esq  = r.left + (r.width - b.width) / 2;
+  esq = Math.max(10, Math.min(esq, window.innerWidth - b.width - 10));
+
+  _DICA_EL.style.left = Math.round(esq) + 'px';
+  _DICA_EL.style.top  = Math.round(topo) + 'px';
+
+  var cor = getComputedStyle(_DICA_EL).backgroundColor;
+  _DICA_SETA.style.borderTop = acima ? ('7px solid ' + cor) : 'none';
+  _DICA_SETA.style.borderBottom = acima ? 'none' : ('7px solid ' + cor);
+  _DICA_SETA.style.left = Math.round(Math.min(Math.max(r.left + r.width/2 - 7, esq + 8),
+                                              esq + b.width - 22)) + 'px';
+  _DICA_SETA.style.top  = Math.round(acima ? (topo + b.height - 1) : (topo - 6)) + 'px';
+  _DICA_SETA.classList.add('on');
+}
+
+function _dicaEsconder(){
+  clearTimeout(_DICA_T); _DICA_ALVO = null;
+  if(_DICA_EL) _DICA_EL.classList.remove('on');
+  if(_DICA_SETA) _DICA_SETA.classList.remove('on');
+}
+
+(function _ligarDicas(){
+  if(!_dicaLigada()) return;
+
+  document.addEventListener('mouseover', function(ev){
+    var card = ev.target.closest ? ev.target.closest('.menu-card') : null;
+    if(!card || card === _DICA_ALVO) return;
+    _dicaEsconder();
+    _DICA_ALVO = card;
+    _DICA_T = setTimeout(function(){
+      // pode ter saido durante os 380ms, ou o cartao pode ter sumido
+      if(_DICA_ALVO === card && document.body.contains(card)) _dicaMostrar(card);
+    }, 380);
+  });
+
+  document.addEventListener('mouseout', function(ev){
+    var card = ev.target.closest ? ev.target.closest('.menu-card') : null;
+    if(!card) return;
+    // mouseout dispara ao andar entre os filhos do proprio cartao
+    if(ev.relatedTarget && card.contains(ev.relatedTarget)) return;
+    _dicaEsconder();
+  });
+
+  // rolar, clicar ou trocar de tela derruba o balao na hora
+  document.addEventListener('click', _dicaEsconder, true);
+  window.addEventListener('scroll', _dicaEsconder, true);
+  window.addEventListener('blur', _dicaEsconder);
+})();
 
 /* ---------- a tela: secao 3 de Configuracoes ---------- */
 var _ORG = null;
@@ -14787,7 +14953,11 @@ async function abrirFicha(exato){
       + '</div>'
       + '<div class="controls">'
       + r.campos.map(function(c,i){
-          return '<div class="field' + (c.vazio ? ' fi-vazio' : '') + '">'
+          /* 5.24.0:endereco e e-mail ocupam duas colunas da grade. Numa
+             coluna de 190px o endereco fica cortado e a pessoa digita sem ver
+             o que ja tinha escrito. */
+          var largo = /ENDERE|MAIL/i.test(c.rotulo) ? ' largo' : '';
+          return '<div class="field' + largo + (c.vazio ? ' fi-vazio' : '') + '">'
             + '<label for="fi_' + i + '">' + c.rotulo + (c.vazio ? ' <span class="fi-marca">falta</span>' : '') + '</label>'
             + '<input type="' + (c.tipo === 'date' ? 'date' : 'text') + '" id="fi_' + i + '" value="'
             + String(c.valor).replace(/"/g,'&quot;') + '">'
