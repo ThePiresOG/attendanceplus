@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
+<meta name="app-versao" content="5.26.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -1514,7 +1516,7 @@
     <p class="login-titulo"><span class="login-linha"><span class="login-to">to</span> Attendance Plus</span><span class="login-subtitulo">Controle de presença e tarefas</span></p>
     <div class="login-form">
       <div class="login-field">
-        <label for="loginProfessor">Professor(a)</label>
+        <label for="loginProfessor">Login</label>
         <select id="loginProfessor"></select>
       </div>
       <div class="login-field">
@@ -3606,8 +3608,36 @@
           </div>
         </section>
 
+        <section class="nv-cartao" id="cfgAlertaCtCartao">
+          <h3 class="nv-secao"><span>2</span> Aviso de contratos vencendo</h3>
+          <div class="nv-grid">
+            <div class="nv-campo nv-full">
+              <label style="display:flex;gap:8px;align-items:center;">
+                <input type="checkbox" id="cfgAlCtLigado" style="width:18px;height:18px;"> Mostrar o aviso ao entrar no app
+              </label>
+            </div>
+            <div class="nv-campo">
+              <label for="cfgAlCt1">Primeiro aviso (dias antes)</label>
+              <input type="number" id="cfgAlCt1" min="1" max="180" step="1">
+            </div>
+            <div class="nv-campo">
+              <label for="cfgAlCt2">Segundo aviso (dias antes)</label>
+              <input type="number" id="cfgAlCt2" min="1" max="180" step="1">
+            </div>
+            <div class="nv-campo nv-full">
+              <small class="nv-dica">Aparece para quem tem acesso à recepção. Cada contrato avisa
+                uma vez em cada prazo: depois de tocar em Ciente, só volta no prazo seguinte.
+                Contrato renovado ou encerrado não entra.</small>
+            </div>
+          </div>
+          <div id="cfgAlCtResultado"></div>
+          <div class="cfg-acao">
+            <button class="btn-principal" id="btnSalvarCfgAlCt">Salvar avisos</button>
+          </div>
+        </section>
+
         <section class="nv-cartao" id="permCartao">
-          <h3 class="nv-secao"><span>2</span> Quem alcan&ccedil;a o qu&ecirc;</h3>
+          <h3 class="nv-secao"><span>3</span> Quem alcan&ccedil;a o qu&ecirc;</h3>
           <p class="perm-explica">Marque e o bot&atilde;o some para quem n&atilde;o tem acesso.
             O servidor confere de novo a cada clique, ent&atilde;o esconder aqui
             n&atilde;o &eacute; s&oacute; enfeite: bloqueia de verdade.</p>
@@ -3615,7 +3645,7 @@
         </section>
 
         <section class="nv-cartao" id="orgCartao">
-          <h3 class="nv-secao"><span>3</span> Onde cada bot&atilde;o fica</h3>
+          <h3 class="nv-secao"><span>4</span> Onde cada bot&atilde;o fica</h3>
           <p class="perm-explica">A se&ccedil;&atilde;o de cima decide <b>quem v&ecirc;</b>.
             Esta decide <b>onde fica</b>. Mova um bot&atilde;o de tela ou de se&ccedil;&atilde;o,
             ou mude a ordem dentro do grupo.</p>
@@ -4426,80 +4456,111 @@ const $loginErro = document.getElementById('loginErro');
   });
 })();
 
-const APP_VERSAO = '5.24.0';
+/* 5.26.0: a versao mora numa meta tag no topo do arquivo. Assim o app consegue
+   ler a versao do HTML publicado baixando so o comeco dele. */
+const APP_VERSAO = (function(){
+  try{
+    var m = document.querySelector('meta[name="app-versao"]');
+    if(m && m.content) return m.content;
+  }catch(e){}
+  return '5.26.0';
+})();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
-  if(cr) cr.textContent = 'Criado por Felipe Sanches \u00b7 v' + APP_VERSAO;
+  if(cr) cr.textContent = 'Criado por Felipe Sanches · v' + APP_VERSAO;
 });
 
 // ===== AVISO DE NOVA VERSÃO =====
-// A versao abaixo acompanha o APP_VERSAO do Code.gs. Sempre que subir um HTML
-// novo no GitHub, ela precisa bater com a do servidor, senao a faixa nao some.
+/* 5.26.0: a faixa "Nova versão disponível" aparecia toda vez que o Code.gs
+   subia de versao, mesmo sem HTML novo no GitHub. A pessoa tocava, a pagina
+   recarregava o MESMO arquivo e a faixa voltava no proximo acesso.
+   A comparacao certa e com o index.html que esta no ar, nao com o servidor:
+   so existe atualizacao para carregar quando o arquivo publicado e mais novo
+   que o que esta aberto. O Code.gs pode mudar sozinho a vontade. */
+function _versaoMenor(a, b){
+  var A = String(a).split('.').map(Number), B = String(b).split('.').map(Number);
+  for(var i = 0; i < 3; i++){
+    if((A[i]||0) < (B[i]||0)) return true;
+    if((A[i]||0) > (B[i]||0)) return false;
+  }
+  return false;
+}
+
+/** Versao do index.html publicado agora, ou null se nao der para saber. */
+async function _versaoNoAr(){
+  var url = location.pathname + '?vchk=' + Date.now();
+  var acha = function(txt){
+    var m = String(txt || '').match(/name="app-versao"\s+content="([\d.]+)"/);
+    return m ? m[1] : null;
+  };
+  // primeiro so o comeco do arquivo (a meta tag esta nas primeiras linhas)
+  try{
+    var r1 = await fetch(url, { cache:'no-store', headers:{ 'Range':'bytes=0-4095' } });
+    if(r1.ok){ var v1 = acha(await r1.text()); if(v1) return v1; }
+  }catch(e){}
+  // servidor que ignora Range ou devolve compactado: baixa inteiro
+  try{
+    var r2 = await fetch(url, { cache:'no-store' });
+    if(r2.ok) return acha(await r2.text());
+  }catch(e){}
+  return null;
+}
+
+function _faixaVersao(html, estilo, aoTocar){
+  var b = document.getElementById('bannerVersao');
+  if(!b){
+    b = document.createElement('div');
+    b.id = 'bannerVersao';
+    document.body.appendChild(b);
+  }
+  b.style.cssText = estilo;
+  b.innerHTML = html;
+  b.onclick = aoTocar || null;
+  return b;
+}
+
 async function checarVersao(){
   try{
     var jaTentei = '';
     try{ jaTentei = sessionStorage.getItem('ap_recarregou') || ''; }catch(e){}
-    // "5.6.1" vem antes de "5.6.2"? compara numero a numero, nao texto
-    var _versaoMenor = function(a, b){
-      var A = String(a).split('.').map(Number), B = String(b).split('.').map(Number);
-      for(var i = 0; i < 3; i++){
-        if((A[i]||0) < (B[i]||0)) return true;
-        if((A[i]||0) > (B[i]||0)) return false;
-      }
-      return false;
-    };
 
-    const r = await chamarAPI({ acao: 'versaoApp' });
-    if(!r.sucesso || !r.versao) return;
+    // 1. existe HTML mais novo publicado? so entao oferece atualizar
+    var noAr = await _versaoNoAr();
+    if(noAr && _versaoMenor(APP_VERSAO, noAr) && jaTentei !== noAr){
+      _faixaVersao('Nova versão disponível &middot; toque aqui para atualizar',
+        'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--salmao);color:#fff;'
+        + 'padding:12px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;'
+        + 'box-shadow:0 2px 8px rgba(0,0,0,.2);',
+        function(){
+          this.style.cursor = 'default';
+          this.textContent = 'Atualizando...';
+          try{ sessionStorage.setItem('ap_recarregou', noAr); }catch(e){}
+          // ?v= e t= furam o cache do navegador e do GitHub Pages
+          location.replace(location.pathname + '?v=' + encodeURIComponent(noAr) + '&t=' + Date.now());
+        });
+      return;
+    }
 
-    // versoes iguais: nada a fazer, e some qualquer faixa que tenha sobrado
-    if(r.versao === APP_VERSAO){
-      const antigo = document.getElementById('bannerVersao');
-      if(antigo) antigo.remove();
+    // 2. o HTML aberto ja e o mais novo. A faixa salmao some.
+    var antigo = document.getElementById('bannerVersao');
+    if(antigo) antigo.remove();
+    if(noAr && !_versaoMenor(APP_VERSAO, noAr)){
       try{ sessionStorage.removeItem('ap_recarregou'); }catch(e){}
-      return;
     }
 
-    // 5.6.3: o caso que custou uma noite. Quando o Code.gs publicado esta
-    // ATRAS do index, o app pedia para recarregar a pagina, o que nunca
-    // resolve, e depois calava. Telas ficavam vazias sem explicacao nenhuma.
-    // Agora ele diz o que realmente aconteceu.
+    /* 3. o caso da 5.6.3: Code.gs publicado ATRAS do HTML deixa telas vazias.
+       Isso nao se resolve recarregando, so publicando o Apps Script. Por isso
+       aparece so para quem administra, que e quem consegue resolver. */
+    if(!(typeof PERM !== 'undefined' && PERM && PERM.admin)) return;
+    const r = await chamarAPI({ acao: 'versaoApp' });
+    if(!r || !r.sucesso || !r.versao) return;
     if(_versaoMenor(r.versao, APP_VERSAO)){
-      var av = document.getElementById('bannerVersao');
-      if(!av){
-        av = document.createElement('div');
-        av.id = 'bannerVersao';
-        av.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;'
-          + 'background:#8a6d1a;color:#fff;padding:9px 14px;font-size:12.5px;'
-          + 'text-align:center;line-height:1.45;';
-        document.body.appendChild(av);
-      }
-      av.innerHTML = 'O Apps Script publicado está na versão <b>' + r.versao
+      _faixaVersao('O Apps Script publicado está na versão <b>' + r.versao
         + '</b> e esta tela é a <b>' + APP_VERSAO + '</b>.<br>'
-        + 'Publique o Code.gs novo. Recarregar a página não resolve.';
-      return;
+        + 'Publique o Code.gs novo. Recarregar a página não resolve.',
+        'position:fixed;top:0;left:0;right:0;z-index:9999;background:#8a6d1a;color:#fff;'
+        + 'padding:9px 14px;font-size:12.5px;text-align:center;line-height:1.45;');
     }
-
-    // ja recarreguei atras dessa versao e continua diferente:
-    // o HTML no ar e que esta velho, entao nao adianta ficar insistindo
-    if(jaTentei === r.versao) return;
-
-    if(document.getElementById('bannerVersao')) return;
-
-    const b = document.createElement('div');
-    b.id = 'bannerVersao';
-    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--salmao);color:#fff;padding:12px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);';
-    b.innerHTML = 'Nova versão disponível &middot; toque aqui para atualizar';
-
-    b.addEventListener('click', function(){
-      b.style.cursor = 'default';
-      b.textContent = 'Atualizando...';
-      try{ sessionStorage.setItem('ap_recarregou', r.versao); }catch(e){}
-      // ?v= e t= furam o cache do navegador e do GitHub Pages
-      location.replace(location.pathname + '?v=' + encodeURIComponent(r.versao) + '&t=' + Date.now());
-    });
-
-    document.body.appendChild(b);
   }catch(e){}
 }
 setTimeout(checarVersao, 3000);
@@ -4598,17 +4659,25 @@ function hojeISO(){ return new Date().toISOString().slice(0,10); }
 
 async function popularLoginProfessores(){
   // tenta buscar a lista atualizada da planilha; se falhar, usa a lista local
+  /* 5.26.0: quem perdeu o acesso sai da lista (o servidor filtra quem esta
+     sem senha). Sem internet, usa a ultima lista que veio do servidor neste
+     aparelho, e nao a lista escrita no codigo, que fica velha. */
+  try{
+    const salva = JSON.parse(localStorage.getItem('ap_lista_login') || 'null');
+    if(Array.isArray(salva) && salva.length) PROFESSORES = salva;
+  }catch(e){}
   try{
     const r = await chamarAPI({ acao:'listaProfessores' });
     if(r.sucesso && r.professores && r.professores.length){
       PROFESSORES = r.professores;
+      try{ localStorage.setItem('ap_lista_login', JSON.stringify(r.professores)); }catch(e){}
     }
   } catch(e){ /* mantém a lista local */ }
 
   $loginProfessor.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = 'Selecione o teacher';
+  placeholder.textContent = 'Selecione seu usuário';
   placeholder.disabled = true;
   placeholder.selected = true;
   $loginProfessor.appendChild(placeholder);
@@ -5210,7 +5279,7 @@ $data.addEventListener('change', renderLista);
 $btnEntrar.addEventListener('click', async ()=>{
   const nome = $loginProfessor.value;
   const senha = $loginSenha.value;
-  if(!nome){ $loginErro.textContent = 'Selecione o teacher primeiro.'; return; }
+  if(!nome){ $loginErro.textContent = 'Selecione seu usuário primeiro.'; return; }
   $btnEntrar.disabled = true;
   $btnEntrar.textContent = 'Entrando...';
   $loginErro.textContent = '';
@@ -8966,7 +9035,8 @@ function htmlFicha(d){
     h += '<div class="fa-sub">Nenhum contrato encontrado para este nome.</div>';
   }else{
     var c = d.contratoAtual;
-    var tag = c.vencido ? '<span class="fa-tag no">vencido</span>'
+    var tag = c.encerrado ? '<span class="fa-tag no">encerrado</span>'
+      : c.vencido ? '<span class="fa-tag no">vencido</span>'
       : (c.diasParaVencer !== null && c.diasParaVencer <= 60
           ? '<span class="fa-tag av">vence em ' + c.diasParaVencer + ' dias</span>'
           : '<span class="fa-tag ok">vigente</span>');
@@ -8974,11 +9044,18 @@ function htmlFicha(d){
       + '<div><span>Número</span><b>nº ' + c.numero + ' ' + tag + '</b></div>'
       + '<div><span>Mensalidade</span><b>' + c.mensalidadeTexto + '</b></div>'
       + '<div><span>Início</span><b>' + (c.inicio || '—') + '</b></div>'
-      + '<div><span>Fim</span><b>' + (c.fim || '—') + '</b></div>'
+      + '<div><span>Fim</span><b>' + (c.fim || '—')
+        + (c.fimAjustado ? ' <span style="font-weight:400;color:#8a6d1a;">(no contrato: ' + c.fimOriginal + ')</span>' : '')
+        + '</b></div>'
       + (c.parcelas ? '<div class="larga"><span>Total do contrato</span><b>' + c.totalTexto
         + ' em ' + c.parcelas + 'x</b></div>' : '')
       + '</div>';
-    if(c.pdfUrl) h += '<div class="doc-acoes" style="margin-top:9px;">' + botaoPdf(c.pdfUrl,'Abrir contrato','doc-link') + '</div>';
+    if(c.pdfUrl || (PERM && PERM.recepcao)){
+      h += '<div class="doc-acoes" style="margin-top:9px;">'
+        + (c.pdfUrl ? botaoPdf(c.pdfUrl,'Abrir contrato','doc-link') : '')
+        + botaoAjustarContrato(c.numero, c.aluno || d.aluno, 'ren-btn sec').replace('data-ajct="1"', 'data-ajct="1" data-ficha="' + _escH(d.aluno) + '"')
+        + '</div>';
+    }
     if(d.historicoContratos.length > 1){
       h += '<div style="margin-top:11px;"><span style="font-size:9.5px;letter-spacing:.9px;color:#8a8a84;text-transform:uppercase;">Contratos anteriores</span>';
       d.historicoContratos.slice(1).forEach(function(x){
@@ -11697,6 +11774,7 @@ async function carregarDesligamentos(){
     box.innerHTML = '<div class="msg-aviso">Estes alunos continuam aparecendo para o professor, '
       + 'mas o contrato não está mais valendo. Registrar a saída tira eles da lista '
       + 'a partir da data informada, sem apagar o histórico de aulas.<br>'
+      + 'Aluno em dia que aparece aqui por causa de afastamento antigo: use <b>Ajustar contrato</b> para corrigir o vencimento.<br>'
       + 'Contratos vencidos entram aqui depois de ' + r.toleranciaDias + ' dias sem renovação.</div>'
       + r.desligamentos.map(function(x, i){
           var dataIso = x.dataSugerida ? _brParaIso(x.dataSugerida) : _hojeIso();
@@ -11708,6 +11786,7 @@ async function carregarDesligamentos(){
             + '<div class="desl-acoes">'
             + '<input type="date" class="desl-data" id="deslData' + i + '" value="' + dataIso + '">'
             + '<button class="ren-btn" onclick="confirmarSaida(' + i + ')">Registrar saída</button>'
+            + botaoAjustarContrato(x.numeroContrato, x.aluno)
             + '</div></div>';
         }).join('');
 
@@ -12040,6 +12119,10 @@ async function abrirMenuComTudo(nome){
     if(!boot || !boot.sucesso) boot = null;
   }catch(e){ boot = null; }
   window._BOOT = boot;
+  // 5.26.0: agendado logo aqui, antes do resto da montagem, para que um erro
+  // em qualquer cartao nao impeça o aviso de contratos de aparecer
+  setTimeout(function(){ mostrarAlertaContratos(nome, boot ? boot.alertaContratos : null); }, 900);
+  setTimeout(checarVersao, 1500);   // agora com perfil, para o aviso de admin
 
   // 5.10.0: posiciona antes de revelar, senao os cartoes movidos apareceriam
   // por um instante no lugar antigo.
@@ -12302,6 +12385,7 @@ document.getElementById('recepCardConfig').addEventListener('click', async funct
     document.getElementById('cfgInativo').value = r.minutosInatividade || 5;
     document.getElementById('cfgAnoIni').value = r.anoInicio || ANO_INICIO;
     document.getElementById('cfgAnoFim').value = r.anoFim || ANO_FIM;
+    carregarCfgAlertaCt(r);   // 5.26.0
   }catch(e){}
   abrirPermissoes();
   abrirOrganizador();
@@ -13571,6 +13655,8 @@ async function carregarProspectos(soRetorno){
         + '<button class="btn-material" data-contato="' + i + '">Registrar conversa</button>'
         + '<button class="btn-material" data-hist="' + i + '">Histórico</button>'
         + '<button class="btn-material" data-edit="' + i + '">Editar</button>'
+        + (p.situacao !== 'Virou aluno'
+            ? '<button class="btn-material" data-matric="' + i + '">Aluno matriculado</button>' : '')
         + '</div><div class="pr-hist hidden" id="prHist' + i + '"></div></div>';
     }).join('');
 
@@ -13585,6 +13671,12 @@ async function carregarProspectos(soRetorno){
     });
     box.querySelectorAll('[data-edit]').forEach(function(b){
       b.onclick = function(){ editarProspecto(_PROSP.lista[Number(b.dataset.edit)]); };
+    });
+    box.querySelectorAll('[data-matric]').forEach(function(b){
+      b.onclick = function(){
+        var p = _PROSP.lista[Number(b.dataset.matric)];
+        if(p) marcarJaMatriculado('prospecto', p.linha, p.nome);
+      };
     });
   }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao buscar.</div>'; }
 }
@@ -14380,6 +14472,8 @@ async function carregarListaNiv(){
       if(_NIV_PODE_PDF) acoes.push('<button class="ren-btn" onclick="pdfNivelamento('+i+')">PDF</button>');
       if(x.situacao !== 'Fechou'){
         acoes.push('<button class="ren-btn" onclick="nivVirarContrato('+i+')">Gerar contrato</button>');
+        // 5.26.0: matriculou por fora (contrato feito direto, sem passar por aqui)
+        acoes.push('<button class="ren-btn sec" onclick="nivJaMatriculado('+i+')">Já matriculado</button>');
         if(x.situacao !== 'Não fechou')
           acoes.push('<button class="ren-btn sec" onclick="nivMarcar('+i+',\'Não fechou\')">Não fechou</button>');
       }
@@ -15091,6 +15185,7 @@ async function carregarRenovacoes(){
         + '<span class="ren-prazo ' + cls + '">' + prazo + '</span></div>'
         + '<div class="ren-meta">Contrato ' + x.numeroContrato + ' · matrícula ' + x.numeroMatricula + '<br>'
         + 'Vigência ' + x.inicio + ' a ' + x.fim
+        + (x.fimAjustado ? ' <span style="color:#8a6d1a;">(ajustado; no contrato: ' + x.fimOriginal + ')</span>' : '')
         + (x.mensalidade ? ' · R$ ' + _brl(x.mensalidade) : '')
         + (x.responsavel ? '<br>Responsável: ' + x.responsavel : '')
         + (x.renovado ? '<br>Já renovado pelo contrato nº ' + x.numeroRenovacao : '')
@@ -15101,6 +15196,7 @@ async function carregarRenovacoes(){
             + '<button class="ren-btn" onclick="renovarContrato(' + iRen + ')">Renovar</button>'
             + (fone ? '<a class="ren-btn sec" style="text-decoration:none;" target="_blank" href="https://wa.me/' + fone + '?text=' + encodeURIComponent(msg) + '">WhatsApp</a>' : '')
             + (x.pdfUrl ? botaoPdf(x.pdfUrl, 'Contrato atual', 'ren-btn sec') : '')
+            + botaoAjustarContrato(x.numeroContrato, x.aluno)
             + '</div>')
         + '</div>';
     }).join('');
@@ -16518,10 +16614,11 @@ async function carregarBuscaContratos(){
     let html = `<div style="padding:0 20px 8px;font-size:12px;color:#8A8A82;">${r.contratos.length} contrato(s) encontrado(s)</div>`;
     r.contratos.forEach(c=>{
       const linhaResp = c.responsavel ? `<div class="recep-extra">Responsável: ${c.responsavel}</div>` : '';
-      const linhaInicio = c.inicio ? `<div class="recep-extra">Início: ${c.inicio}</div>` : '';
+      const linhaInicio = c.inicio ? `<div class="recep-extra">Início: ${c.inicio}${c.fim ? ' &middot; Fim: ' + c.fim + (c.fimAjustado ? ' (ajustado)' : '') : ''}</div>` : '';
+      const tagEnc = c.encerrado ? ' <span class="fa-tag no">encerrado</span>' : '';
       html += `<div class="skill-linha" style="align-items:flex-start;">
         <div style="flex:1;">
-          <span class="skill-nome">N&ordm; ${c.numeroContrato} &middot; ${c.aluno}</span>
+          <span class="skill-nome">N&ordm; ${c.numeroContrato} &middot; ${c.aluno}${tagEnc}</span>
           <div class="recep-extra">Matrícula ${c.numeroMatricula} &middot; ${c.tipo} &middot; emitido ${c.data}</div>
           ${linhaResp}
           ${linhaInicio}
@@ -16530,6 +16627,7 @@ async function carregarBuscaContratos(){
           ${botaoPdf(c.pdfUrl, 'PDF', 'btn-material')}
           <button class="btn-material ct-anexar" data-num="${c.numeroContrato}"
             data-aluno="${String(c.aluno).replace(/"/g,'&quot;')}">Anexar assinado</button>
+          ${botaoAjustarContrato(c.numeroContrato, c.aluno, 'btn-material')}
           ${(c.assinado||[]).map((u,k)=>
             `<a class="btn-material ct-assinado" href="${u}" target="_blank" rel="noopener">`
             + `Assinado${(c.assinado.length>1?' '+(k+1):'')}</a>`).join('')}
@@ -16629,6 +16727,281 @@ document.getElementById('btnLimparBuscaContrato').addEventListener('click', ()=>
   document.getElementById('contratoBuscaMes').value = '';
   carregarBuscaContratos();
 });
+
+
+/* ==========================================================================
+ * 5.26.0 - AVISO DE CONTRATOS VENCENDO, AJUSTE DE CONTRATO E "JA MATRICULADO"
+ * ========================================================================== */
+
+function _escH(s){
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---------- 3. pop-up de contratos vencendo ----------
+   Dois avisos por contrato: quando entra na janela do primeiro (padrao 45
+   dias) e quando entra na do segundo (padrao 30). "Ciente" guarda neste
+   aparelho que aquela pessoa ja viu aquele aviso daquele contrato, para nao
+   repetir a cada login. "Lembrar depois" so fecha. */
+function _chaveAlertaCt(nome){ return 'ap_alerta_ct|' + _chaveNome(nome); }
+
+function _alertasVistos(nome){
+  try{ return JSON.parse(localStorage.getItem(_chaveAlertaCt(nome)) || '{}') || {}; }
+  catch(e){ return {}; }
+}
+
+async function mostrarAlertaContratos(nome, pronto){
+  try{
+    if(!PERM || !PERM.recepcao) return;
+    var r = pronto;
+    if(!r || r.sucesso === false) r = await chamarAPI({ acao:'alertaContratos' });
+    if(!r || !r.sucesso || !r.ligado || !r.itens || !r.itens.length) return;
+
+    var vistos = _alertasVistos(nome);
+    var novos = r.itens.filter(function(x){
+      return !vistos[x.numeroContrato + '|' + _chaveNome(x.aluno) + '|' + x.faixa];
+    });
+    if(!novos.length) return;
+    if(document.getElementById('alertaCtFundo')) return;
+
+    var f2 = novos.filter(function(x){ return x.faixa === 2; });
+    var f1 = novos.filter(function(x){ return x.faixa === 1; });
+
+    var linha = function(x){
+      var prazo = x.diasRestantes <= 0 ? 'vence hoje' : 'vence em ' + x.diasRestantes + ' dia' + (x.diasRestantes === 1 ? '' : 's');
+      return '<div class="ap-item" style="cursor:default;"><span><b>' + _escH(x.aluno) + '</b>'
+        + '<i>Contrato nº ' + _escH(x.numeroContrato) + ' · ' + prazo + ' (' + _escH(x.fim) + ')'
+        + (x.responsavel ? ' · resp. ' + _escH(x.responsavel) : '') + '</i></span></div>';
+    };
+    var bloco = function(titulo, cor, lista){
+      if(!lista.length) return '';
+      return '<div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;'
+        + 'color:' + cor + ';margin:4px 0 8px;">' + titulo + '</div>' + lista.map(linha).join('');
+    };
+
+    var fundo = document.createElement('div');
+    fundo.className = 'ap-fundo';
+    fundo.id = 'alertaCtFundo';
+    fundo.innerHTML = '<div class="ap-cx" style="max-width:460px;">'
+      + '<div class="ap-topo"><b>' + (f2.length ? '&#9888; ' : '') + novos.length
+      + ' contrato' + (novos.length > 1 ? 's' : '') + ' perto de vencer</b>'
+      + '<span>Hora de chamar para renovar (e reajustar).</span></div>'
+      + '<div class="ap-lista">'
+      + bloco('Até ' + r.dias2 + ' dias', '#8a3b2d', f2)
+      + bloco('Até ' + r.dias1 + ' dias', '#8a6d1a', f1)
+      + '</div>'
+      + '<div class="ap-rod">'
+      + '<button class="ren-btn sec" id="alCtDepois">Lembrar depois</button>'
+      + '<div style="flex:1;"></div>'
+      + '<button class="ren-btn sec" id="alCtCiente">Ciente</button>'
+      + '<button class="pend-acao" id="alCtAbrir">Ver renovações</button>'
+      + '</div></div>';
+    document.body.appendChild(fundo);
+
+    var marcar = function(){
+      var v = _alertasVistos(nome);
+      novos.forEach(function(x){ v[x.numeroContrato + '|' + _chaveNome(x.aluno) + '|' + x.faixa] = Date.now(); });
+      // limpa o que tem mais de 200 dias para a chave nao crescer para sempre
+      var corte = Date.now() - 200*86400000;
+      Object.keys(v).forEach(function(k){ if(v[k] < corte) delete v[k]; });
+      try{ localStorage.setItem(_chaveAlertaCt(nome), JSON.stringify(v)); }catch(e){}
+    };
+    fundo.querySelector('#alCtDepois').onclick = function(){ fundo.remove(); };
+    fundo.querySelector('#alCtCiente').onclick = function(){ marcar(); fundo.remove(); };
+    fundo.querySelector('#alCtAbrir').onclick = function(){
+      marcar(); fundo.remove();
+      try{
+        var card = document.getElementById('recepCardRenovacoes');
+        if(card) card.click();
+      }catch(e){}
+    };
+  }catch(e){ /* aviso nunca pode travar o login */ }
+}
+
+/* ---------- 4 e 5. ajustar vencimento / encerrar contrato ---------- */
+
+/** Botao padrao. Os dados viajam em data-attribute (nome com apostrofo). */
+function botaoAjustarContrato(numero, aluno, classe){
+  if(!numero || !(PERM && PERM.recepcao)) return '';
+  return '<button class="' + (classe || 'ren-btn sec') + '" data-ajct="1" data-num="' + _escH(numero)
+    + '" data-aluno="' + _escH(aluno) + '">Ajustar contrato</button>';
+}
+
+document.addEventListener('click', function(e){
+  var b = e.target && e.target.closest ? e.target.closest('[data-ajct]') : null;
+  if(!b) return;
+  e.preventDefault();
+  var aposSalvar = null;
+  if(b.closest('#renResultado')) aposSalvar = carregarRenovacoes;
+  else if(b.closest('#contratoBuscaResultado')) aposSalvar = carregarBuscaContratos;
+  else if(b.closest('#deslResultado')) aposSalvar = carregarDesligamentos;
+  else if(b.closest('#alResultado')) aposSalvar = function(){ buscarFicha(b.dataset.ficha || ''); };
+  abrirAjusteContrato(b.dataset.num, b.dataset.aluno, aposSalvar);
+});
+
+async function abrirAjusteContrato(numero, aluno, aposSalvar){
+  var info;
+  try{
+    mostrarToast('Abrindo contrato...');
+    info = await chamarAPI({ acao:'infoContrato', numContrato: numero, aluno: aluno });
+  }catch(e){ info = null; }
+  if(!info || !info.sucesso){ mostrarToast((info && info.erro) || 'Não consegui abrir o contrato'); return; }
+
+  var situ = info.encerrado
+    ? '<span class="fa-tag no">encerrado</span>'
+    : (info.diasAteOFim !== null && info.diasAteOFim < 0
+        ? '<span class="fa-tag no">vencido há ' + Math.abs(info.diasAteOFim) + ' dias</span>'
+        : '<span class="fa-tag ok">ativo</span>');
+
+  var detalhes = '<div style="font-size:12px;color:#5d5d58;line-height:1.6;">'
+    + 'Início: <b>' + _escH(info.inicio || '—') + '</b><br>'
+    + 'Fim no contrato (PDF): <b>' + _escH(info.fimOriginal || '—') + '</b><br>'
+    + (info.afastamentos.length
+        ? 'Afastamento: ' + info.afastamentos.map(function(a){ return 'adendo ' + _escH(a.adendo) + ' leva para ' + _escH(a.novoFim); }).join('; ') + '<br>' : '')
+    + (info.fimAjustado ? 'Ajustado na mão para: <b>' + _escH(info.fimAjustado) + '</b>'
+        + (info.ajustadoPor ? ' (' + _escH(info.ajustadoPor) + ', ' + _escH(info.ajustadoEm) + ')' : '') + '<br>' : '')
+    + 'Vale até: <b>' + _escH(info.fimEfetivo || '—') + '</b> ' + situ
+    + (info.baixa ? '<br>Baixa pelo recibo nº ' + _escH(info.baixa.recibo) + ' em ' + _escH(info.baixa.data) : '')
+    + (info.motivoAjuste ? '<br><i style="color:#8a8a84;">Último motivo: ' + _escH(info.motivoAjuste) + '</i>' : '')
+    + '</div>';
+
+  var opcoesSit = info.baixa
+    ? '<option value="">Manter como está (baixa emitida pelo sistema)</option>'
+    : (info.encerradoManual
+        ? '<option value="">Manter encerrado</option><option value="reabrir">Reabrir (o aluno continua matriculado)</option>'
+        : '<option value="">Manter ativo</option><option value="encerrar">Encerrar: baixa já feita fora do sistema</option>');
+
+  var fundo = document.createElement('div');
+  fundo.className = 'ap-fundo';
+  fundo.innerHTML = '<div class="ap-cx" style="max-width:440px;">'
+    + '<div class="ap-topo"><b>Contrato nº ' + _escH(info.numeroContrato) + '</b>'
+    + '<span>' + _escH(info.aluno) + '</span></div>'
+    + '<div class="ap-lista">' + detalhes
+    + '<label style="display:block;font-size:12px;font-weight:600;margin:14px 0 4px;">Novo vencimento</label>'
+    + '<input type="date" class="mv-det" id="ajCtFim" value="' + _escH(info.fimEfetivoIso || '') + '">'
+    + '<small style="display:block;font-size:11px;color:#8a8a84;margin-top:4px;">O PDF e a coluna J não mudam. '
+    + 'A data nova vale para Renovações, avisos e Alunos para desligar.</small>'
+    + (info.fimAjustado ? '<label style="display:flex;gap:6px;align-items:center;font-size:12px;margin-top:8px;">'
+        + '<input type="checkbox" id="ajCtLimpar"> Voltar para a data original do contrato</label>' : '')
+    + '<label style="display:block;font-size:12px;font-weight:600;margin:14px 0 4px;">Situação</label>'
+    + '<select class="mv-det" id="ajCtSit">' + opcoesSit + '</select>'
+    + '<div id="ajCtDataEncBox" class="hidden"><label style="display:block;font-size:12px;font-weight:600;margin:10px 0 4px;">Data da baixa</label>'
+    + '<input type="date" class="mv-det" id="ajCtDataEnc"></div>'
+    + '<label style="display:block;font-size:12px;font-weight:600;margin:14px 0 4px;">Motivo (obrigatório)</label>'
+    + '<input type="text" class="mv-det" id="ajCtMotivo" placeholder="Ex.: afastamento de 60 dias feito em papel, antes do sistema">'
+    + '<div id="ajCtMsg"></div>'
+    + '</div>'
+    + '<div class="ap-rod"><div style="flex:1;"></div>'
+    + '<button class="ren-btn sec" id="ajCtCancelar">Cancelar</button>'
+    + '<button class="pend-acao" id="ajCtSalvar">Salvar ajuste</button>'
+    + '</div></div>';
+  document.body.appendChild(fundo);
+
+  var sel = fundo.querySelector('#ajCtSit');
+  sel.onchange = function(){
+    fundo.querySelector('#ajCtDataEncBox').classList.toggle('hidden', sel.value !== 'encerrar');
+  };
+  fundo.querySelector('#ajCtCancelar').onclick = function(){ fundo.remove(); };
+  fundo.querySelector('#ajCtSalvar').onclick = async function(){
+    var btn = this, msg = fundo.querySelector('#ajCtMsg');
+    var motivo = fundo.querySelector('#ajCtMotivo').value.trim();
+    if(motivo.length < 5){ msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Escreva o motivo do ajuste.</div>'; return; }
+
+    var pedido = { acao:'ajustarContrato', numContrato: info.numeroContrato, aluno: info.aluno, motivo: motivo };
+    var limpar = fundo.querySelector('#ajCtLimpar');
+    var iso = fundo.querySelector('#ajCtFim').value;
+    if(limpar && limpar.checked) pedido.novoFim = '';
+    else if(iso && iso !== info.fimEfetivoIso) pedido.novoFim = _isoParaBr(iso);
+    // "acao" ja e o nome da rota; encerrar/reabrir vai em situacaoNova
+    if(sel.value){
+      pedido.situacaoNova = sel.value;
+      var de = fundo.querySelector('#ajCtDataEnc').value;
+      if(sel.value === 'encerrar' && de) pedido.dataEncerramento = _isoParaBr(de);
+    }
+    if(pedido.novoFim === undefined && !pedido.situacaoNova){
+      msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Mude a data ou a situação antes de salvar.</div>';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try{
+      var r = await chamarAPI(pedido);
+      if(r && r.sucesso){
+        fundo.remove();
+        mostrarToast('Contrato ajustado' + (r.fimEfetivo ? ': vale até ' + r.fimEfetivo : '')
+          + (r.encerrado ? ' (encerrado)' : ''));
+        if(typeof aposSalvar === 'function') aposSalvar();
+      }else{
+        msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">' + _escH((r && r.erro) || 'Erro ao salvar') + '</div>';
+        btn.disabled = false; btn.textContent = 'Salvar ajuste';
+      }
+    }catch(e){
+      msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Falha de conexão.</div>';
+      btn.disabled = false; btn.textContent = 'Salvar ajuste';
+    }
+  };
+}
+
+/* ---------- 7. prospecto/nivelamento que matriculou por fora ---------- */
+async function marcarJaMatriculado(origem, linha, nome){
+  var num = await apTexto('Marcar ' + _escH(nome) + ' como aluno matriculado',
+    'Informe o nº do contrato, se souber. Em branco, procuro o contrato pelo nome. '
+    + 'O nivelamento vira "Fechou" e o prospecto vira "Virou aluno".', '', 'Nº do contrato (opcional)');
+  if(num === null) return;
+  mostrarToast('Atualizando...');
+  try{
+    var r = await chamarAPI({ acao:'marcarMatriculado', origem: origem, linha: linha,
+      numeroContrato: String(num || '').trim() });
+    if(!r || !r.sucesso){ mostrarToast((r && r.erro) || 'Erro'); return; }
+    mostrarToast(r.aluno + ' marcado como aluno'
+      + (r.numeroContrato ? ' (contrato nº ' + r.numeroContrato + ')' : ''));
+    if(origem === 'nivelamento' && typeof carregarListaNiv === 'function') carregarListaNiv();
+    if(origem === 'prospecto' && typeof carregarProspectos === 'function') carregarProspectos();
+  }catch(e){ mostrarToast('Falha de conexão'); }
+}
+function nivJaMatriculado(i){
+  var x = _LISTA_NIV[i]; if(!x) return;
+  marcarJaMatriculado('nivelamento', x.linha, x.aluno);
+}
+
+/* ---------- 3. configuracao do aviso ---------- */
+async function carregarCfgAlertaCt(r){
+  try{
+    if(!r) r = await chamarAPI({ acao:'lerConfig' });
+    var l = document.getElementById('cfgAlCtLigado');
+    if(!l) return;
+    l.checked = r.alertaContratoLigado !== false;
+    document.getElementById('cfgAlCt1').value = r.alertaContratoDias1 || 45;
+    document.getElementById('cfgAlCt2').value = r.alertaContratoDias2 || 30;
+  }catch(e){}
+}
+(function(){
+  var b = document.getElementById('btnSalvarCfgAlCt');
+  if(!b) return;
+  b.addEventListener('click', async function(){
+    var box = document.getElementById('cfgAlCtResultado');
+    var d1 = Number(document.getElementById('cfgAlCt1').value);
+    var d2 = Number(document.getElementById('cfgAlCt2').value);
+    var lig = document.getElementById('cfgAlCtLigado').checked;
+    if(!(d1 >= 1 && d1 <= 180 && d2 >= 1 && d2 <= 180)){
+      box.innerHTML = '<div class="assess-aviso">Use de 1 a 180 dias.</div>'; return;
+    }
+    if(d2 >= d1){
+      box.innerHTML = '<div class="assess-aviso">O segundo aviso precisa ser mais perto do vencimento que o primeiro.</div>'; return;
+    }
+    b.disabled = true; b.textContent = 'Salvando...';
+    try{
+      var r = await chamarAPI({ acao:'salvarConfig', alertaContratoLigado: lig,
+        alertaContratoDias1: d1, alertaContratoDias2: d2 });
+      box.innerHTML = r.sucesso
+        ? '<div class="niv-ok">Pronto. ' + (r.alertaContratoLigado
+            ? 'Avisos com ' + r.alertaContratoDias1 + ' e ' + r.alertaContratoDias2 + ' dias para vencer.'
+            : 'Aviso desligado.') + '</div>'
+        : '<div class="assess-aviso">' + _escH(r.erro || 'Erro') + '</div>';
+    }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha ao salvar.</div>'; }
+    b.disabled = false; b.textContent = 'Salvar avisos';
+  });
+})();
+
 
 popularLoginProfessores();
 
