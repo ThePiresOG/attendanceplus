@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.27.0">
+<meta name="app-versao" content="5.28.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -3466,6 +3466,7 @@
           <select id="exFiltroAno"><option value="">Todos os anos</option></select>
         </div>
       </div>
+      <div style="padding:8px 20px 0;" id="exDuplicatas"></div>
       <div style="padding:8px 20px 0;" id="exResumo"></div>
       <div style="padding:0 20px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <button class="ren-btn sec" id="btnExGuardar">Guardar na planilha</button>
@@ -4495,7 +4496,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.27.0';
+  return '5.28.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -15313,7 +15314,7 @@ async function renovarContrato(iRen){
   mostrarToast('Buscando os dados...');
   try{
     var r = await chamarAPI({ acao:'dadosParaRenovacao', numContrato: numContrato,
-      aluno: alunoDoCard || '' });
+      aluno: alunoDoCard || '', novoInicio: alvo.novoInicio || '' });
     if(!r.sucesso){ mostrarToast(r.erro || 'Erro ao buscar'); return; }
 
     // 4.1.0: antes de puxar tudo, confere o que mudou desde o contrato anterior
@@ -17068,6 +17069,7 @@ document.getElementById('recepCardExAlunos').addEventListener('click', function(
 document.getElementById('btnExGuardar').addEventListener('click', guardarExAlunosUI);
 
 async function carregarExAlunos(){
+  carregarDuplicatas();   // 5.28.0: roda em paralelo
   var box = document.getElementById('exResultado');
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Juntando o histórico (pode levar alguns segundos)...</p>';
   try{
@@ -17160,7 +17162,8 @@ function desenharExAlunos(){
       + (f.observacao ? '<div class="fa-sub" style="margin-top:8px;color:#5d5d58;">Obs.: ' + _escH(f.observacao) + '</div>' : '')
       + (f.motivoSistema ? '<div class="fa-sub" style="margin-top:4px;">Registro do sistema: ' + _escH(f.motivoSistema) + '</div>' : '')
       + '<div class="ren-acoes">'
-      + '<button class="ren-btn" data-exmot="' + i + '">' + (f.motivo ? 'Mudar motivo' : 'Definir motivo') + '</button>'
+      + '<button class="ren-btn" data-exvolta="' + i + '">Trazer de volta</button>'
+      + '<button class="ren-btn sec" data-exmot="' + i + '">' + (f.motivo ? 'Mudar motivo' : 'Definir motivo') + '</button>'
       + '<button class="ren-btn sec" data-exrel="' + i + '">Relatório de saída</button>'
       + '<button class="ren-btn sec" data-expdf="' + i + '">PDFs guardados</button>'
       + (fone ? '<a class="ren-btn sec" style="text-decoration:none;" target="_blank" href="https://wa.me/' + fone + '">WhatsApp</a>' : '')
@@ -17170,6 +17173,9 @@ function desenharExAlunos(){
 
   box.querySelectorAll('[data-exmot]').forEach(function(b){
     b.onclick = function(){ definirMotivoExAluno(_EX.filtrada[Number(b.dataset.exmot)]); };
+  });
+  box.querySelectorAll('[data-exvolta]').forEach(function(b){
+    b.onclick = function(){ trazerDeVoltaUI(_EX.filtrada[Number(b.dataset.exvolta)]); };
   });
   box.querySelectorAll('[data-exrel]').forEach(function(b){
     b.onclick = function(){ abrirRelatorioDeSaida(_EX.filtrada[Number(b.dataset.exrel)].aluno); };
@@ -17251,6 +17257,151 @@ async function guardarExAlunosUI(){
     }else mostrarToast((r && r.erro) || 'Erro');
   }catch(e){ mostrarToast('Falha de conexão'); }
   btn.disabled = false; btn.textContent = 'Guardar na planilha';
+}
+
+
+/* ==========================================================================
+ * 5.28.0 - ALUNO DUPLICADO NA MESMA TURMA E "TRAZER DE VOLTA"
+ * ========================================================================== */
+var _DUP = [];
+
+async function carregarDuplicatas(){
+  var box = document.getElementById('exDuplicatas');
+  if(!box) return;
+  box.innerHTML = '';
+  try{
+    var r = await chamarAPI({ acao:'duplicatasDeAlunos' });
+    _DUP = (r && r.sucesso && r.pares) ? r.pares : [];
+    if(!_DUP.length) return;
+    box.innerHTML = '<div class="msg-aviso" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'
+      + '<span style="flex:1;min-width:200px;"><b>' + _DUP.length + ' possível(is) aluno(s) duplicado(s)</b> na mesma turma. '
+      + 'Nome parecido, mesma sala, horário e teacher.</span>'
+      + '<button class="ren-btn" id="btnRevisarDup">Revisar</button></div>';
+    document.getElementById('btnRevisarDup').onclick = revisarDuplicatas;
+  }catch(e){}
+}
+
+function _linhaDup(x){
+  // o <b> aqui vira bloco (estilo do topo da janela), entao o resto ja cai na linha de baixo
+  return '<b style="margin-top:8px;">' + _escH(x.nome) + '</b>' + x.presencas + ' registro(s) de presença'
+    + (x.ultima ? ', último em ' + _escH(x.ultima) : '')
+    + (x.naLista ? ' · <span style="color:#2f6b45;">está na lista da turma</span>' : ' · fora da lista');
+}
+
+/** Um par por vez. Nada e juntado sem a pessoa escolher. */
+async function revisarDuplicatas(){
+  var mudou = false;
+  for(var i = 0; i < _DUP.length; i++){
+    var p = _DUP[i], A = p.sugeridoManter, B = p.sugeridoJuntar;
+    var esc = await apEscolha('São a mesma pessoa? (' + (i+1) + ' de ' + _DUP.length + ')',
+      'Turma ' + _escH(p.turmaId) + ' · ' + _escH([p.dias, p.horario, p.professor].filter(Boolean).join(' · '))
+      + '<br><br>' + _linhaDup(A) + '<br>' + _linhaDup(B), [
+        { rotulo: 'Sim. Ficar com "' + _escH(A.nome) + '"', sub: 'Sugerido: é o nome que está na turma' },
+        { rotulo: 'Sim. Ficar com "' + _escH(B.nome) + '"' },
+        { rotulo: 'Não, são pessoas diferentes', sub: 'Não pergunto mais sobre este par' },
+        { rotulo: 'Pular por agora' }
+      ]);
+    if(esc === null) break;
+    if(esc === 3) continue;
+    if(esc === 2){
+      await chamarAPI({ acao:'marcarNomesDistintos', turmaId: p.turmaId, nomeA: A.nome, nomeB: B.nome });
+      mudou = true; continue;
+    }
+    var manter = esc === 0 ? A.nome : B.nome, juntar = esc === 0 ? B.nome : A.nome;
+    var sim = await chamarAPI({ acao:'unificarAlunos', turmaId: p.turmaId, manter: manter, juntar: juntar, simular: true });
+    if(!sim || !sim.sucesso){ mostrarToast((sim && sim.erro) || 'Erro'); continue; }
+    var c = sim.contagem;
+    var ok = await apEscolha('Confirmar a unificação?',
+      '"' + _escH(juntar) + '" vira "' + _escH(manter) + '" na turma ' + _escH(p.turmaId) + ':<br>'
+      + c.presencas + ' presença(s) mudam de nome'
+      + (c.presencasRepetidas ? ', ' + c.presencasRepetidas + ' repetida(s) no mesmo dia saem' : '')
+      + ', ' + c.notas + ' nota(s), ' + c.vinculos + ' registro(s) de entrada/saída'
+      + (c.attendance ? ', e o nome repetido sai da lista da turma' : '') + '.'
+      + '<br>Fica registrado na aba Unificações de alunos.', [
+        { rotulo: 'Unificar' }, { rotulo: 'Voltar sem mudar nada' } ]);
+    if(ok !== 0) continue;
+    var r = await chamarAPI({ acao:'unificarAlunos', turmaId: p.turmaId, manter: manter, juntar: juntar });
+    if(r && r.sucesso){ mostrarToast('Unificado em ' + manter); mudou = true; }
+    else mostrarToast((r && r.erro) || 'Não consegui unificar');
+  }
+  if(mudou) carregarExAlunos();
+}
+
+/* ---------- trazer de volta ---------- */
+async function trazerDeVoltaUI(f){
+  if(!f) return;
+  mostrarToast('Buscando turmas...');
+  var op;
+  try{ op = await chamarAPI({ acao:'opcoesRetorno', aluno: f.aluno }); }catch(e){ op = null; }
+  if(!op || !op.sucesso){ mostrarToast((op && op.erro) || 'Erro ao buscar turmas'); return; }
+
+  var opcoes = op.turmas.map(function(t, i){
+    var marca = t.mesmaTurma ? 'turma de antes · ' : (t.mesmoHorario ? 'mesmo horário · ' : (t.mesmoNivel ? 'mesmo nível · ' : ''));
+    var vaga = !t.cabeNaPlanilha ? ' · lista cheia' : (t.vagas ? ' · ' + t.vagas + ' vaga(s)' : ' · sem vaga');
+    return '<option value="' + i + '"' + (!t.cabeNaPlanilha ? ' disabled' : '') + '>'
+      + _escH(t.turmaId + ' · ' + t.nivel + ' · ' + [t.dias, t.horario].filter(Boolean).join(' ') + ' · ' + t.professor)
+      + ' (' + marca + vaga.replace(' · ', '') + ')</option>';
+  }).join('');
+  var antes = op.antes;
+  var hoje = _hojeIso();
+
+  var fundo = document.createElement('div');
+  fundo.className = 'ap-fundo';
+  fundo.innerHTML = '<div class="ap-cx" style="max-width:460px;">'
+    + '<div class="ap-topo"><b>Trazer ' + _escH(op.aluno) + ' de volta</b>'
+    + '<span>' + (antes && (antes.dias || antes.horario)
+        ? 'Antes: ' + _escH([antes.dias, antes.horario, antes.professor, antes.nivel].filter(Boolean).join(' · '))
+          + (antes.livro ? ' · ' + _escH(antes.livro) : '')
+        : 'Sem registro do horário de antes') + '</span></div>'
+    + '<div class="ap-lista">'
+    + '<label style="display:block;font-size:12px;font-weight:600;margin:4px 0 4px;">Turma</label>'
+    + '<select class="mv-det" id="tvTurma">' + opcoes + '</select>'
+    + '<label style="display:block;font-size:12px;font-weight:600;margin:14px 0 4px;">Volta a partir de</label>'
+    + '<input type="date" class="mv-det" id="tvData" value="' + hoje + '">'
+    + '<small style="display:block;font-size:11px;color:#8a8a84;margin-top:6px;">Antes dessa data ele não aparece na lista do professor. '
+    + 'O histórico de antes continua inteiro.</small>'
+    + '<div id="tvMsg"></div></div>'
+    + '<div class="ap-rod"><div style="flex:1;"></div>'
+    + '<button class="ren-btn sec" id="tvCancelar">Cancelar</button>'
+    + '<button class="pend-acao" id="tvOk">Trazer de volta</button></div></div>';
+  document.body.appendChild(fundo);
+  var sel = fundo.querySelector('#tvTurma');
+  var primeiraValida = op.turmas.findIndex(function(t){ return t.cabeNaPlanilha; });
+  if(primeiraValida >= 0) sel.value = String(primeiraValida);
+  fundo.querySelector('#tvCancelar').onclick = function(){ fundo.remove(); };
+  fundo.querySelector('#tvOk').onclick = async function(){
+    var btn = this, msg = fundo.querySelector('#tvMsg');
+    var t = op.turmas[Number(sel.value)];
+    var dataIso = fundo.querySelector('#tvData').value;
+    if(!t || !dataIso){ msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Escolha a turma e a data.</div>'; return; }
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try{
+      var r = await chamarAPI({ acao:'trazerDeVolta', aluno: op.aluno, turmaId: t.turmaId, data: _isoParaBr(dataIso) });
+      if(!r || !r.sucesso){
+        msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">' + _escH((r && r.erro) || 'Erro') + '</div>';
+        btn.disabled = false; btn.textContent = 'Trazer de volta'; return;
+      }
+      fundo.remove();
+      mostrarToast(r.aluno + ' volta para a turma ' + r.turmaId + ' em ' + r.data);
+      if(r.precisaContrato){
+        var c = await apEscolha('Falta o contrato',
+          _escH(r.aluno) + ' não tem contrato valendo. ' + (r.ultimoContrato
+            ? 'Quer gerar a renovação agora, a partir do contrato nº ' + _escH(r.ultimoContrato) + '?'
+            : 'Não achei contrato anterior: gere um novo em Contratos.'),
+          r.ultimoContrato ? [{ rotulo: 'Gerar a renovação agora', sub: 'Abre o contrato já preenchido, começando em ' + r.data },
+                               { rotulo: 'Depois' }] : [{ rotulo: 'Entendi' }]);
+        if(c === 0 && r.ultimoContrato){
+          _LISTA_RENOV = [{ numeroContrato: r.ultimoContrato, aluno: r.aluno, novoInicio: r.data }];
+          renovarContrato(0);
+          return;
+        }
+      }
+      carregarExAlunos();
+    }catch(e){
+      msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Falha de conexão.</div>';
+      btn.disabled = false; btn.textContent = 'Trazer de volta';
+    }
+  };
 }
 
 popularLoginProfessores();
