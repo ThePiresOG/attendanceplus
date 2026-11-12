@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.26.0">
+<meta name="app-versao" content="5.27.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -2249,6 +2249,14 @@
         </div>
         <span class="menu-card-seta">&rarr;</span>
       </button>
+      <button class="menu-card" id="recepCardExAlunos">
+        <div class="menu-card-icone">&#128218;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Ex-alunos</span>
+          <span class="menu-card-sub">Hor&aacute;rio, livro, mensalidade e motivo de quem j&aacute; saiu</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
 <div class="sec-titulo" data-sec="No dia a dia">No dia a dia</div>
       <button class="menu-card" id="recepCardPresenca">
         <div class="menu-card-icone">P</div>
@@ -3442,6 +3450,30 @@
       <div class="assess-resultado" id="deslResultado"></div>
     </div>
 
+    <!-- 5.27.0: ex-alunos -->
+    <div class="recep-painel hidden" id="painelExAlunos">
+      <div class="busca-linha">
+        <div class="campo">
+          <label for="exBusca">Buscar ex-aluno</label>
+          <input type="text" id="exBusca" placeholder="Digite parte do nome" autocomplete="off">
+        </div>
+        <div class="campo" style="flex:0 1 190px;">
+          <label for="exFiltroMotivo">Motivo</label>
+          <select id="exFiltroMotivo"><option value="">Todos os motivos</option></select>
+        </div>
+        <div class="campo" style="flex:0 1 150px;">
+          <label for="exFiltroAno">Ano da sa&iacute;da</label>
+          <select id="exFiltroAno"><option value="">Todos os anos</option></select>
+        </div>
+      </div>
+      <div style="padding:8px 20px 0;" id="exResumo"></div>
+      <div style="padding:0 20px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="ren-btn sec" id="btnExGuardar">Guardar na planilha</button>
+        <span class="fa-sub" style="margin:0;flex:1;min-width:200px;">Grava todos na aba Ex-alunos com o hor&aacute;rio de hoje, para n&atilde;o se perder se a turma mudar.</span>
+      </div>
+      <div class="assess-resultado" id="exResultado"></div>
+    </div>
+
     <div class="recep-painel hidden" id="painelConversa">
       <div class="controls">
         <div class="field">
@@ -4463,7 +4495,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.26.0';
+  return '5.27.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -6858,6 +6890,7 @@ document.getElementById('btnGerarBaixa').addEventListener('click', async functio
       + 'Total quitado: R$ '+_brl(r.calculo.totalQuitar)+'</div>'
       + '<div class="doc-acoes"><a class="doc-link" href="'+r.pdfUrl+'" target="_blank">Abrir PDF</a></div>';
     mostrarToast('Baixa registrada');
+    perguntarMotivoDepoisDaSaida(_alunoDoContrato(_contratosBaixa, document.getElementById('baixaContrato').value), motivo);   // 5.27.0
 
     document.getElementById('baixaConfirma').checked = false;
     document.getElementById('baixaCalculo').innerHTML = '';
@@ -7443,6 +7476,7 @@ async function confirmarEncerramento(i){
 
   if(r.sucesso){
     mostrarToast('Aulas encerradas');
+    perguntarMotivoDepoisDaSaida(a.aluno, motivo);   // 5.27.0
     var el = document.getElementById('enc' + i);
     if(el){
       el.style.opacity = '.5';
@@ -11449,6 +11483,7 @@ async function saidaAlunoUI(k){
   if(r.sucesso){
     mostrarToast('Saída registrada em ' + dataBr);
     carregarAlunosTurma();
+    perguntarMotivoDepoisDaSaida(a.nome, motivo);   // 5.27.0
   }else{
     mostrarToast(r.erro || 'Erro ao registrar');
   }
@@ -11816,6 +11851,7 @@ async function confirmarSaida(i){
   });
   if(r.sucesso){
     mostrarToast('Saída registrada');
+    perguntarMotivoDepoisDaSaida(x.aluno, x.motivo);   // 5.27.0
     var el = document.getElementById('desl' + i);
     if(el){ el.style.opacity = '.45'; el.querySelector('.desl-acoes').innerHTML =
       '<span class="pill-ok">Saída em ' + dataBr + '</span>'; }
@@ -12172,6 +12208,7 @@ var MAPA_CARDS = [
   ['recepCardRenovacoes',  'recepcao'],
   ['recepCardTurmas',      'recepcao'],
   ['recepCardDesligar',    'recepcao'],
+  ['recepCardExAlunos',    'recepcao'],   // 5.27.0
   ['recepCardPresenca',    'recepcao'],
   ['recepCardCalendario',  'recepcao'],
   ['recepCardPanorama',    'recepcao'],
@@ -14997,7 +15034,8 @@ async function gerarPdfRelAluno(btn){
 
     _baixarBlob(blob, arquivo);
     var b64 = await _blobParaBase64(blob);
-    var g = await chamarAPI({ acao:'arquivarRelatorioAluno', base64:b64, nomeArquivo:arquivo });
+    var g = await chamarAPI({ acao:'arquivarRelatorioAluno', base64:b64, nomeArquivo:arquivo,
+      aluno: r.aluno, periodo: (r.periodo && r.periodo.de ? r.periodo.de + ' a ' + r.periodo.ate : '') });
     mostrarToast(g && g.sucesso ? 'PDF baixado e guardado no Drive' : 'PDF baixado');
   }catch(e){ mostrarToast('Falha ao gerar o PDF'); }
   palco.innerHTML = '';
@@ -17002,6 +17040,218 @@ async function carregarCfgAlertaCt(r){
   });
 })();
 
+
+
+/* ==========================================================================
+ * 5.27.0 - EX-ALUNOS
+ * Quem ja passou pela escola, para responder na hora "qual era o horario
+ * dele?" quando o aluno quer voltar. A lista e calculada do que ja existe
+ * na planilha (retroativa). O motivo real fica na aba Ex-alunos.
+ * ========================================================================== */
+var MOTIVOS_SAIDA = ['Financeiro', 'Horário não serve mais', 'Mudou de cidade',
+  'Trabalho ou faculdade', 'Atingiu o objetivo', 'Insatisfação', 'Saúde',
+  'Parou de responder', 'Outro'];
+var _EX = { lista: [], filtrada: [] };
+
+document.getElementById('recepCardExAlunos').addEventListener('click', function(){
+  abrirPainelRecep('painelExAlunos', 'Ex-alunos');
+  carregarExAlunos();
+});
+['exBusca'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', function(){
+    clearTimeout(window._exTimer); window._exTimer = setTimeout(desenharExAlunos, 250);
+  });
+});
+['exFiltroMotivo','exFiltroAno'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', desenharExAlunos);
+});
+document.getElementById('btnExGuardar').addEventListener('click', guardarExAlunosUI);
+
+async function carregarExAlunos(){
+  var box = document.getElementById('exResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Juntando o histórico (pode levar alguns segundos)...</p>';
+  try{
+    var r = await chamarAPI({ acao:'listarExAlunos' });
+    if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + _escH((r && r.erro) || 'Erro ao carregar.') + '</div>'; return; }
+    _EX.lista = r.exAlunos || [];
+
+    var anos = {};
+    _EX.lista.forEach(function(f){ if(f.saiuISO) anos[f.saiuISO.slice(0,4)] = true; });
+    var selAno = document.getElementById('exFiltroAno');
+    var atualAno = selAno.value;
+    selAno.innerHTML = '<option value="">Todos os anos</option>'
+      + Object.keys(anos).sort().reverse().map(function(a){ return '<option>' + a + '</option>'; }).join('');
+    selAno.value = atualAno;
+
+    var selMot = document.getElementById('exFiltroMotivo');
+    var atualMot = selMot.value;
+    selMot.innerHTML = '<option value="">Todos os motivos</option><option value="__sem">Sem motivo</option>'
+      + MOTIVOS_SAIDA.map(function(m){ return '<option>' + m + '</option>'; }).join('');
+    selMot.value = atualMot;
+
+    var top = Object.keys(r.porMotivo || {}).filter(function(m){ return m !== 'Sem motivo'; })
+      .sort(function(a,b){ return r.porMotivo[b] - r.porMotivo[a]; }).slice(0,3);
+    document.getElementById('exResumo').innerHTML = '<div class="ren-resumo">'
+      + '<div><span class="n">' + r.total + '</span><span class="r">ex-alunos</span></div>'
+      + '<div class="' + (r.semMotivo ? 'alerta' : '') + '"><span class="n">' + r.semMotivo + '</span><span class="r">sem motivo</span></div>'
+      + (top.length ? '<div><span class="n" style="font-size:14px;line-height:1.35;">' + _escH(top[0]) + '</span><span class="r">motivo mais comum (' + r.porMotivo[top[0]] + ')</span></div>' : '')
+      + '</div>';
+    desenharExAlunos();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha de conexão.</div>'; }
+}
+
+function _exFiltrar(){
+  var termo = _chaveNome(document.getElementById('exBusca').value);
+  var mot = document.getElementById('exFiltroMotivo').value;
+  var ano = document.getElementById('exFiltroAno').value;
+  return _EX.lista.filter(function(f){
+    if(termo && _chaveNome(f.aluno + ' ' + (f.nomeNaTurma || '')).indexOf(termo) === -1) return false;
+    if(mot === '__sem' && f.motivo) return false;
+    if(mot && mot !== '__sem' && f.motivo !== mot) return false;
+    if(ano && String(f.saiuISO || '').slice(0,4) !== ano) return false;
+    return true;
+  });
+}
+
+function desenharExAlunos(){
+  var box = document.getElementById('exResultado');
+  var lista = _exFiltrar();
+  _EX.filtrada = lista;
+  if(!lista.length){ box.innerHTML = '<div class="assess-aviso">Nenhum ex-aluno com esse filtro.</div>'; return; }
+  var podeValor = !!(PERM && PERM.financeiro);   // recepcao nao ve dinheiro
+
+  box.innerHTML = '<div style="padding:0 20px;">' + lista.map(function(f, i){
+    var turmaTxt = [f.dias, f.horario].filter(Boolean).join(' · ') || 'horário não registrado';
+    var grade = [
+      ['Dias e horário', turmaTxt + (f.turma ? ' <span style="color:#8a8a84;font-weight:400;">(turma ' + _escH(f.turma) + ')</span>' : '')],
+      ['Professor', f.professor || '—'],
+      ['Nível', f.nivel || '—'],
+      ['Último livro', f.livro || '—'],
+      ['Tempo de curso', f.meses !== '' && f.meses !== null && f.meses !== undefined
+        ? String(f.meses).replace('.', ',') + ' meses' : '—'],
+      ['Frequência', f.frequencia === null || f.frequencia === undefined || f.frequencia === ''
+        ? (f.antesDoSistema ? 'antes do sistema' : '—')
+        : f.frequencia + '% <span style="color:#8a8a84;font-weight:400;">(' + f.presencas + ' P · ' + f.faltas + ' F)</span>']
+    ];
+    if(podeValor) grade.push(['Mensalidade', f.mensalidade ? 'R$ ' + _brl(f.mensalidade) : '—']);
+    grade.push(['Período', (f.entrou || '?') + ' a ' + (f.saiu || '?')]);
+
+    var tagMot = f.motivo
+      ? '<span class="fa-tag ok">' + _escH(f.motivo) + '</span>'
+      : '<span class="fa-tag no">sem motivo</span>';
+    var fone = String(f.telefone || '').replace(/\D/g,'');
+    if(fone && fone.length <= 11) fone = '55' + fone;
+
+    var outras = (f.turmas || []).slice(1).map(function(t){
+      return '<div class="fa-linha off"><b>Turma ' + _escH(t.turmaId) + (t.arquivada ? ' (arquivada)' : '') + '</b>'
+        + '<span>' + _escH([t.dias, t.horario, t.professor].filter(Boolean).join(' · ') || '—')
+        + (t.de ? ' · ' + _escH(t.de) + ' a ' + _escH(t.ate) : '') + (t.livro ? ' · ' + _escH(t.livro) : '') + '</span></div>';
+    }).join('');
+
+    return '<div class="fa-bloco" id="ex' + i + '">'
+      + '<div class="doc-topo"><span class="fa-nome" style="font-size:15.5px;">' + _escH(f.aluno) + '</span>' + tagMot + '</div>'
+      + '<div class="fa-sub">' + (f.saiu ? 'Saiu em ' + _escH(f.saiu) : 'Data de saída não registrada')
+      + (f.nomeNaTurma ? ' · na turma: ' + _escH(f.nomeNaTurma) : '')
+      + (f.ultimoContrato ? ' · contrato nº ' + _escH(f.ultimoContrato) : '') + '</div>'
+      + '<div class="fa-grade" style="margin-top:10px;">'
+      + grade.map(function(g){ return '<div' + (g[0] === 'Dias e horário' ? ' class="larga"' : '') + '><span>' + g[0] + '</span><b>' + g[1] + '</b></div>'; }).join('')
+      + '</div>'
+      + (outras ? '<div style="margin-top:10px;">' + outras + '</div>' : '')
+      + (f.observacao ? '<div class="fa-sub" style="margin-top:8px;color:#5d5d58;">Obs.: ' + _escH(f.observacao) + '</div>' : '')
+      + (f.motivoSistema ? '<div class="fa-sub" style="margin-top:4px;">Registro do sistema: ' + _escH(f.motivoSistema) + '</div>' : '')
+      + '<div class="ren-acoes">'
+      + '<button class="ren-btn" data-exmot="' + i + '">' + (f.motivo ? 'Mudar motivo' : 'Definir motivo') + '</button>'
+      + '<button class="ren-btn sec" data-exrel="' + i + '">Relatório de saída</button>'
+      + '<button class="ren-btn sec" data-expdf="' + i + '">PDFs guardados</button>'
+      + (fone ? '<a class="ren-btn sec" style="text-decoration:none;" target="_blank" href="https://wa.me/' + fone + '">WhatsApp</a>' : '')
+      + '</div><div id="exPdf' + i + '"></div>'
+      + '</div>';
+  }).join('') + '</div>';
+
+  box.querySelectorAll('[data-exmot]').forEach(function(b){
+    b.onclick = function(){ definirMotivoExAluno(_EX.filtrada[Number(b.dataset.exmot)]); };
+  });
+  box.querySelectorAll('[data-exrel]').forEach(function(b){
+    b.onclick = function(){ abrirRelatorioDeSaida(_EX.filtrada[Number(b.dataset.exrel)].aluno); };
+  });
+  box.querySelectorAll('[data-expdf]').forEach(function(b){
+    b.onclick = function(){ listarPdfsExAluno(Number(b.dataset.expdf)); };
+  });
+}
+
+/** Pergunta o motivo real. Devolve true se gravou. */
+async function definirMotivoExAluno(f, aposSaida){
+  if(!f) return false;
+  var opcoes = MOTIVOS_SAIDA.map(function(m){ return { rotulo: m }; });
+  if(aposSaida) opcoes.push({ rotulo: 'Pular por agora', sub: 'Dá para preencher depois na tela Ex-alunos' });
+  var i = await apEscolha('Por que ' + _escH(f.aluno) + ' parou?',
+    'Fica no histórico de ex-alunos. Ajuda a ver por que a escola perde aluno.', opcoes);
+  if(i === null || i < 0 || i >= MOTIVOS_SAIDA.length) return false;
+  var motivo = MOTIVOS_SAIDA[i];
+  var obs = await apTexto('Algum detalhe?', 'Opcional. Ex.: quer voltar no ano que vem; só pode à noite.',
+    f.observacao || '', 'Observação');
+  if(obs === null) obs = f.observacao || '';
+  try{
+    var r = await chamarAPI({ acao:'salvarMotivoExAluno', aluno: f.aluno, motivo: motivo, observacao: obs });
+    if(r && r.sucesso){
+      mostrarToast('Motivo salvo: ' + motivo);
+      f.motivo = motivo; f.observacao = obs;
+      if(!aposSaida && document.getElementById('painelExAlunos') &&
+         !document.getElementById('painelExAlunos').classList.contains('hidden')) desenharExAlunos();
+      return true;
+    }
+    mostrarToast((r && r.erro) || 'Não consegui salvar');
+  }catch(e){ mostrarToast('Falha de conexão'); }
+  return false;
+}
+
+/** Chamado depois de qualquer saida ou baixa registrada. */
+function perguntarMotivoDepoisDaSaida(nome, motivoAdmin){
+  if(!nome) return;
+  if(/transferid/i.test(String(motivoAdmin || ''))) return;   // trocou de turma, nao saiu da escola
+  setTimeout(function(){ definirMotivoExAluno({ aluno: nome }, true); }, 400);
+}
+
+/** Abre o Relatorio do aluno ja montado para o ex-aluno (vida toda). */
+function abrirRelatorioDeSaida(nome){
+  abrirPainelRecep('painelRelAluno', 'Relatório do aluno');
+  document.getElementById('raBusca').value = nome;
+  document.getElementById('raDe').value = '';
+  document.getElementById('raAte').value = '';
+  document.getElementById('raResultado').innerHTML = '';
+  montarRelAluno(nome);
+}
+
+async function listarPdfsExAluno(i){
+  var f = _EX.filtrada[i], box = document.getElementById('exPdf' + i);
+  if(!f || !box) return;
+  box.innerHTML = '<div class="fa-sub" style="margin-top:8px;">Procurando no Drive...</div>';
+  try{
+    var r = await chamarAPI({ acao:'relatoriosGuardados', aluno: f.aluno });
+    if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + _escH((r && r.erro) || 'Erro') + '</div>'; return; }
+    box.innerHTML = r.relatorios.length
+      ? '<div class="doc-acoes" style="margin-top:8px;flex-wrap:wrap;">' + r.relatorios.map(function(x){
+          return botaoPdf(x.url, (x.tipo || 'PDF') + (x.quando ? ' · ' + x.quando : ''), 'doc-link');
+        }).join('') + '</div>'
+      : '<div class="fa-sub" style="margin-top:8px;">Nenhum relatório guardado. Use Relatório de saída para gerar um.</div>';
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha de conexão.</div>'; }
+}
+
+async function guardarExAlunosUI(){
+  var btn = document.getElementById('btnExGuardar');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try{
+    var r = await chamarAPI({ acao:'guardarExAlunos' });
+    if(r && r.sucesso){
+      await apAviso('Histórico guardado',
+        r.gravados
+          ? r.gravados + ' ex-aluno(s) foram gravados na aba <b>Ex-alunos</b> da planilha, com o horário, o livro e a mensalidade de hoje. Se a turma mudar depois, o registro deles não muda.'
+          : 'Todos os ex-alunos já estavam gravados na aba <b>Ex-alunos</b>.');
+      carregarExAlunos();
+    }else mostrarToast((r && r.erro) || 'Erro');
+  }catch(e){ mostrarToast('Falha de conexão'); }
+  btn.disabled = false; btn.textContent = 'Guardar na planilha';
+}
 
 popularLoginProfessores();
 
