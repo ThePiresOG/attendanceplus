@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.30.0">
+<meta name="app-versao" content="5.31.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -3568,6 +3568,7 @@
       <div class="busca-box">
         <button class="ren-btn" id="btnRodarPing" style="width:100%;">Rodar teste de conex&atilde;o</button>
       </div>
+      <div class="assess-resultado" id="temposResultado"></div>
       <div class="assess-resultado" id="pingResultado"></div>
     </div>
 
@@ -4187,6 +4188,17 @@ var _ACOES_QUE_MUDAM_TURMA = { removerAluno:1, adicionarAluno:1, registrarSaida:
   editarTurma:1, criarTurma:1, arquivarTurma:1, salvarVinculo:1 };
 
 async function chamarAPI(payload){
+  // 5.31.0: mede o tempo de toda chamada (ver _registrarTempo)
+  var _t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  var _r = await _chamarAPIcru(payload);
+  try{
+    var _t1 = (window.performance && performance.now) ? performance.now() : Date.now();
+    _registrarTempo((payload && payload.acao) || 'sem-acao', Math.round(_t1 - _t0), _r && _r._ms);
+  }catch(e){}
+  return _r;
+}
+
+async function _chamarAPIcru(payload){
   var acao = (payload && payload.acao) || 'sem-acao';
   // 4.4.0: qualquer acao que mexa em turma ou aluno invalida a lista guardada,
   // senao a tela de consulta continua mostrando o estado antigo
@@ -4503,7 +4515,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.30.0';
+  return '5.31.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -6950,6 +6962,7 @@ async function carregarListaBaixas(){
 
 document.getElementById('recepCardConexao').addEventListener('click', function(){
   abrirPainelRecep('painelConexao','Testar conexão');
+  try{ desenharTempos(); }catch(e){}   // 5.31.0
   document.getElementById('pingResultado').innerHTML =
     '<div class="msg-aviso">Toque em "Rodar teste" acima. Ele faz 5 chamadas em sequência, '
     + 'da mais simples para a mais parecida com salvar uma turma, e mostra onde para de funcionar.</div>';
@@ -16909,6 +16922,7 @@ async function abrirAjusteContrato(numero, aluno, aposSalvar){
     + (info.fimAjustado ? 'Ajustado na mão para: <b>' + _escH(info.fimAjustado) + '</b>'
         + (info.ajustadoPor ? ' (' + _escH(info.ajustadoPor) + ', ' + _escH(info.ajustadoEm) + ')' : '') + '<br>' : '')
     + 'Vale até: <b>' + _escH(info.fimEfetivo || '—') + '</b> ' + situ
+    + (info.podeValor && info.mensalidade ? '<br>Mensalidade: <b>R$ ' + _brl(info.mensalidade) + '</b>' : '')
     + (info.baixa ? '<br>Baixa pelo recibo nº ' + _escH(info.baixa.recibo) + ' em ' + _escH(info.baixa.data) : '')
     + (info.motivoAjuste ? '<br><i style="color:#8a8a84;">Último motivo: ' + _escH(info.motivoAjuste) + '</i>' : '')
     + '</div>';
@@ -16931,6 +16945,12 @@ async function abrirAjusteContrato(numero, aluno, aposSalvar){
     + 'A data nova vale para Renovações, avisos e Alunos para desligar.</small>'
     + (info.fimAjustado ? '<label style="display:flex;gap:6px;align-items:center;font-size:12px;margin-top:8px;">'
         + '<input type="checkbox" id="ajCtLimpar"> Voltar para a data original do contrato</label>' : '')
+    + (info.podeValor
+        ? '<label style="display:block;font-size:12px;font-weight:600;margin:14px 0 4px;">Mensalidade (R$)</label>'
+          + '<input type="text" inputmode="decimal" class="mv-det" id="ajCtMens" value="' + (info.mensalidade ? _brl(info.mensalidade) : '') + '">'
+          + '<small style="display:block;font-size:11px;color:#8a8a84;margin-top:4px;">Total do contrato hoje: '
+          + (info.valorTotal ? 'R$ ' + _brl(info.valorTotal) : '—') + '. Ao mudar, o total, a ficha e o valor na turma acompanham.</small>'
+        : '')
     + '<label style="display:block;font-size:12px;font-weight:600;margin:14px 0 4px;">Situação</label>'
     + '<select class="mv-det" id="ajCtSit">' + opcoesSit + '</select>'
     + '<div id="ajCtDataEncBox" class="hidden"><label style="display:block;font-size:12px;font-weight:600;margin:10px 0 4px;">Data da baixa</label>'
@@ -16966,8 +16986,12 @@ async function abrirAjusteContrato(numero, aluno, aposSalvar){
       var de = fundo.querySelector('#ajCtDataEnc').value;
       if(sel.value === 'encerrar' && de) pedido.dataEncerramento = _isoParaBr(de);
     }
-    if(pedido.novoFim === undefined && !pedido.situacaoNova){
-      msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Mude a data ou a situação antes de salvar.</div>';
+    var campoMens = fundo.querySelector('#ajCtMens');
+    if(campoMens && campoMens.value.trim() && campoMens.value.trim() !== (info.mensalidade ? _brl(info.mensalidade) : '')){
+      pedido.novaMensalidade = campoMens.value.trim();
+    }
+    if(pedido.novoFim === undefined && !pedido.situacaoNova && pedido.novaMensalidade === undefined){
+      msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Mude a data, a mensalidade ou a situação antes de salvar.</div>';
       return;
     }
     btn.disabled = true; btn.textContent = 'Salvando...';
@@ -17433,16 +17457,28 @@ function _foneProfessor(prof){
   return f;
 }
 
+/* 5.31.0: com 32 aulas a mensagem virava um link de 3 mil caracteres, que o
+   filtro do navegador (Microsoft Family Safety, no caso do computador da
+   recepcao) recusava. Agora agrupa por turma, e o que ainda passar do limite
+   vai copiado: o WhatsApp abre na conversa do professor e e so colar. */
 function _msgCobranca(prof, itens){
-  var primeiro = String(prof || '').split(' ')[0];
-  return 'Olá, ' + primeiro + '! Passando para lembrar de lançar a presença '
-    + (itens.length > 1 ? 'destas aulas' : 'desta aula') + ' no AttendancePlus:\n'
-    + itens.map(function(p){
-        return '• ' + p.diaSemana + ' ' + p.dataBr + ' · turma ' + p.turmaId + ' (' + p.nivel + ')'
-          + (p.horario ? ' · ' + p.horario : '');
+  var nome = String(prof || '').split(' ')[0];
+  nome = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+  var porTurma = {}, ordem = [];
+  itens.forEach(function(p){
+    var k = String(p.turmaId);
+    if(!porTurma[k]){ porTurma[k] = { p: p, datas: [] }; ordem.push(k); }
+    porTurma[k].datas.push(String(p.dataBr).slice(0, 5));
+  });
+  return 'Olá, ' + nome + '! ' + (itens.length > 1 ? 'Faltam ' + itens.length + ' presenças' : 'Falta 1 presença')
+    + ' para lançar no AttendancePlus:\n'
+    + ordem.map(function(k){
+        var g = porTurma[k];
+        return '• Turma ' + k + ' (' + g.p.nivel + (g.p.horario ? ', ' + g.p.horario : '') + '): ' + g.datas.join(', ');
       }).join('\n')
     + '\nObrigado! ' + String.fromCodePoint(0x1F60A);
 }
+var LIMITE_LINK_WHATSAPP = 1500;
 
 var _PEND_ESCOLA = null;
 function desenharCobrancaRecepcao(){
@@ -17488,6 +17524,8 @@ function desenharCobrancaRecepcao(){
         var g = porProf[k];
         var fone = _foneProfessor(g.nome);
         var msg = _msgCobranca(g.nome, g.itens);
+        var linkCompleto = 'https://wa.me/' + fone + '?text=' + encodeURIComponent(msg);
+        var longo = linkCompleto.length > LIMITE_LINK_WHATSAPP;
         var lista = g.itens.map(function(p){
           var atraso = p.ehHoje ? 'hoje' : (p.diasDeAtraso === 1 ? 'ontem' : p.diasDeAtraso + ' dias');
           return '<div style="font-size:12px;color:var(--carvao);padding:3px 0;">' + _escH(p.diaSemana + ' ' + p.dataBr)
@@ -17498,8 +17536,9 @@ function desenharCobrancaRecepcao(){
           + '<details style="flex:1;min-width:180px;"><summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--verde-escuro);">'
           + _escH(g.nome) + ' · ' + g.itens.length + ' aula(s)</summary><div style="margin-top:6px;">' + lista + '</div></details>'
           + (fone
-              ? '<a class="ren-btn" style="text-decoration:none;" target="_blank" rel="noopener" data-cobrar="' + k + '" href="https://wa.me/'
-                + fone + '?text=' + encodeURIComponent(msg) + '">Cobrar no WhatsApp</a>'
+              ? '<a class="ren-btn" style="text-decoration:none;" target="_blank" rel="noopener" data-cobrar="' + k + '"'
+                + (longo ? ' data-longo="1"' : '') + ' href="' + (longo ? 'https://wa.me/' + fone : linkCompleto) + '">'
+                + (longo ? 'Copiar e abrir WhatsApp' : 'Cobrar no WhatsApp') + '</a>'
               : '<button class="ren-btn sec" data-copiar="' + k + '">Copiar mensagem</button>'
                 + '<span style="font-size:11px;color:#8a6d1a;width:100%;">Sem WhatsApp cadastrado em Usuários</span>')
           + '</div>';
@@ -17514,7 +17553,17 @@ function desenharCobrancaRecepcao(){
     });
   };
   box.querySelectorAll('[data-cobrar]').forEach(function(a){
-    a.addEventListener('click', function(){ registrar(porProf[a.dataset.cobrar]); mostrarToast('Cobrança registrada'); });
+    a.addEventListener('click', function(){
+      var g = porProf[a.dataset.cobrar];
+      if(a.dataset.longo){
+        // a copia comeca ainda dentro do clique; o link abre a conversa logo em seguida
+        try{ navigator.clipboard.writeText(_msgCobranca(g.nome, g.itens)); }catch(e){}
+        mostrarToast('Mensagem copiada: cole no WhatsApp (Ctrl+V)');
+      }else{
+        mostrarToast('Cobrança registrada');
+      }
+      registrar(g);
+    });
   });
   box.querySelectorAll('[data-copiar]').forEach(function(b){
     b.onclick = async function(){
@@ -17523,6 +17572,67 @@ function desenharCobrancaRecepcao(){
       catch(e){ mostrarToast('Não consegui copiar'); }
     };
   });
+}
+
+
+/* ==========================================================================
+ * 5.31.0 - MEDIR ANTES DE MEXER
+ * Cada chamada guarda, neste aparelho, quanto tempo levou no total e quanto
+ * o servidor gastou (o "_ms" da resposta). A diferenca e rede + fila do
+ * Google. A tabela aparece em Testar conexao.
+ * ========================================================================== */
+function _registrarTempo(acao, total, servidor){
+  try{
+    var l = JSON.parse(localStorage.getItem('ap_tempos') || '[]');
+    l.push([acao, total, (typeof servidor === 'number') ? servidor : null, Date.now()]);
+    if(l.length > 400) l = l.slice(-400);
+    localStorage.setItem('ap_tempos', JSON.stringify(l));
+  }catch(e){}
+}
+
+function _resumoTempos(){
+  var l = [];
+  try{ l = JSON.parse(localStorage.getItem('ap_tempos') || '[]'); }catch(e){}
+  var g = {};
+  l.forEach(function(x){
+    var k = x[0];
+    if(!g[k]) g[k] = { acao:k, n:0, tot:0, srv:0, nSrv:0, max:0 };
+    g[k].n++; g[k].tot += x[1]; if(x[1] > g[k].max) g[k].max = x[1];
+    if(typeof x[2] === 'number'){ g[k].srv += x[2]; g[k].nSrv++; }
+  });
+  return Object.keys(g).map(function(k){
+    var a = g[k];
+    var mt = a.tot / a.n, ms = a.nSrv ? a.srv / a.nSrv : null;
+    return { acao:a.acao, n:a.n, total:mt, servidor:ms, rede: ms === null ? null : Math.max(0, mt - ms), max:a.max };
+  }).sort(function(a,b){ return b.total - a.total; });
+}
+
+function desenharTempos(){
+  var box = document.getElementById('temposResultado');
+  if(!box) return;
+  var r = _resumoTempos();
+  if(!r.length){ box.innerHTML = '<div class="assess-aviso">Ainda não há medições neste aparelho. Use o app normalmente e volte aqui.</div>'; return; }
+  var s = function(ms){ return ms === null ? '—' : (ms / 1000).toFixed(1).replace('.', ',') + ' s'; };
+  box.innerHTML = '<div style="padding:0 20px;"><div class="fa-bloco"><h4>Tempo de cada ação neste aparelho</h4>'
+    + '<div class="fa-sub" style="margin-bottom:8px;">Servidor = o que o nosso código gastou. Rede e fila = o resto (internet + Google).</div>'
+    + '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">'
+    + '<tr style="text-align:left;color:#8a8a84;"><th>Ação</th><th>Vezes</th><th>Média</th><th>Servidor</th><th>Rede e fila</th><th>Pior</th></tr>'
+    + r.map(function(x){
+        return '<tr style="border-top:1px solid var(--linha);"><td style="padding:5px 4px;">' + _escH(x.acao) + '</td><td>' + x.n
+          + '</td><td><b>' + s(x.total) + '</b></td><td>' + s(x.servidor) + '</td><td>' + s(x.rede) + '</td><td>' + s(x.max) + '</td></tr>';
+      }).join('')
+    + '</table></div><div class="ren-acoes"><button class="ren-btn" id="btnCopiarTempos">Copiar para enviar ao Claude</button>'
+    + '<button class="ren-btn sec" id="btnZerarTempos">Zerar medições</button></div></div></div>';
+  document.getElementById('btnCopiarTempos').onclick = async function(){
+    var txt = 'Tempos do AttendancePlus (' + APP_VERSAO + ')\n' + r.map(function(x){
+      return x.acao + ' | vezes ' + x.n + ' | média ' + s(x.total) + ' | servidor ' + s(x.servidor) + ' | rede ' + s(x.rede) + ' | pior ' + s(x.max);
+    }).join('\n');
+    try{ await navigator.clipboard.writeText(txt); mostrarToast('Copiado'); }catch(e){ mostrarToast('Não consegui copiar'); }
+  };
+  document.getElementById('btnZerarTempos').onclick = function(){
+    try{ localStorage.removeItem('ap_tempos'); }catch(e){}
+    desenharTempos();
+  };
 }
 
 popularLoginProfessores();
