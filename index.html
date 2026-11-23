@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.28.0">
+<meta name="app-versao" content="5.30.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -4309,8 +4309,15 @@ function detalheErro(r){
 }
 
 async function buscarTurmas(professor){
-  const res = await fetch(`${API_URL}?professor=${encodeURIComponent(professor)}`);
+  // 5.30.0: a rota pede login; o token vai junto
+  const res = await fetch(`${API_URL}?professor=${encodeURIComponent(professor)}`
+    + (TOKEN_SESSAO ? `&token=${encodeURIComponent(TOKEN_SESSAO)}` : ''));
   const dados = await res.json();
+  if(!Array.isArray(dados)){ _checarAcesso(dados); return []; }
+  return _mapearTurmas(dados);
+}
+
+function _mapearTurmas(dados){
   return dados.map(t => ({
     id: 't' + t.linha,
     linha: t.linha,
@@ -4496,7 +4503,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.28.0';
+  return '5.30.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -5347,7 +5354,8 @@ $btnEntrar.addEventListener('click', async ()=>{
       return;
     }
     if(PERM.presenca){
-      TURMAS = await buscarTurmas(nome);
+      // 5.29.0: as turmas ja vem na resposta do login (uma ida a menos)
+      TURMAS = Array.isArray(login.turmas) ? _mapearTurmas(login.turmas) : await buscarTurmas(nome);
       if(TURMAS.length === 0){
         $loginErro.textContent = 'Login certo, mas nenhuma turma encontrada pra esse professor.';
         return;
@@ -6439,6 +6447,7 @@ function mostrarCardsRecepcao(){
   document.getElementById('recepAbasPresenca').classList.add('hidden');
   document.querySelectorAll('.recep-painel').forEach(p=> p.classList.add('hidden'));
   $recepcaoSub.textContent = 'O que você quer fazer?';
+  try{ desenharCobrancaRecepcao(); }catch(e){}   // 5.29.0
 }
 
 document.getElementById('recepCardContratos').addEventListener('click', ()=>{
@@ -12015,8 +12024,9 @@ async function carregarPendencias(nome, pronto){
   if(!box) return;
   try{
     var r = pronto || await chamarAPI({ acao:'pendenciasPresenca', professor: (PERM && PERM.presenca) ? nome : '' });
-    if(!r.sucesso || !r.total){ box.classList.add('hidden'); desenharHome(); return; }
+    if(!r.sucesso || !r.total){ box.classList.add('hidden'); PENDENCIAS = null; desenharCobrancaRecepcao(); desenharHome(); return; }
     PENDENCIAS = r;
+    desenharCobrancaRecepcao();   // 5.29.0
 
     // 3.6.8: o aviso passou a cobrir o mes inteiro
     var doMesAnterior = (r.mesAnterior !== undefined) ? r.mesAnterior : r.semanaPassada;
@@ -15922,17 +15932,16 @@ async function cobrarProfessor(turmaId, professor){
   const data = $dataRecepcao.value;
   const dataFmt = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
   if(!confirm(`Cobrar ${professor} sobre a turma ${turmaId} do dia ${dataFmt}?`)) return;
+  // 5.29.0: abre o WhatsApp AGORA, ainda dentro do clique. Esperando o
+  // servidor antes, o navegador bloqueava a janela quando ele demorava.
+  const fone = _foneProfessor(professor);
+  const emojiSorriso = String.fromCodePoint(0x1F60A);
+  const msg = encodeURIComponent(`Olá ${professor}! Passando para lembrar de registrar a presença da turma ${turmaId} referente à aula do dia ${dataFmt}. Obrigado! ` + emojiSorriso);
+  if(fone) window.open(`https://wa.me/${fone}?text=${msg}`, '_blank');
   try{
     const r = await chamarAPI({ acao:'cobrarTurma', turmaId, professor, data, registrada: false });
     if(r.sucesso){
-      const numero = WHATSAPP_PROF[String(professor).trim().toUpperCase()];
-      const emojiSorriso = String.fromCodePoint(0x1F60A);
-      const msg = encodeURIComponent(`Olá ${professor}! Passando para lembrar de registrar a presença da turma ${turmaId} referente à aula do dia ${dataFmt}. Obrigado! ` + emojiSorriso);
-      if(numero){
-        window.open(`https://wa.me/55${numero}?text=${msg}`, '_blank');
-      } else {
-        mostrarToast('Cobrança registrada (sem WhatsApp cadastrado)');
-      }
+      if(!fone) mostrarToast('Cobrança registrada (sem WhatsApp cadastrado)');
       carregarStatusDoDia();
     } else {
       mostrarToast('Erro ao registrar cobrança');
@@ -17402,6 +17411,118 @@ async function trazerDeVoltaUI(f){
       btn.disabled = false; btn.textContent = 'Trazer de volta';
     }
   };
+}
+
+
+/* ==========================================================================
+ * 5.29.0 - COBRANCA DE PRESENCA NA TELA INICIAL DA RECEPCAO
+ * A recepcao entra direto nos cartoes da Recepcao, e o aviso de aulas sem
+ * presenca morava no menu principal, que ela nao ve. Aqui ele volta para a
+ * tela dela, agrupado por professor, com um botao de WhatsApp que ja leva a
+ * lista inteira de aulas daquele professor numa mensagem so.
+ * O link e montado ANTES do clique: abrir o WhatsApp depois de esperar o
+ * servidor faz o navegador bloquear a janela (era o que acontecia no
+ * "Cobrar professor" quando o servidor demorava).
+ * ========================================================================== */
+function _foneProfessor(prof){
+  var alvo = _chaveNome(prof);
+  var achado = '';
+  Object.keys(WHATSAPP_PROF || {}).forEach(function(k){ if(!achado && _chaveNome(k) === alvo) achado = WHATSAPP_PROF[k]; });
+  var f = String(achado || '').replace(/\D/g,'');
+  if(f && f.length <= 11) f = '55' + f;
+  return f;
+}
+
+function _msgCobranca(prof, itens){
+  var primeiro = String(prof || '').split(' ')[0];
+  return 'Olá, ' + primeiro + '! Passando para lembrar de lançar a presença '
+    + (itens.length > 1 ? 'destas aulas' : 'desta aula') + ' no AttendancePlus:\n'
+    + itens.map(function(p){
+        return '• ' + p.diaSemana + ' ' + p.dataBr + ' · turma ' + p.turmaId + ' (' + p.nivel + ')'
+          + (p.horario ? ' · ' + p.horario : '');
+      }).join('\n')
+    + '\nObrigado! ' + String.fromCodePoint(0x1F60A);
+}
+
+var _PEND_ESCOLA = null;
+function desenharCobrancaRecepcao(){
+  var grade = document.getElementById('recepCards');
+  if(!grade) return;
+  var box = document.getElementById('recepPendencias');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'recepPendencias';
+    box.style.gridColumn = '1 / -1';
+  }
+  if(grade.firstElementChild !== box) grade.insertBefore(box, grade.firstElementChild);
+
+  // quem tambem da aula (ex.: o dono) tem PENDENCIAS so dele; aqui vale a escola toda
+  var P = PENDENCIAS;
+  if(PERM && PERM.presenca && PERM.recepcao){
+    if(_PEND_ESCOLA === null){
+      _PEND_ESCOLA = 'carregando';
+      chamarAPI({ acao:'pendenciasPresenca', professor:'' }).then(function(r){
+        _PEND_ESCOLA = (r && r.sucesso) ? r : { total: 0 };
+        desenharCobrancaRecepcao();
+      });
+    }
+    P = (_PEND_ESCOLA && _PEND_ESCOLA !== 'carregando') ? _PEND_ESCOLA : null;
+  }
+  if(!(PERM && PERM.recepcao) || !P || !P.total || !P.pendentes){
+    box.innerHTML = ''; box.classList.add('hidden'); return;
+  }
+
+  var porProf = {}, ordem = [];
+  P.pendentes.forEach(function(p){
+    var k = _chaveNome(p.professor || '—');
+    if(!porProf[k]){ porProf[k] = { nome: p.professor || '—', itens: [] }; ordem.push(k); }
+    porProf[k].itens.push(p);
+  });
+  ordem.sort(function(a, b){ return porProf[b].itens.length - porProf[a].itens.length; });
+
+  box.classList.remove('hidden');
+  box.innerHTML = '<div class="pend-box' + ((P.mesAnterior || 0) > 0 ? ' critico' : '') + '" style="margin:0 0 12px;">'
+    + '<div class="pend-topo"><span class="pend-titulo">' + P.total + ' aula(s) sem presença lançada'
+    + ' · ' + ordem.length + ' professor(es)</span></div>'
+    + ordem.map(function(k){
+        var g = porProf[k];
+        var fone = _foneProfessor(g.nome);
+        var msg = _msgCobranca(g.nome, g.itens);
+        var lista = g.itens.map(function(p){
+          var atraso = p.ehHoje ? 'hoje' : (p.diasDeAtraso === 1 ? 'ontem' : p.diasDeAtraso + ' dias');
+          return '<div style="font-size:12px;color:var(--carvao);padding:3px 0;">' + _escH(p.diaSemana + ' ' + p.dataBr)
+            + ' · turma ' + _escH(p.turmaId) + ' · ' + _escH(p.nivel) + (p.horario ? ' · ' + _escH(p.horario) : '')
+            + ' <span style="color:#8a8a84;">(' + atraso + ')</span></div>';
+        }).join('');
+        return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--linha);">'
+          + '<details style="flex:1;min-width:180px;"><summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--verde-escuro);">'
+          + _escH(g.nome) + ' · ' + g.itens.length + ' aula(s)</summary><div style="margin-top:6px;">' + lista + '</div></details>'
+          + (fone
+              ? '<a class="ren-btn" style="text-decoration:none;" target="_blank" rel="noopener" data-cobrar="' + k + '" href="https://wa.me/'
+                + fone + '?text=' + encodeURIComponent(msg) + '">Cobrar no WhatsApp</a>'
+              : '<button class="ren-btn sec" data-copiar="' + k + '">Copiar mensagem</button>'
+                + '<span style="font-size:11px;color:#8a6d1a;width:100%;">Sem WhatsApp cadastrado em Usuários</span>')
+          + '</div>';
+      }).join('')
+    + '</div>';
+
+  // registra a cobranca depois que o WhatsApp ja abriu (nao segura o clique)
+  var registrar = function(g){
+    g.itens.forEach(function(p){
+      chamarAPI({ acao:'cobrarTurma', turmaId: p.turmaId, professor: p.professor, data: p.data, registrada: false })
+        .catch(function(){});
+    });
+  };
+  box.querySelectorAll('[data-cobrar]').forEach(function(a){
+    a.addEventListener('click', function(){ registrar(porProf[a.dataset.cobrar]); mostrarToast('Cobrança registrada'); });
+  });
+  box.querySelectorAll('[data-copiar]').forEach(function(b){
+    b.onclick = async function(){
+      var g = porProf[b.dataset.copiar];
+      try{ await navigator.clipboard.writeText(_msgCobranca(g.nome, g.itens)); mostrarToast('Mensagem copiada'); registrar(g); }
+      catch(e){ mostrarToast('Não consegui copiar'); }
+    };
+  });
 }
 
 popularLoginProfessores();
