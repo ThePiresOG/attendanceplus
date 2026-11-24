@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.31.0">
+<meta name="app-versao" content="5.32.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -4515,7 +4515,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.31.0';
+  return '5.32.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -5281,8 +5281,15 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
         ? 'Aula da turma ' + t.turmaId + ' registrada como não realizada'
         : 'Presença salva para turma ' + t.turmaId);
       _AULA_CANCELADA = false;
+      // 5.32.0: o resumo da semana e as pendencias ficavam com o numero de
+      // antes de salvar ate a pessoa sair e entrar de novo
+      _PEND_ESCOLA_TS = 0;
+      setTimeout(function(){ try{ carregarResumoSemana(professorLogado); }catch(e){} }, 1000);
       if(VEIO_DE_PENDENCIA) setTimeout(voltarDaPendencia, 900);
-      else setTimeout(irParaMenu, 900);
+      else {
+        setTimeout(irParaMenu, 900);
+        setTimeout(function(){ try{ carregarPendencias(professorLogado); }catch(e){} }, 1000);
+      }
     }
     else mostrarToast('Erro ao salvar: ' + (resultado.erro || 'tenta de novo'));
   } catch(err){
@@ -12037,8 +12044,14 @@ async function carregarPendencias(nome, pronto){
   if(!box) return;
   try{
     var r = pronto || await chamarAPI({ acao:'pendenciasPresenca', professor: (PERM && PERM.presenca) ? nome : '' });
-    if(!r.sucesso || !r.total){ box.classList.add('hidden'); PENDENCIAS = null; desenharCobrancaRecepcao(); desenharHome(); return; }
+    if(!r.sucesso || !r.total){
+      box.classList.add('hidden'); PENDENCIAS = null;
+      if(r.sucesso && PERM && !PERM.presenca){ _PEND_ESCOLA = r; _PEND_ESCOLA_TS = Date.now(); }
+      desenharCobrancaRecepcao(); desenharHome(); return;
+    }
     PENDENCIAS = r;
+    // 5.32.0: quem nao da aula recebe a escola toda aqui; serve para a lista da recepcao
+    if(PERM && !PERM.presenca){ _PEND_ESCOLA = r; _PEND_ESCOLA_TS = Date.now(); }
     desenharCobrancaRecepcao();   // 5.29.0
 
     // 3.6.8: o aviso passou a cobrir o mes inteiro
@@ -12172,16 +12185,30 @@ function _ajustarTitulosDeSecao(){
 /* 5.7.0: uma ida so ao servidor no lugar de seis. Cada ida ao Apps Script
    custa de um a tres segundos; era essa a lentidao ao entrar. */
 async function abrirMenuComTudo(nome){
+  /* 5.32.0: o pacote unico levava 14 s de servidor, uma parte depois da
+     outra. Agora as quatro partes pesadas saem juntas, em paralelo, e cada
+     uma aparece na tela assim que chega. */
+  var euLanco = !!(PERM && PERM.presenca);
+  var pPend = chamarAPI({ acao:'pendenciasPresenca', professor: euLanco ? nome : '' });
+  var pHome = chamarAPI({ acao:'homeResumo' });
+  var pSem = euLanco ? chamarAPI({ acao:'resumoSemana', professor: nome }) : Promise.resolve(null);
+  window._SEMANA_PROMESSA = euLanco ? pSem : null;
+  var pAlerta = (PERM && PERM.recepcao) ? chamarAPI({ acao:'alertaContratos' }) : Promise.resolve(null);
+
   var boot = null;
   try{
-    boot = await chamarAPI({ acao:'aberturaDoMenu', nome: nome, perfil: PERFIL,
-      professorPendencias: (PERM && PERM.presenca) ? nome : '' });
+    boot = await chamarAPI({ acao:'aberturaDoMenu', nome: nome, perfil: PERFIL, leve: true });
     if(!boot || !boot.sucesso) boot = null;
   }catch(e){ boot = null; }
   window._BOOT = boot;
-  // 5.26.0: agendado logo aqui, antes do resto da montagem, para que um erro
-  // em qualquer cartao nao impeça o aviso de contratos de aparecer
-  setTimeout(function(){ mostrarAlertaContratos(nome, boot ? boot.alertaContratos : null); }, 900);
+
+  pPend.then(function(r){ if(boot) boot.pendencias = r; carregarPendencias(nome, (r && r.sucesso) ? r : null); });
+  pHome.then(function(r){ if(boot) boot.home = r; carregarHome((r && r.sucesso !== false) ? r : null); });
+  Promise.all([pSem, pPend]).then(function(rs){
+    if(boot){ boot.semana = rs[0]; boot.pendencias = rs[1]; }
+    desenharKpis({ semana: rs[0], pendencias: rs[1] });
+  });
+  pAlerta.then(function(r){ if(r) mostrarAlertaContratos(nome, r); });
   setTimeout(checarVersao, 1500);   // agora com perfil, para o aviso de admin
 
   // 5.10.0: posiciona antes de revelar, senao os cartoes movidos apareceriam
@@ -12189,12 +12216,9 @@ async function abrirMenuComTudo(nome){
   if(boot && boot.layout && boot.layout.sucesso !== false) aplicarLayout(boot.layout.layout);
   aplicarPermissoes();
   aplicarRevelacoes(boot);
-  carregarPendencias(nome, boot ? boot.pendencias : null);
   montarDesktop();
   montarNavLateral();
-  carregarHome(boot ? boot.home : null);
   mostrarNovidades(nome, boot ? boot.novidades : null);
-  desenharKpis(boot);
   if(DESKTOP_LIGADO) setTimeout(carregarKpisPesados, 400);
 }
 
@@ -13487,8 +13511,9 @@ function desenharKpis(boot){
   var html = '';
   var sem = boot && boot.semana && boot.semana.sucesso ? boot.semana : null;
   if(sem){
-    var faltam = Math.max(0, sem.previstas - sem.dadas);
-    html += _kpi(sem.dadas + ' / ' + sem.previstas, 'Aulas esta semana',
+    var ateHojeK = (typeof sem.previstasAteHoje === 'number') ? sem.previstasAteHoje : sem.previstas;
+    var faltam = Math.max(0, ateHojeK - sem.dadas);
+    html += _kpi(sem.dadas + ' / ' + ateHojeK, 'Aulas até agora',
       faltam ? 'Faltam ' + faltam : 'Tudo em dia');
   }
   var pend = boot && boot.pendencias && boot.pendencias.pendencias
@@ -16300,14 +16325,19 @@ async function carregarResumoSemana(nome){
   try{
     // 5.12.0: normalmente ja veio na abertura do menu. So pede de novo se
     // aquele pacote nao trouxe, para nao gastar uma ida a toa.
-    const pronto = window._BOOT && window._BOOT.semana;
-    const r = (pronto && pronto.sucesso) ? pronto
-      : await chamarAPI({ acao:'resumoSemana', professor: nome });
-    if(r.sucesso){
-      const faltam = Math.max(0, r.previstas - r.dadas);
-      let msg = `Esta semana: <strong>${r.dadas}</strong> de <strong>${r.previstas}</strong> aula(s) registrada(s).`;
+    // 5.32.0: a primeira vez aproveita a chamada da abertura do menu;
+    // depois de salvar uma aula, busca de novo (antes ficava o numero velho)
+    const promessa = window._SEMANA_PROMESSA;
+    window._SEMANA_PROMESSA = null;
+    const r = (promessa ? await promessa : null) || await chamarAPI({ acao:'resumoSemana', professor: nome });
+    if(r && r.sucesso){
+      // 5.32.0: conta so o que ja aconteceu; aula de sexta nao e "falta" na terca
+      const ateHoje = (typeof r.previstasAteHoje === 'number') ? r.previstasAteHoje : r.previstas;
+      const faltam = Math.max(0, ateHoje - r.dadas);
+      let msg = `Esta semana: <strong>${r.dadas}</strong> de <strong>${ateHoje}</strong> aula(s) até agora registrada(s).`;
       if(faltam > 0) msg += ` Faltam <strong>${faltam}</strong>.`;
-      else if(r.previstas > 0) msg += ` Tudo em dia! ` + String.fromCodePoint(0x1F44F);
+      else if(ateHoje > 0) msg += ` Tudo em dia! ` + String.fromCodePoint(0x1F44F);
+      if(r.previstas > ateHoje) msg += `<div style="font-size:11px;opacity:.8;margin-top:4px;">Ainda vêm ${r.previstas - ateHoje} aula(s) nesta semana.</div>`;
       if(r.feriados && r.feriados.length){
         msg += `<div style="font-size:11px;opacity:.8;margin-top:4px;">Sem aula esta semana: ${r.feriados.join(', ')}</div>`;
       }
@@ -17480,7 +17510,18 @@ function _msgCobranca(prof, itens){
 }
 var LIMITE_LINK_WHATSAPP = 1500;
 
-var _PEND_ESCOLA = null;
+var _PEND_ESCOLA = null, _PEND_ESCOLA_TS = 0, _PEND_ESCOLA_BUSCANDO = false;
+function _atualizarPendEscola(forcar){
+  if(_PEND_ESCOLA_BUSCANDO) return;
+  if(!forcar && _PEND_ESCOLA_TS && Date.now() - _PEND_ESCOLA_TS < 60000) return;
+  _PEND_ESCOLA_BUSCANDO = true;
+  chamarAPI({ acao:'pendenciasPresenca', professor:'' }).then(function(r){
+    _PEND_ESCOLA_BUSCANDO = false;
+    _PEND_ESCOLA_TS = Date.now();   // mesmo se falhar, para nao repetir sem parar
+    if(r && r.sucesso) _PEND_ESCOLA = r;
+    desenharCobrancaRecepcao();
+  }).catch(function(){ _PEND_ESCOLA_BUSCANDO = false; _PEND_ESCOLA_TS = Date.now(); });
+}
 function desenharCobrancaRecepcao(){
   var grade = document.getElementById('recepCards');
   if(!grade) return;
@@ -17492,18 +17533,13 @@ function desenharCobrancaRecepcao(){
   }
   if(grade.firstElementChild !== box) grade.insertBefore(box, grade.firstElementChild);
 
-  // quem tambem da aula (ex.: o dono) tem PENDENCIAS so dele; aqui vale a escola toda
-  var P = PENDENCIAS;
-  if(PERM && PERM.presenca && PERM.recepcao){
-    if(_PEND_ESCOLA === null){
-      _PEND_ESCOLA = 'carregando';
-      chamarAPI({ acao:'pendenciasPresenca', professor:'' }).then(function(r){
-        _PEND_ESCOLA = (r && r.sucesso) ? r : { total: 0 };
-        desenharCobrancaRecepcao();
-      });
-    }
-    P = (_PEND_ESCOLA && _PEND_ESCOLA !== 'carregando') ? _PEND_ESCOLA : null;
-  }
+  /* 5.32.0: esta lista era buscada UMA vez por sessao. Professor que
+     lancava depois continuava aparecendo como devedor ate a recepcao sair e
+     entrar de novo (o caso do "FELIPE · 5 aulas" ja lancadas). Agora vale a
+     escola toda, buscada de novo quando tem mais de 1 minuto. */
+  if(PERM && PERM.recepcao) _atualizarPendEscola(false);
+  var P = (_PEND_ESCOLA && _PEND_ESCOLA.sucesso) ? _PEND_ESCOLA
+        : ((PERM && !PERM.presenca) ? PENDENCIAS : null);
   if(!(PERM && PERM.recepcao) || !P || !P.total || !P.pendentes){
     box.innerHTML = ''; box.classList.add('hidden'); return;
   }
