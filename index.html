@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.32.0">
+<meta name="app-versao" content="5.33.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -2258,6 +2258,14 @@
         <span class="menu-card-seta">&rarr;</span>
       </button>
 <div class="sec-titulo" data-sec="No dia a dia">No dia a dia</div>
+      <button class="menu-card" id="recepCardReposicoes">
+        <div class="menu-card-icone">&#8634;</div>
+        <div class="menu-card-txt">
+          <span class="menu-card-titulo">Reposi&ccedil;&atilde;o de aulas</span>
+          <span class="menu-card-sub">Pedidos dos alunos, do pedido at&eacute; a aula</span>
+        </div>
+        <span class="menu-card-seta">&rarr;</span>
+      </button>
       <button class="menu-card" id="recepCardPresenca">
         <div class="menu-card-icone">P</div>
         <div class="menu-card-txt">
@@ -3450,6 +3458,24 @@
       <div class="assess-resultado" id="deslResultado"></div>
     </div>
 
+    <!-- 5.33.0: reposicao de aulas -->
+    <div class="recep-painel hidden" id="painelReposicoes">
+      <div class="busca-linha">
+        <div class="campo">
+          <label for="repBusca">Buscar aluno</label>
+          <input type="text" id="repBusca" placeholder="Digite parte do nome" autocomplete="off">
+        </div>
+        <button class="busca-btn" id="btnNovaReposicao">+ Nova reposi&ccedil;&atilde;o</button>
+      </div>
+      <div style="padding:8px 20px 0;" id="repResumo"></div>
+      <div style="padding:0 20px 10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="ren-btn" data-repfiltro="abertas">Em aberto</button>
+        <button class="ren-btn sec" data-repfiltro="feitas">Conclu&iacute;das</button>
+        <button class="ren-btn sec" data-repfiltro="todas">Todas</button>
+      </div>
+      <div class="assess-resultado" id="repResultado"></div>
+    </div>
+
     <!-- 5.27.0: ex-alunos -->
     <div class="recep-painel hidden" id="painelExAlunos">
       <div class="busca-linha">
@@ -4515,7 +4541,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.32.0';
+  return '5.33.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -4795,6 +4821,7 @@ function renderLista(){
 function desenharAlunos(t, ehVIP, capacidade){
   $lista.innerHTML = '';
   t.alunos.forEach(nome=> $lista.appendChild(criarLinhaAluno(nome, t)));
+  try{ _desenharVisitantes(); }catch(e){}   // 5.33.0
   // 3.2.0: quem monta a turma e a recepcao. O professor so marca presenca.
   if(!podeVer('recepcao')){
     const aviso = document.createElement('p');
@@ -4853,6 +4880,13 @@ async function carregarAulaDoDia(){
   try{
     const rr = await chamarAPI({ acao:'remarcacoesTurma', turmaId: t.turmaId, data: $data.value });
     remarcacoesSemestre = (rr && rr.contagem) ? rr.contagem : {};
+    // 5.33.0: quem pediu reposicao desta aula ja vem com R; quem vem repor aparece no fim
+    _REPOS_AULA = (rr && rr.reposicoes) ? rr.reposicoes : { saindo: [], entrando: [] };
+    _REPOS_MARCA = {};
+    try{
+      const marc = chaveSessao();
+      turmaAtual().alunos.forEach(function(nm){ if(_pediuReposicao(nm) && !marc[nm]) marc[nm] = 'R'; });
+    }catch(eR){}
     const tt = turmaAtual();
     const cap = tt.capacidade || MAX_SLOTS;
     desenharAlunos(tt, cap < MAX_SLOTS, cap);
@@ -4870,9 +4904,10 @@ function criarLinhaAluno(nome, t){
   }
   // aluno afastado: fundo amarelo, data de volta e sem cobranca de falta
   const afast = (typeof afastamentoDe === 'function') ? afastamentoDe(nome) : null;
-  const badgeAfast = afast
+  const badgeAfast = (afast
     ? `<span class="badge-afast" title="Adendo nº ${afast.numeroAdendo} · ${afast.motivo}">afastado até ${afast.fim}</span>`
-    : '';
+    : '') + ((typeof _pediuReposicao === 'function' && _pediuReposicao(nome))
+    ? `<span class="badge-afast" style="background:#E8EEF5;color:#4A6B8A;">pediu reposição</span>` : '');
 
   const wrap = document.createElement('div');
   wrap.className = 'aluno-wrap';
@@ -5271,6 +5306,8 @@ document.getElementById('btnSalvar').addEventListener('click', async (ev)=>{
     const duracaoAula = ($dur && Number($dur.value)) ? Number($dur.value)
                       : (Number(t.duracaoPadrao) || 1);
     const resultado = await chamarAPI({ acao:'salvarPresenca', registros, duracao: duracaoAula,
+      // 5.33.0: alunos de outra turma que vieram repor
+      reposicoes: Object.keys(_REPOS_MARCA || {}).map(function(l){ return { linha: Number(l), compareceu: _REPOS_MARCA[l] }; }),
       livro: t.livro || '', comentario: $campoComentario.value.trim(),
       homework: $campoHomework.value.trim(),
       cancelada: _AULA_CANCELADA
@@ -11993,6 +12030,15 @@ function desenharHome(){
       'nivelamento');
   }
 
+  // 5.33.0: reposicoes que este professor precisa marcar
+  if(HOME && HOME.reposicoes && HOME.reposicoes.length){
+    HOME.reposicoes.forEach(function(r, i){
+      html += aviso(r.hoje ? 'perto' : 'info', 'Reposição ' + (r.hoje ? 'hoje' : 'de ' + r.data) + ': ' + _escH(r.aluno),
+        (r.tipo === 'Encaixe' ? 'na turma ' + _escH(r.turmaDestino) : 'aula avulsa') + (r.horario ? ' · ' + _escH(r.horario) : '')
+        + ' · toque para marcar se veio', 'rep:' + i);
+    });
+  }
+
   avisos.innerHTML = html;
 
   var temAlgo = temPendencia || !!html;
@@ -12032,6 +12078,10 @@ function desenharHome(){
   Array.prototype.forEach.call(avisos.querySelectorAll('.home-aviso'), function(b){
     b.addEventListener('click', function(){
       var destino = this.dataset.ir;
+      if(String(destino).indexOf('rep:') === 0){   // 5.33.0
+        marcarReposicaoDoProfessor(HOME.reposicoes[Number(destino.slice(4))]);
+        return;
+      }
       var alvo = destino === 'nivelamento' ? document.getElementById('cardNivelamento')
                : document.getElementById('cardFinanceiro');
       if(alvo && !alvo.classList.contains('hidden')) alvo.click();
@@ -12258,6 +12308,7 @@ var MAPA_CARDS = [
   ['recepCardDesligar',    'recepcao'],
   ['recepCardExAlunos',    'recepcao'],   // 5.27.0
   ['recepCardPresenca',    'recepcao'],
+  ['recepCardReposicoes',  'recepcao'],   // 5.33.0
   ['recepCardCalendario',  'recepcao'],
   ['recepCardPanorama',    'recepcao'],
   ['recepCardAfastamento', 'recepcao'],
@@ -17669,6 +17720,262 @@ function desenharTempos(){
     try{ localStorage.removeItem('ap_tempos'); }catch(e){}
     desenharTempos();
   };
+}
+
+
+/* ==========================================================================
+ * 5.33.0 - REPOSICAO DE AULAS
+ * ========================================================================== */
+var _REP = { lista: [], opcoes: null, filtro: 'abertas' };
+
+document.getElementById('recepCardReposicoes').addEventListener('click', function(){
+  abrirPainelRecep('painelReposicoes', 'Reposição de aulas');
+  carregarReposicoes();
+});
+document.getElementById('btnNovaReposicao').addEventListener('click', function(){ formReposicao(null); });
+document.querySelectorAll('[data-repfiltro]').forEach(function(b){
+  b.addEventListener('click', function(){
+    _REP.filtro = b.dataset.repfiltro;
+    document.querySelectorAll('[data-repfiltro]').forEach(function(x){ x.classList.toggle('sec', x !== b); });
+    carregarReposicoes();
+  });
+});
+document.getElementById('repBusca').addEventListener('input', function(){ desenharReposicoes(); });
+
+async function _opcoesRep(){
+  if(_REP.opcoes) return _REP.opcoes;
+  var r = await chamarAPI({ acao:'opcoesReposicao' });
+  if(r && r.sucesso) _REP.opcoes = r;
+  return _REP.opcoes;
+}
+
+async function carregarReposicoes(){
+  var box = document.getElementById('repResultado');
+  box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando...</p>';
+  _opcoesRep();   // ja deixa a lista de alunos pronta para o formulario
+  try{
+    var r = await chamarAPI({ acao:'listarReposicoes', filtro: _REP.filtro });
+    if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + _escH((r && r.erro) || 'Erro') + '</div>'; return; }
+    _REP.lista = r.reposicoes;
+    var s = r.resumo;
+    document.getElementById('repResumo').innerHTML = '<div class="ren-resumo">'
+      + '<div class="' + (s.pedidos ? 'alerta' : '') + '"><span class="n">' + s.pedidos + '</span><span class="r">sem data</span></div>'
+      + '<div><span class="n">' + s.agendadas + '</span><span class="r">agendadas</span></div>'
+      + '<div><span class="n">' + s.hoje + '</span><span class="r">hoje</span></div>'
+      + '<div><span class="n">' + s.feitasMes + '</span><span class="r">feitas no mês</span></div></div>';
+    desenharReposicoes();
+  }catch(e){ box.innerHTML = '<div class="assess-aviso">Falha de conexão.</div>'; }
+}
+
+function _brIso(iso){ return iso ? iso.slice(8,10) + '/' + iso.slice(5,7) + '/' + iso.slice(0,4) : ''; }
+
+function desenharReposicoes(){
+  var box = document.getElementById('repResultado');
+  var termo = _chaveNome(document.getElementById('repBusca').value);
+  var lista = _REP.lista.filter(function(x){ return !termo || _chaveNome(x.aluno).indexOf(termo) !== -1; });
+  if(!lista.length){ box.innerHTML = '<div class="assess-aviso">Nenhuma reposição ' + (_REP.filtro === 'abertas' ? 'em aberto.' : 'nesse filtro.') + '</div>'; return; }
+  var cor = { 'Pedido':'av', 'Agendada':'ok', 'Feita':'ok', 'Faltou':'no', 'Cancelada':'no' };
+  box.innerHTML = '<div style="padding:0 20px;">' + lista.map(function(x, i){
+    var etiqueta = x.atrasada ? '<span class="fa-tag no">passou da data</span>'
+      : x.hoje ? '<span class="fa-tag ok">hoje</span>'
+      : '<span class="fa-tag ' + (cor[x.situacao] || 'av') + '">' + _escH(x.situacao.toLowerCase()) + '</span>';
+    var onde = !x.tipo ? 'A definir: encaixe ou aula avulsa'
+      : x.tipo === 'Encaixe' ? 'Encaixe na turma ' + _escH(x.turmaDestino) + ' · ' + _escH(x.professor)
+      : 'Aula avulsa com ' + _escH(x.professor) + (x.duracao ? ' · ' + String(x.duracao).replace('.', ',') + 'h' : '');
+    var abertas = x.situacao === 'Pedido' || x.situacao === 'Agendada';
+    return '<div class="fa-bloco">'
+      + '<div class="doc-topo"><span class="fa-nome" style="font-size:15px;">' + _escH(x.aluno) + '</span>' + etiqueta + '</div>'
+      + '<div class="fa-sub">Nº ' + x.numero + ' · perdeu a aula de ' + _brIso(x.aulaPerdida) + ' da turma ' + _escH(x.turmaOrigem)
+      + (x.motivo ? ' · ' + _escH(x.motivo) : '') + '</div>'
+      + '<div style="font-size:13px;margin-top:8px;color:var(--carvao);">'
+      + (x.dataReposicao ? '<b>' + _brIso(x.dataReposicao) + (x.horario ? ' · ' + _escH(x.horario) : '') + '</b> · ' : '<b>Sem data</b> · ')
+      + onde + '</div>'
+      + (x.situacao === 'Pedido' && x.diasParado >= 3 ? '<div class="fa-sub" style="color:#8a3b2d;">Pedido há ' + x.diasParado + ' dias sem data</div>' : '')
+      + (x.observacao ? '<div class="fa-sub">' + _escH(x.observacao) + '</div>' : '')
+      + (abertas ? '<div class="ren-acoes">'
+          + '<button class="ren-btn" data-repedit="' + i + '">' + (x.situacao === 'Pedido' ? 'Agendar' : 'Editar') + '</button>'
+          + (x.situacao === 'Agendada' ? '<button class="ren-btn sec" data-repveio="' + i + '">Veio</button>'
+             + '<button class="ren-btn sec" data-repfaltou="' + i + '">Faltou</button>' : '')
+          + '<button class="ren-btn sec" data-repcancel="' + i + '">Cancelar</button></div>' : '')
+      + '</div>';
+  }).join('') + '</div>';
+  var pega = function(attr, fn){ box.querySelectorAll('[' + attr + ']').forEach(function(b){ b.onclick = function(){ fn(lista[Number(b.getAttribute(attr))]); }; }); };
+  pega('data-repedit', formReposicao);
+  pega('data-repveio', function(x){ _marcarRep(x, 'P'); });
+  pega('data-repfaltou', function(x){ _marcarRep(x, 'F'); });
+  pega('data-repcancel', async function(x){
+    var m = await apTexto('Cancelar a reposição de ' + _escH(x.aluno) + '?', 'Diga o motivo (fica registrado).', '', 'Ex.: aluno desistiu de repor');
+    if(m === null) return;
+    var r = await chamarAPI({ acao:'cancelarReposicao', linha: x.linha, motivo: m });
+    mostrarToast(r && r.sucesso ? 'Reposição cancelada' : ((r && r.erro) || 'Erro'));
+    carregarReposicoes();
+  });
+}
+
+async function _marcarRep(x, st){
+  mostrarToast('Salvando...');
+  var r = await chamarAPI({ acao:'marcarReposicao', linha: x.linha, compareceu: st });
+  mostrarToast(r && r.sucesso ? (st === 'P' ? 'Reposição feita' : 'Marcado: aluno faltou') : ((r && r.erro) || 'Erro'));
+  if(document.getElementById('painelReposicoes') && !document.getElementById('painelReposicoes').classList.contains('hidden')) carregarReposicoes();
+  return r;
+}
+
+/** Formulario novo/editar. x = reposicao existente ou null. */
+async function formReposicao(x){
+  mostrarToast('Abrindo...');
+  var op = await _opcoesRep();
+  if(!op){ mostrarToast('Não consegui carregar alunos e turmas'); return; }
+  var hoje = _hojeIso();
+  var optAlunos = op.alunos.map(function(a, i){
+    var sel = x && _chaveNome(a.aluno) === _chaveNome(x.aluno) && a.turmaId === x.turmaOrigem;
+    return '<option value="' + i + '"' + (sel ? ' selected' : '') + '>' + _escH(a.aluno + ' · turma ' + a.turmaId) + '</option>';
+  }).join('');
+  var optProf = op.professores.map(function(p){
+    return '<option' + (x && _chaveNome(x.professor) === _chaveNome(p) ? ' selected' : '') + '>' + _escH(p) + '</option>';
+  }).join('');
+  var lbl = function(t){ return '<label style="display:block;font-size:12px;font-weight:600;margin:12px 0 4px;">' + t + '</label>'; };
+
+  var fundo = document.createElement('div');
+  fundo.className = 'ap-fundo';
+  fundo.innerHTML = '<div class="ap-cx" style="max-width:460px;">'
+    + '<div class="ap-topo"><b>' + (x ? 'Reposição nº ' + x.numero : 'Nova reposição') + '</b>'
+    + '<span>Sem data ainda? Salve só o pedido e agende depois.</span></div>'
+    + '<div class="ap-lista">'
+    + lbl('Aluno') + (x ? '<div style="font-size:13px;">' + _escH(x.aluno) + ' · turma ' + _escH(x.turmaOrigem) + '</div>'
+        : '<input type="text" class="mv-det" id="rpFiltroAluno" placeholder="Digite para filtrar" style="margin-bottom:6px;">'
+          + '<select class="mv-det" id="rpAluno"><option value="">Escolha o aluno</option>' + optAlunos + '</select>')
+    + lbl('Aula que o aluno perdeu (ou vai perder)') + '<input type="date" class="mv-det" id="rpPerdida" value="' + (x ? x.aulaPerdida : '') + '">'
+    + '<div id="rpLimite" class="fa-sub"></div>'
+    + lbl('Motivo') + '<input type="text" class="mv-det" id="rpMotivo" value="' + _escH(x ? x.motivo : '') + '" placeholder="Ex.: viagem a trabalho">'
+    + lbl('Pediu por') + '<select class="mv-det" id="rpCanal">' + ['WhatsApp','Presencial','Ligação','Professor avisou'].map(function(c){
+        return '<option' + (x && x.canal === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>'
+    + lbl('Como vai repor') + '<select class="mv-det" id="rpTipo">'
+      + '<option value=""' + (!x || !x.tipo ? ' selected' : '') + '>Ainda não sei (só o pedido)</option>'
+      + '<option value="Encaixe"' + (x && x.tipo === 'Encaixe' ? ' selected' : '') + '>Encaixe em outra turma</option>'
+      + '<option value="Avulsa"' + (x && x.tipo === 'Avulsa' ? ' selected' : '') + '>Aula avulsa com um professor</option></select>'
+    + '<div id="rpEncaixe" class="hidden">' + lbl('Turma em que vai repor') + '<select class="mv-det" id="rpDestino"></select></div>'
+    + '<div id="rpAvulsa" class="hidden">' + lbl('Professor') + '<select class="mv-det" id="rpProf"><option value="">Escolha</option>' + optProf + '</select>'
+      + lbl('Horário') + '<input type="text" class="mv-det" id="rpHorario" value="' + _escH(x && x.tipo === 'Avulsa' ? x.horario : '') + '" placeholder="Ex.: 18h">'
+      + lbl('Duração') + '<select class="mv-det" id="rpDuracao">' + [['1','1h'],['1.5','1h30'],['2','2h']].map(function(d){
+          return '<option value="' + d[0] + '"' + (x && String(x.duracao) === d[0] ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></div>'
+    + '<div id="rpDataBox" class="hidden">' + lbl('Data da reposição') + '<input type="date" class="mv-det" id="rpData" value="' + (x ? (x.dataReposicao || '') : '') + '"></div>'
+    + lbl('Observação') + '<input type="text" class="mv-det" id="rpObs" value="' + _escH(x ? x.observacao : '') + '">'
+    + '<div id="rpMsg"></div></div>'
+    + '<div class="ap-rod"><div style="flex:1;"></div><button class="ren-btn sec" id="rpCancelar">Fechar</button>'
+    + '<button class="pend-acao" id="rpSalvar">Salvar</button></div></div>';
+  document.body.appendChild(fundo);
+
+  var $ = function(id){ return fundo.querySelector('#' + id); };
+  var alunoSel = function(){
+    if(x) return { aluno: x.aluno, turmaId: x.turmaOrigem };
+    var v = $('rpAluno').value; return v === '' ? null : op.alunos[Number(v)];
+  };
+  var montarDestinos = function(){
+    var a = alunoSel(); var sel = $('rpDestino');
+    var org = a ? op.turmas.find(function(t){ return t.turmaId === a.turmaId; }) : null;
+    var lista = op.turmas.filter(function(t){ return !a || t.turmaId !== a.turmaId; }).sort(function(p, q){
+      var mp = org && p.nivel === org.nivel ? 0 : 1, mq = org && q.nivel === org.nivel ? 0 : 1;
+      return (mp - mq) || (q.vagas - p.vagas);
+    });
+    sel.innerHTML = '<option value="">Escolha a turma</option>' + lista.map(function(t){
+      return '<option value="' + _escH(t.turmaId) + '"' + (x && x.turmaDestino === t.turmaId ? ' selected' : '') + '>'
+        + _escH(t.turmaId + ' · ' + t.nivel + ' · ' + t.dias + ' ' + t.horario + ' · ' + t.professor
+          + (org && t.nivel === org.nivel ? ' · mesmo nível' : '') + ' · ' + (t.vagas ? t.vagas + ' vaga(s)' : 'sem vaga')) + '</option>';
+    }).join('');
+  };
+  var trocarTipo = function(){
+    var tp = $('rpTipo').value;
+    $('rpEncaixe').classList.toggle('hidden', tp !== 'Encaixe');
+    $('rpAvulsa').classList.toggle('hidden', tp !== 'Avulsa');
+    $('rpDataBox').classList.toggle('hidden', !tp);
+    if(tp === 'Encaixe') montarDestinos();
+  };
+  $('rpTipo').onchange = trocarTipo;
+  if(!x){
+    $('rpAluno').onchange = function(){ if($('rpTipo').value === 'Encaixe') montarDestinos(); };
+    $('rpFiltroAluno').oninput = function(){
+      var f = _chaveNome(this.value);
+      Array.prototype.forEach.call($('rpAluno').options, function(o, k){
+        if(k === 0) return; o.hidden = !!f && _chaveNome(o.textContent).indexOf(f) === -1;
+      });
+    };
+  }
+  trocarTipo();
+  $('rpCancelar').onclick = function(){ fundo.remove(); };
+  var enviar = async function(confirmarLimite){
+    var a = alunoSel(), msg = $('rpMsg');
+    if(!a){ msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Escolha o aluno.</div>'; return; }
+    if(!$('rpPerdida').value){ msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Informe a aula perdida.</div>'; return; }
+    var btn = $('rpSalvar'); btn.disabled = true; btn.textContent = 'Salvando...';
+    var r = await chamarAPI({ acao:'salvarReposicao', linha: x ? x.linha : 0,
+      aluno: a.aluno, turmaOrigem: a.turmaId, aulaPerdida: $('rpPerdida').value,
+      motivo: $('rpMotivo').value, canal: $('rpCanal').value, tipo: $('rpTipo').value,
+      turmaDestino: $('rpDestino').value, professor: $('rpProf').value, horario: $('rpHorario').value,
+      duracao: $('rpDuracao').value, dataReposicao: $('rpTipo').value ? $('rpData').value : '',
+      observacao: $('rpObs').value, confirmarLimite: !!confirmarLimite });
+    btn.disabled = false; btn.textContent = 'Salvar';
+    if(r && r.precisaConfirmar){
+      var c = await apEscolha('Acima do limite de remarcações', _escH(r.erro), [{ rotulo:'Registrar mesmo assim', sub:'Exceção autorizada pela escola' }, { rotulo:'Voltar' }]);
+      if(c === 0) return enviar(true);
+      return;
+    }
+    if(!r || !r.sucesso){ msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">' + _escH((r && r.erro) || 'Erro') + '</div>'; return; }
+    fundo.remove();
+    mostrarToast('Reposição nº ' + r.numero + (r.situacao === 'Agendada' ? ' agendada' : ' registrada como pedido'));
+    if(r.aviso) apAviso('Atenção ao limite', _escH(r.aviso));
+    carregarReposicoes();
+  };
+  $('rpSalvar').onclick = function(){ enviar(false); };
+}
+
+/* ---------- na lista de presenca ---------- */
+var _REPOS_AULA = { saindo: [], entrando: [] };
+var _REPOS_MARCA = {};
+
+function _pediuReposicao(nome){
+  return (_REPOS_AULA.saindo || []).some(function(s){ return _chaveNome(s.aluno) === _chaveNome(nome); });
+}
+
+function _desenharVisitantes(){
+  var lista = (_REPOS_AULA.entrando || []);
+  if(!lista.length || !$lista) return;
+  var cab = document.createElement('div');
+  cab.className = 'dica-swipe';
+  cab.style.margin = '12px 0 6px';
+  cab.innerHTML = '<span><b>Vêm repor nesta aula</b> (não contam na turma)</span>';
+  $lista.appendChild(cab);
+  lista.forEach(function(v){
+    if(v.compareceu && _REPOS_MARCA[v.linha] === undefined) _REPOS_MARCA[v.linha] = v.compareceu;
+    var st = _REPOS_MARCA[v.linha];
+    var row = document.createElement('div');
+    row.className = 'aluno-wrap';
+    row.innerHTML = '<div class="aluno ' + (st ? 'marcado' : '') + '" style="border-left:3px solid var(--salmao);">'
+      + '<span class="nome">' + _escH(v.aluno) + '<span class="badge-afast" style="background:#FBE9E5;color:#8a3b2d;">reposição · turma '
+      + _escH(v.turmaOrigem) + ', aula de ' + _escH(v.aulaPerdida) + '</span></span>'
+      + '<div class="botoes"><div class="stamp p ' + (st === 'P' ? 'p-on' : '') + '" title="Veio">P</div>'
+      + '<div class="stamp f ' + (st === 'F' ? 'f-on' : '') + '" title="Não veio">F</div></div></div>';
+    var bts = row.querySelectorAll('.stamp');
+    bts[0].onclick = function(){ _REPOS_MARCA[v.linha] = _REPOS_MARCA[v.linha] === 'P' ? undefined : 'P'; if(_REPOS_MARCA[v.linha] === undefined) delete _REPOS_MARCA[v.linha]; _redesenharAlunos(); };
+    bts[1].onclick = function(){ _REPOS_MARCA[v.linha] = _REPOS_MARCA[v.linha] === 'F' ? undefined : 'F'; if(_REPOS_MARCA[v.linha] === undefined) delete _REPOS_MARCA[v.linha]; _redesenharAlunos(); };
+    $lista.appendChild(row);
+  });
+}
+function _redesenharAlunos(){
+  var tt = turmaAtual(); var cap = tt.capacidade || MAX_SLOTS;
+  desenharAlunos(tt, cap < MAX_SLOTS, cap);
+}
+
+/* ---------- reposicoes do professor (tela inicial) ---------- */
+async function marcarReposicaoDoProfessor(r){
+  var esc = await apEscolha(_escH(r.aluno) + ' veio repor?',
+    (r.tipo === 'Encaixe' ? 'Na turma ' + _escH(r.turmaDestino) : 'Aula avulsa') + ' · ' + _escH(r.data) + (r.horario ? ' · ' + _escH(r.horario) : '')
+      + '<br>Aula perdida da turma ' + _escH(r.turmaOrigem), [{ rotulo:'Veio' }, { rotulo:'Não veio' }]);
+  if(esc === null || esc < 0) return;
+  var res = await _marcarRep(r, esc === 0 ? 'P' : 'F');
+  if(res && res.sucesso && HOME && HOME.reposicoes){
+    HOME.reposicoes = HOME.reposicoes.filter(function(x){ return x.linha !== r.linha; });
+    desenharHome();
+  }
 }
 
 popularLoginProfessores();
