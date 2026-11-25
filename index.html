@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.33.0">
+<meta name="app-versao" content="5.34.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -2897,6 +2897,7 @@
     </div>
 
     <div class="recep-painel hidden" id="painelAluno">
+      <div id="alVarredura"></div><!-- 5.34.0 -->
       <div class="busca-linha">
         <div class="campo">
           <label for="alBusca">Nome do aluno</label>
@@ -4541,7 +4542,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.33.0';
+  return '5.34.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -9025,6 +9026,7 @@ document.getElementById('recepCardAluno').addEventListener('click', function(){
   abrirPainelRecep('painelAluno','Ficha do aluno');
   document.getElementById('alResultado').innerHTML =
     '<div class="assess-aviso">Digite o nome do aluno e toque em Buscar.</div>';
+  carregarVarredura();   // 5.34.0: roda em paralelo, nao trava a busca
 });
 
 // 4.9.3: passar a funcao direto fazia o navegador mandar o MouseEvent como
@@ -17979,6 +17981,146 @@ async function marcarReposicaoDoProfessor(r){
 }
 
 popularLoginProfessores();
+
+
+/* ==========================================================================
+ * 5.34.0 - VARREDURA DE ALUNOS
+ * Acha aluno que o app nao enxerga (turma com codigo 0, nome repetido,
+ * contrato ativo sem turma...) e deixa corrigir dali mesmo.
+ * ========================================================================== */
+var _VARR = null;
+
+var _VARR_GRUPOS = [
+  { k:'turmaInvalida', tit:'Turma com código 0 ou vazio',
+    exp:'O app pula turma com código 0. Os alunos dela somem da busca, da reposição, das pendências e do fechamento.' },
+  { k:'nomeRepetido', tit:'Mesmo nome repetido na turma',
+    exp:'O nome está escrito mais de uma vez na mesma turma. Ocupa vaga e confunde a lista de presença.' },
+  { k:'contratoSemTurma', tit:'Contrato em vigor, mas sem turma',
+    exp:'O contrato vale hoje e o nome não está em nenhuma turma. Pode ser afastamento, aluno que ainda vai começar ou o nome escrito diferente na turma.' },
+  { k:'inativoComContrato', tit:'Contrato em vigor, mas marcado como inativo na turma',
+    exp:'Está na turma como inativo (saiu ou foi movido), só que o contrato continua valendo.' },
+  { k:'doisContratos', tit:'Mais de um contrato valendo ao mesmo tempo',
+    exp:'Confira se um deles é duplicado ou deveria ter recebido baixa.' },
+  { k:'semContrato', tit:'Ativo na turma, sem contrato encontrado',
+    exp:'Está ativo na turma, mas não achei contrato com esse nome. Pode ser nome diferente no contrato ou contrato que falta cadastrar.' }
+];
+
+async function carregarVarredura(){
+  var box = document.getElementById('alVarredura');
+  if(!box) return;
+  box.innerHTML = '';
+  try{
+    var r = await chamarAPI({ acao:'varreduraAlunos' });
+    if(!r || !r.sucesso){ return; }
+    _VARR = r;
+    if(!r.total){
+      box.innerHTML = '<div class="assess-aviso" style="margin-bottom:10px;">Varredura feita: todos os alunos estão aparecendo.</div>';
+      return;
+    }
+    var graves = (r.achados.turmaInvalida || []).length + (r.achados.nomeRepetido || []).length;
+    box.innerHTML = '<div class="msg-aviso" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">'
+      + '<span style="flex:1;min-width:200px;"><b>Varredura: ' + r.total + ' ponto(s) para conferir</b>'
+      + (graves ? '<br>' + graves + ' deles escondem aluno do app e dá para corrigir agora.' : '') + '</span>'
+      + '<button class="ren-btn" id="btnVerVarredura">Ver varredura</button></div>';
+    document.getElementById('btnVerVarredura').onclick = abrirVarredura;
+  }catch(e){}
+}
+
+function _varrLinha(k, x, i){
+  var podeAdmin = typeof PERM !== 'undefined' && PERM && PERM.admin;
+  var btn = '';
+  var txt = '';
+  if(k === 'turmaInvalida'){
+    txt = '<b>Turma "' + _escH(x.codigo) + '"</b> · ' + _escH([x.nivel, x.professor, x.dias, x.horario].filter(Boolean).join(' · '))
+      + '<br><span style="opacity:.8">Alunos: ' + _escH((x.alunos || []).join(', ')) + '</span>';
+    btn = podeAdmin
+      ? '<button class="pend-acao" data-acao="renumerar" data-i="' + i + '">Dar código ' + _escH(x.sugestao || '') + '</button>'
+      : '<span style="font-size:12px;opacity:.75">Peça ao Felipe para corrigir</span>';
+  }else if(k === 'nomeRepetido'){
+    txt = '<b>' + _escH(x.aluno) + '</b> aparece ' + x.vezes + ' vezes na turma ' + _escH(x.turma);
+    btn = '<button class="pend-acao" data-acao="repetido" data-i="' + i + '">Deixar só um</button>';
+  }else if(k === 'contratoSemTurma'){
+    txt = '<b>' + _escH(x.aluno) + '</b> · contrato ' + _escH(x.contrato) + ' até ' + _escH(x.fim || '?');
+  }else if(k === 'inativoComContrato'){
+    txt = '<b>' + _escH(x.aluno) + '</b> · contrato ' + _escH(x.contrato) + ' até ' + _escH(x.fim || '?')
+      + ' · turma ' + _escH((x.turmas || []).join(', '));
+  }else if(k === 'doisContratos'){
+    txt = '<b>' + _escH(x.aluno) + '</b><br>' + (x.contratos || []).map(function(c){
+      return 'Contrato ' + _escH(c.numero) + ' (' + _escH(c.inicio || '?') + ' a ' + _escH(c.fim || '?') + ')';
+    }).join('<br>');
+  }else if(k === 'semContrato'){
+    txt = '<b>' + _escH(x.aluno) + '</b> · turma ' + _escH(x.turma) + (x.ambiguo ? ' · nome parecido com mais de um contrato' : '');
+  }
+  return '<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(127,127,127,.18);">'
+    + '<div style="flex:1;min-width:0;font-size:13.5px;line-height:1.4;">' + txt + '</div>' + btn + '</div>';
+}
+
+function abrirVarredura(){
+  if(!_VARR) return;
+  var A = _VARR.achados || {};
+  var corpo = _VARR_GRUPOS.filter(function(g){ return (A[g.k] || []).length; }).map(function(g){
+    return '<div style="margin:6px 0 14px;">'
+      + '<div style="font-weight:700;font-size:14.5px;">' + g.tit + ' (' + A[g.k].length + ')</div>'
+      + '<div style="font-size:12.5px;opacity:.75;margin:2px 0 4px;">' + g.exp + '</div>'
+      + A[g.k].map(function(x, i){ return _varrLinha(g.k, x, i); }).join('')
+      + '</div>';
+  }).join('');
+  var fundo = document.createElement('div');
+  fundo.className = 'ap-fundo';
+  fundo.id = 'varrFundo';
+  fundo.innerHTML = '<div class="ap-cx" style="max-width:560px;">'
+    + '<div class="ap-topo"><b>Varredura de alunos</b><span>' + _VARR.total + ' ponto(s) para conferir</span></div>'
+    + '<div class="ap-lista" style="max-height:62vh;overflow:auto;padding:4px 16px;">' + corpo + '</div>'
+    + '<div class="ap-rod"><div style="flex:1;"></div><button class="ren-btn sec" id="varrFechar">Fechar</button></div>'
+    + '</div>';
+  document.body.appendChild(fundo);
+  fundo.querySelector('#varrFechar').onclick = function(){ fundo.remove(); };
+  Array.prototype.forEach.call(fundo.querySelectorAll('[data-acao]'), function(b){
+    b.addEventListener('click', function(){ _varrAcao(this.dataset.acao, Number(this.dataset.i), this); });
+  });
+}
+
+async function _varrAcao(acao, i, btn){
+  var A = (_VARR && _VARR.achados) || {};
+  var r;
+  if(acao === 'renumerar'){
+    var x = A.turmaInvalida[i];
+    var novo = await apTexto('Novo código da turma',
+      'Turma de ' + _escH(x.professor) + ' · ' + _escH(x.dias) + ' ' + _escH(x.horario)
+      + '. Presenças, aulas dadas, notas e reposições vão junto.', x.sugestao || '', 'Ex.: 141');
+    if(novo === null) return;
+    novo = String(novo).trim();
+    if(!novo) return;
+    btn.disabled = true; btn.textContent = 'Gravando...';
+    try{ r = await chamarAPI({ acao:'renumerarTurma', linha: x.linha, para: novo }); }catch(e){ r = null; }
+    if(r && r.sucesso){
+      var m = r.mudou || {};
+      var det = Object.keys(m).map(function(k){ return k + ': ' + m[k]; }).join('<br>');
+      await apAviso('Turma agora é ' + _escH(r.para),
+        'Pronto. Os alunos dessa turma voltam a aparecer na busca, na reposição e nas pendências.'
+        + (det ? '<br><br><span style="font-size:12.5px;opacity:.8">Linhas atualizadas:<br>' + det + '</span>' : '')
+        + '<br><br>Se essa turma teve aula dada com código 0, confira o fechamento do professor desse período.');
+    }else{
+      btn.disabled = false; btn.textContent = 'Dar código ' + (x.sugestao || '');
+      mostrarToast((r && r.erro) || 'Falha de conexão');
+      return;
+    }
+  }else if(acao === 'repetido'){
+    var y = A.nomeRepetido[i];
+    btn.disabled = true; btn.textContent = 'Gravando...';
+    try{ r = await chamarAPI({ acao:'limparRepetido', linha: y.linha, aluno: y.aluno }); }catch(e){ r = null; }
+    if(r && r.sucesso){
+      mostrarToast(r.tirados ? (y.aluno + ': ficou só um na turma ' + y.turma) : (r.aviso || 'Já estava certo'));
+    }else{
+      btn.disabled = false; btn.textContent = 'Deixar só um';
+      mostrarToast((r && r.erro) || 'Falha de conexão');
+      return;
+    }
+  }
+  var f = document.getElementById('varrFundo'); if(f) f.remove();
+  await carregarVarredura();
+  if(_VARR && _VARR.total) abrirVarredura();
+}
 
 </script>
 </body>
