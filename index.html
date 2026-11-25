@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.34.0">
+<meta name="app-versao" content="5.35.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -1211,6 +1211,44 @@
 .esc-nome{display:block;font-size:15px;font-weight:600;color:#2f3a34;margin-bottom:5px;}
 .esc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#8a8a82;}
 .fa-tag.av{ background:#FDF3D4; color:#8a6d1a; }
+  /* ===== 5.35.0: lista completa de alunos ===== */
+  .alx-filtros{ display:flex; flex-wrap:wrap; gap:6px; padding:0 20px 10px; }
+  .alx-chip{ border:1px solid #d9d8d2; background:#fff; color:var(--verde-escuro); border-radius:999px;
+    padding:6px 12px; font:600 12.5px/1 inherit; font-family:inherit; cursor:pointer; }
+  .alx-chip b{ font-weight:700; margin-left:4px; opacity:.75; }
+  .alx-chip.on{ background:var(--verde-escuro); color:#fff; border-color:var(--verde-escuro); }
+  .alx-resumo{ padding:0 20px 10px; font-size:12.5px; color:#7a7a74; line-height:1.45; }
+  .alx-tab{ margin:0 20px 20px; border:1px solid #e6e5df; border-radius:12px; overflow:hidden; background:#fff; }
+  .alx-linha{ display:grid; grid-template-columns: minmax(180px,2.3fr) 70px minmax(110px,1.3fr) minmax(80px,1fr) minmax(130px,1.4fr) minmax(110px,1.1fr);
+    gap:10px; align-items:center; padding:10px 14px; border-top:1px solid #eeede8; font-size:13.5px; cursor:pointer; }
+  .alx-linha.comvalor{ grid-template-columns: minmax(180px,2.3fr) 70px minmax(110px,1.3fr) minmax(80px,1fr) minmax(130px,1.4fr) minmax(120px,1.1fr) 104px; }
+  .alx-linha:hover{ background:#f7f6f2; }
+  .alx-linha.cab{ position:sticky; top:0; background:#f3f2ed; border-top:none; cursor:default; z-index:1;
+    font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#7a7a74; }
+  .alx-linha.cab span[data-ord]{ cursor:pointer; user-select:none; }
+  .alx-linha.cab span[data-ord]:hover{ color:var(--verde-escuro); }
+  .alx-nome{ font-weight:700; color:#2b2b28; }
+  .alx-sub{ display:block; font-size:11.5px; color:#8a8a84; font-weight:400; margin-top:2px; }
+  .alx-aviso{ display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px;
+    background:#FDF3D4; color:#8a6d1a; margin:3px 4px 0 0; }
+  .alx-ct{ font-size:12.5px; }
+  .alx-c-tel{ white-space:nowrap; }
+  .alx-ct.vencendo{ color:#a06a00; font-weight:600; }
+  .alx-ct.vencido, .alx-ct.baixa{ color:#a5402e; font-weight:600; }
+  .alx-muted{ color:#a3a39d; }
+  .alx-vazio{ padding:18px; text-align:center; color:#8a8a84; font-size:13px; }
+  .alx-rot{ display:none; }
+  @media (max-width: 859px){
+    .alx-tab{ margin:0 12px 16px; }
+    .alx-linha, .alx-linha.comvalor{ display:block; padding:12px 14px; }
+    .alx-linha.cab{ display:none; }
+    .alx-linha > span{ display:inline; font-size:12.5px; color:#5d5d58; }
+    .alx-linha > span.alx-c-nome{ display:block; font-size:14px; margin-bottom:3px; }
+    .alx-linha > span.alx-c-tel, .alx-linha > span.alx-c-ct{ display:block; margin-top:2px; }
+    .alx-linha > span:not(.alx-c-nome):not(.alx-c-tel):not(.alx-c-ct):not(.alx-c-prof):not(:empty)::after{ content:' · '; color:#bbb; }
+    .alx-rot{ display:inline; color:#9a9a94; }
+  }
+
   .nv-item{ display:flex; align-items:center; gap:11px; background:var(--branco);
     border:1px solid var(--linha); border-radius:12px; padding:11px 14px; margin-bottom:8px; }
   .nv-item.hoje{ border-left:3px solid var(--salmao); }
@@ -2897,15 +2935,25 @@
     </div>
 
     <div class="recep-painel hidden" id="painelAluno">
-      <div id="alVarredura"></div><!-- 5.34.0 -->
-      <div class="busca-linha">
-        <div class="campo">
-          <label for="alBusca">Nome do aluno</label>
-          <input type="text" id="alBusca" placeholder="Digite parte do nome" autocomplete="off">
+      <!-- 5.35.0: lista completa (listaAlunosBox) e ficha detalhada (consultaAluno).
+           Os ids comecam com lista/consulta de proposito: o Voltar enxerga os dois. -->
+      <div id="listaAlunosBox">
+        <div id="alVarredura"></div><!-- 5.34.0 -->
+        <div class="busca-linha">
+          <div class="campo">
+            <label for="alBusca">Procurar na lista</label>
+            <input type="text" id="alBusca" placeholder="Nome, turma, professor ou nº do contrato" autocomplete="off">
+          </div>
+          <button class="busca-btn" id="btnAlBuscar">Buscar</button>
         </div>
-        <button class="busca-btn" id="btnAlBuscar">Buscar</button>
+        <div id="alxFiltros" class="alx-filtros"></div>
+        <div id="alxResumo" class="alx-resumo"></div>
+        <div id="alxTabela"></div>
       </div>
-      <div id="alResultado"></div>
+      <div id="consultaAluno" class="hidden">
+        <div style="padding:0 20px 10px;"><button class="ren-btn sec" id="btnVoltarListaAlunos">&larr; Lista de alunos</button></div>
+        <div id="alResultado"></div>
+      </div>
     </div>
 
     <div class="recep-painel hidden" id="painelNiver">
@@ -4542,7 +4590,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.34.0';
+  return '5.35.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -7416,6 +7464,9 @@ function _navGuardar(){
   _navSanear();          // nunca guarda uma tela ja embolada
   var f = _navFoto();
   if(!f) return;
+  // 5.35.0: o mesmo passo duas vezes seguidas fazia o Voltar parecer que nao funcionou
+  var ult = _NAV_HIST[_NAV_HIST.length - 1];
+  if(ult && ult.abertos.join('|') === f.abertos.join('|') && ult.sub === f.sub) return;
   _NAV_HIST.push(f);
   if(_NAV_HIST.length > 30) _NAV_HIST.shift();
 }
@@ -9023,24 +9074,32 @@ async function nr1GerarPdf(nomeArquivo, html){
  * ========================================================================== */
 
 document.getElementById('recepCardAluno').addEventListener('click', function(){
-  abrirPainelRecep('painelAluno','Ficha do aluno');
-  document.getElementById('alResultado').innerHTML =
-    '<div class="assess-aviso">Digite o nome do aluno e toque em Buscar.</div>';
+  abrirPainelRecep('painelAluno','Alunos');
+  // 5.35.0: abre na lista completa, nao numa busca vazia
+  document.getElementById('listaAlunosBox').classList.remove('hidden');
+  document.getElementById('consultaAluno').classList.add('hidden');
+  document.getElementById('alResultado').innerHTML = '';
+  carregarListaAlunos();
   carregarVarredura();   // 5.34.0: roda em paralelo, nao trava a busca
 });
 
 // 4.9.3: passar a funcao direto fazia o navegador mandar o MouseEvent como
 // primeiro argumento. Ele chegava no servidor como se fosse o nome do aluno e
 // a busca nao achava mais ninguem.
-document.getElementById('btnAlBuscar').addEventListener('click', function(){ buscarFicha(); });
+document.getElementById('btnAlBuscar').addEventListener('click', function(){ alxBuscar(); });
 document.getElementById('alBusca').addEventListener('keydown', function(e){
-  if(e.key === 'Enter') buscarFicha();
+  if(e.key === 'Enter') alxBuscar();
 });
+document.getElementById('alBusca').addEventListener('input', function(){   // 5.35.0: filtra enquanto digita
+  clearTimeout(window._alxT); window._alxT = setTimeout(desenharListaAlunos, 120);
+});
+document.getElementById('btnVoltarListaAlunos').addEventListener('click', alxVoltarParaLista);
 
 async function buscarFicha(exato){
   if(typeof exato !== 'string') exato = '';   // 4.9.3: nunca aceita evento
-  var termo = document.getElementById('alBusca').value.trim();
+  var termo = (exato || document.getElementById('alBusca').value).trim();   // 5.35.0
   var box = document.getElementById('alResultado');
+  _alMostrarDetalhe();   // 5.35.0: troca a lista pela ficha (e o Voltar traz a lista)
   if(termo.length < 2){ box.innerHTML = '<div class="assess-aviso">Digite ao menos 2 letras.</div>'; return; }
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Buscando...</p>';
   try{
@@ -9115,7 +9174,11 @@ function htmlFicha(d){
     + '<div class="larga"><span>E-mail</span><b>' + (d.email || '—') + '</b></div>'
     + (d.responsavel ? '<div class="larga"><span>Responsável</span><b>' + d.responsavel + '</b></div>' : '')
     + (d.cidade ? '<div class="larga"><span>Cidade</span><b>' + d.cidade + '</b></div>' : '')
-    + '</div></div>';
+    + '</div>'
+    /* 5.34.1: leva direto para Completar ficha com este aluno */
+    + '<div style="margin-top:12px;"><button class="ren-btn sec" onclick="irParaCompletarFicha(' + JSON.stringify(String(d.aluno || '')).replace(/"/g,'&quot;') + ')">'
+    + (d.dadosDoContrato || d.semCadastro || !d.telefone || !d.email || !d.nascimento ? 'Preencher contatos' : 'Editar contatos') + '</button></div>'
+    + '</div>';
 
   // turmas
   h += '<div class="fa-bloco"><h4>Turmas</h4>';
@@ -14248,6 +14311,7 @@ document.getElementById('cardFechaTeachers').addEventListener('click', function(
   document.getElementById('telaFechaTeachers').classList.remove('hidden');
 });
 document.getElementById('btnVoltarFecha').addEventListener('click', function(){
+  if(typeof navVoltar === 'function' && navVoltar()) return;   // 5.35.0
   document.getElementById('telaFechaTeachers').classList.add('hidden');
   $telaMenu.classList.remove('hidden');
 });
@@ -14741,6 +14805,7 @@ function nivVirarContrato(i){
   // escrito depois que a pessoa escolher o tipo e o formulario existir, entao
   // guardamos aqui e abrirFormContrato preenche.
   mostrarToast('Escolha 18+ ou Menor para ' + x.aluno);
+  _navGuardar();   // 5.35.0
   abrirPainelRecep('painelContratos','Contratos');
   var faixa = document.getElementById('cttFaixaNiv');
   if(faixa){
@@ -15156,6 +15221,13 @@ document.getElementById('fiBusca').addEventListener('keydown', function(e){
   if(e.key === 'Enter') abrirFicha();
 });
 
+function irParaCompletarFicha(nome){   // 5.34.1
+  _navGuardar();   // 5.35.0: Voltar traz de volta para a ficha
+  abrirPainelRecep('painelFicha','Completar ficha');
+  document.getElementById('fiBusca').value = nome;
+  abrirFicha(nome);
+}
+
 async function abrirFicha(exato){
   if(typeof exato !== 'string') exato = '';
   var termo = document.getElementById('fiBusca').value.trim();
@@ -15422,6 +15494,7 @@ async function renovarContrato(iRen){
     var mudaram = await confirmarDadosRenovacao(r.campos, (r.campos && r.campos.NOME_ALUNO) || 'aluno');
     if(mudaram === null){ mostrarToast('Renovação cancelada'); return; }
 
+    _navGuardar();   // 5.35.0: Voltar volta para a lista de renovações, nao para os cards
     document.getElementById('recepCards').classList.add('hidden');
     document.querySelectorAll('.recep-painel').forEach(function(p){ p.classList.add('hidden'); });
     document.getElementById('painelContratos').classList.remove('hidden');
@@ -15870,6 +15943,16 @@ function gerarPDFCobranca(rel){
 }
 
 document.getElementById('btnSairRecepcao').addEventListener('click', ()=>{
+  // 5.35.0: o historico vem PRIMEIRO. Antes, quem entrava por um card do menu
+  // principal e andava dentro do painel (subcard, ficha, formulario) era jogado
+  // direto no menu ao tocar em Voltar, pulando as telas do meio.
+  if(typeof navVoltar === 'function' && navVoltar()){
+    if($telaRecepcao.classList.contains('hidden')){
+      _PAINEL_VEIO_DO_MENU = false;
+      document.getElementById('btnSairRecepcao').textContent = 'Sair';
+    }
+    return;
+  }
   // 5.12.5: entrou pelo menu principal, volta para o menu principal. Sem isto
   // a pessoa clicava em Configuracoes no menu e era largada nos cards da
   // recepcao, uma tela que ela nem tinha aberto.
@@ -17336,6 +17419,7 @@ function perguntarMotivoDepoisDaSaida(nome, motivoAdmin){
 
 /** Abre o Relatorio do aluno ja montado para o ex-aluno (vida toda). */
 function abrirRelatorioDeSaida(nome){
+  _navGuardar();   // 5.35.0: Voltar volta para Ex-alunos
   abrirPainelRecep('painelRelAluno', 'Relatório do aluno');
   document.getElementById('raBusca').value = nome;
   document.getElementById('raDe').value = '';
@@ -17444,8 +17528,9 @@ async function revisarDuplicatas(){
 }
 
 /* ---------- trazer de volta ---------- */
-async function trazerDeVoltaUI(f){
+async function trazerDeVoltaUI(f, opc){   // 5.35.0: opc = { titulo, depois }
   if(!f) return;
+  opc = opc || {};
   mostrarToast('Buscando turmas...');
   var op;
   try{ op = await chamarAPI({ acao:'opcoesRetorno', aluno: f.aluno }); }catch(e){ op = null; }
@@ -17464,7 +17549,7 @@ async function trazerDeVoltaUI(f){
   var fundo = document.createElement('div');
   fundo.className = 'ap-fundo';
   fundo.innerHTML = '<div class="ap-cx" style="max-width:460px;">'
-    + '<div class="ap-topo"><b>Trazer ' + _escH(op.aluno) + ' de volta</b>'
+    + '<div class="ap-topo"><b>' + (opc.titulo ? _escH(opc.titulo) : 'Trazer ' + _escH(op.aluno) + ' de volta') + '</b>'
     + '<span>' + (antes && (antes.dias || antes.horario)
         ? 'Antes: ' + _escH([antes.dias, antes.horario, antes.professor, antes.nivel].filter(Boolean).join(' · '))
           + (antes.livro ? ' · ' + _escH(antes.livro) : '')
@@ -17512,6 +17597,7 @@ async function trazerDeVoltaUI(f){
           return;
         }
       }
+      if(typeof opc.depois === 'function'){ try{ opc.depois(r); }catch(e2){} }
       carregarExAlunos();
     }catch(e){
       msg.innerHTML = '<div class="assess-aviso" style="margin-top:10px;">Falha de conexão.</div>';
@@ -18026,35 +18112,6 @@ async function carregarVarredura(){
   }catch(e){}
 }
 
-function _varrLinha(k, x, i){
-  var podeAdmin = typeof PERM !== 'undefined' && PERM && PERM.admin;
-  var btn = '';
-  var txt = '';
-  if(k === 'turmaInvalida'){
-    txt = '<b>Turma "' + _escH(x.codigo) + '"</b> · ' + _escH([x.nivel, x.professor, x.dias, x.horario].filter(Boolean).join(' · '))
-      + '<br><span style="opacity:.8">Alunos: ' + _escH((x.alunos || []).join(', ')) + '</span>';
-    btn = podeAdmin
-      ? '<button class="pend-acao" data-acao="renumerar" data-i="' + i + '">Dar código ' + _escH(x.sugestao || '') + '</button>'
-      : '<span style="font-size:12px;opacity:.75">Peça ao Felipe para corrigir</span>';
-  }else if(k === 'nomeRepetido'){
-    txt = '<b>' + _escH(x.aluno) + '</b> aparece ' + x.vezes + ' vezes na turma ' + _escH(x.turma);
-    btn = '<button class="pend-acao" data-acao="repetido" data-i="' + i + '">Deixar só um</button>';
-  }else if(k === 'contratoSemTurma'){
-    txt = '<b>' + _escH(x.aluno) + '</b> · contrato ' + _escH(x.contrato) + ' até ' + _escH(x.fim || '?');
-  }else if(k === 'inativoComContrato'){
-    txt = '<b>' + _escH(x.aluno) + '</b> · contrato ' + _escH(x.contrato) + ' até ' + _escH(x.fim || '?')
-      + ' · turma ' + _escH((x.turmas || []).join(', '));
-  }else if(k === 'doisContratos'){
-    txt = '<b>' + _escH(x.aluno) + '</b><br>' + (x.contratos || []).map(function(c){
-      return 'Contrato ' + _escH(c.numero) + ' (' + _escH(c.inicio || '?') + ' a ' + _escH(c.fim || '?') + ')';
-    }).join('<br>');
-  }else if(k === 'semContrato'){
-    txt = '<b>' + _escH(x.aluno) + '</b> · turma ' + _escH(x.turma) + (x.ambiguo ? ' · nome parecido com mais de um contrato' : '');
-  }
-  return '<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(127,127,127,.18);">'
-    + '<div style="flex:1;min-width:0;font-size:13.5px;line-height:1.4;">' + txt + '</div>' + btn + '</div>';
-}
-
 function abrirVarredura(){
   if(!_VARR) return;
   var A = _VARR.achados || {};
@@ -18080,9 +18137,110 @@ function abrirVarredura(){
   });
 }
 
+function _varrBtn(acao, i, rot, sec, extra){
+  return '<button class="' + (sec ? 'ren-btn sec' : 'pend-acao') + '" style="margin:2px 0 2px 6px;white-space:nowrap;" data-acao="' + acao + '" data-i="' + i + '"'
+    + (extra ? ' data-x="' + _escH(extra) + '"' : '') + '>' + rot + '</button>';
+}
+
+function _varrLinha(k, x, i){
+  var podeAdmin = typeof PERM !== 'undefined' && PERM && PERM.admin;
+  var btn = '';
+  var txt = '';
+  if(k === 'turmaInvalida'){
+    txt = '<b>Turma "' + _escH(x.codigo) + '"</b> · ' + _escH([x.nivel, x.professor, x.dias, x.horario].filter(Boolean).join(' · '))
+      + '<br><span style="opacity:.8">Alunos: ' + _escH((x.alunos || []).join(', ')) + '</span>';
+    btn = podeAdmin
+      ? _varrBtn('renumerar', i, 'Dar código ' + _escH(x.sugestao || ''))
+      : '<span style="font-size:12px;opacity:.75">Peça ao Felipe para corrigir</span>';
+  }else if(k === 'nomeRepetido'){
+    txt = '<b>' + _escH(x.aluno) + '</b> aparece ' + x.vezes + ' vezes na turma ' + _escH(x.turma);
+    btn = _varrBtn('repetido', i, 'Deixar só um');
+  }else if(k === 'contratoSemTurma'){
+    txt = '<b>' + _escH(x.aluno) + '</b> · contrato ' + _escH(x.contrato) + ' até ' + _escH(x.fim || '?');
+    btn = _varrBtn('ficha', i, 'Ver ficha', true, x.aluno)
+        + _varrBtn('turma', i, 'Pôr numa turma', false, x.aluno)
+        + _varrBtn('baixa', i, 'Dar baixa', true, x.aluno + '|' + x.contrato);
+  }else if(k === 'inativoComContrato'){
+    txt = '<b>' + _escH(x.aluno) + '</b> · contrato ' + _escH(x.contrato) + ' até ' + _escH(x.fim || '?')
+      + ' · turma ' + _escH((x.turmas || []).join(', '));
+    btn = _varrBtn('ficha', i, 'Ver ficha', true, x.aluno)
+        + _varrBtn('turma', i, 'Trazer de volta', false, x.aluno)
+        + _varrBtn('baixa', i, 'Dar baixa', true, x.aluno + '|' + x.contrato);
+  }else if(k === 'doisContratos'){
+    txt = '<b>' + _escH(x.aluno) + '</b><br>' + (x.contratos || []).map(function(c){
+      return 'Contrato ' + _escH(c.numero) + ' (' + _escH(c.inicio || '?') + ' a ' + _escH(c.fim || '?') + ')';
+    }).join('<br>');
+    btn = _varrBtn('ficha', i, 'Ver ficha', true, x.aluno)
+        + (x.contratos || []).map(function(c){ return _varrBtn('baixa', i, 'Baixa no nº ' + _escH(c.numero), true, x.aluno + '|' + c.numero); }).join('');
+  }else if(k === 'semContrato'){
+    txt = '<b>' + _escH(x.aluno) + '</b> · turma ' + _escH(x.turma) + (x.ambiguo ? ' · nome parecido com mais de um contrato' : '');
+    btn = _varrBtn('ficha', i, 'Ver ficha', true, x.aluno)
+        + _varrBtn('contrato', i, 'Fazer contrato', false, x.aluno);
+  }
+  return '<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(127,127,127,.18);flex-wrap:wrap;">'
+    + '<div style="flex:1;min-width:200px;font-size:13.5px;line-height:1.4;">' + txt + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;justify-content:flex-end;">' + btn + '</div></div>';
+}
+
+function _varrFechar(){ var f = document.getElementById('varrFundo'); if(f) f.remove(); }
+
+/* 5.35.0: leva para o card e a opcao exata, ja preenchida. O Voltar traz de
+   volta para Alunos (o passo fica guardado antes do salto). */
+async function _irParaBaixa(aluno, numero){
+  _navGuardar();
+  abrirPainelRecep('painelBaixa', 'Baixa de contrato');
+  document.getElementById('baixaSubcards').classList.add('hidden');
+  document.getElementById('listaBaixa').classList.add('hidden');
+  document.getElementById('formBaixa').classList.remove('hidden');
+  document.getElementById('baixaResultado').innerHTML = '';
+  document.getElementById('baixaCalculo').innerHTML = '';
+  document.getElementById('baixaData').value = _hojeIso();
+  document.getElementById('baixaDataPgto').value = _hojeIso();
+  $recepcaoSub.textContent = 'Nova baixa · ' + aluno;
+  document.getElementById('baixaBuscaAluno').value = aluno;
+  await buscarContratosBaixa();
+  var sel = document.getElementById('baixaContrato');
+  if(numero && sel && sel.querySelector('option[value="' + numero + '"]')){
+    sel.value = String(numero);
+    sel.dispatchEvent(new Event('change'));
+  }
+}
+
+function _irParaContratoNovo(aluno){
+  _navGuardar();
+  abrirPainelRecep('painelContratos', 'Contratos');
+  mostrarSubcardsContrato();
+  mostrarToast('Escolha 18+ ou Menor para fazer o contrato de ' + aluno);
+}
+
 async function _varrAcao(acao, i, btn){
   var A = (_VARR && _VARR.achados) || {};
+  var extra = btn.dataset.x || '';
   var r;
+  if(acao === 'ficha'){
+    _varrFechar();
+    _alAbrirFicha(extra);
+    return;
+  }
+  if(acao === 'baixa'){
+    var pz = extra.split('|');
+    _varrFechar();
+    _irParaBaixa(pz[0], pz[1] || '');
+    return;
+  }
+  if(acao === 'contrato'){
+    _varrFechar();
+    _irParaContratoNovo(extra);
+    return;
+  }
+  if(acao === 'turma'){
+    _varrFechar();
+    trazerDeVoltaUI({ aluno: extra }, {
+      titulo: 'Colocar ' + extra + ' numa turma',
+      depois: function(){ carregarVarredura(); carregarListaAlunos(); }
+    });
+    return;
+  }
   if(acao === 'renumerar'){
     var x = A.turmaInvalida[i];
     var novo = await apTexto('Novo código da turma',
@@ -18117,9 +18275,222 @@ async function _varrAcao(acao, i, btn){
       return;
     }
   }
-  var f = document.getElementById('varrFundo'); if(f) f.remove();
+  _varrFechar();
+  carregarListaAlunos();
   await carregarVarredura();
   if(_VARR && _VARR.total) abrirVarredura();
+}
+
+
+/* ==========================================================================
+ * 5.35.0 - LISTA COMPLETA DE ALUNOS
+ * Uma linha por pessoa. Clicar abre a ficha detalhada; Voltar traz a lista.
+ * ========================================================================== */
+var _ALX = { dados: null, filtro: 'ativo', ordem: 'nome', desc: false, carregando: false };
+
+var _ALX_FILTROS = [
+  { k:'ativo',    rot:'Ativos' },
+  { k:'afastado', rot:'Afastados' },
+  { k:'semTurma', rot:'Contrato sem turma' },
+  { k:'inativo',  rot:'Saíram (nome ainda na turma)' },
+  { k:'aviso',    rot:'Com aviso' },
+  { k:'todos',    rot:'Todos' }
+];
+
+async function carregarListaAlunos(){
+  var tab = document.getElementById('alxTabela');
+  if(!tab) return;
+  if(!_ALX.dados) tab.innerHTML = '<p style="color:#9a9a94;font-size:13px;padding:0 20px;">Carregando a lista de alunos...</p>';
+  _ALX.carregando = true;
+  try{
+    var r = await chamarAPI({ acao:'listaDeAlunos' });
+    if(!r || !r.sucesso){
+      if(!_ALX.dados) tab.innerHTML = '<div class="assess-aviso">' + _escH((r && r.erro) || 'Não consegui carregar a lista.') + '</div>';
+      return;
+    }
+    _ALX.dados = r;
+  }catch(e){
+    if(!_ALX.dados) tab.innerHTML = '<div class="assess-aviso">Falha de conexão ao carregar a lista.</div>';
+    return;
+  }finally{ _ALX.carregando = false; }
+  desenharListaAlunos();
+}
+
+function _alxTexto(a){
+  return _semAcentoJs([a.nome].concat(a.nomesNaTurma || [])
+    .concat((a.turmas || []).map(function(t){ return t.turma + ' ' + t.professor + ' ' + t.dias + ' ' + t.horario + ' ' + t.nivel; }))
+    .concat(a.contrato ? ['nº' + a.contrato.numero, a.contrato.numero] : []).join(' '));
+}
+function _semAcentoJs(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+function _alxFiltrados(ignorarChip){
+  var d = _ALX.dados; if(!d) return [];
+  var termo = _semAcentoJs(document.getElementById('alBusca').value.trim());
+  var f = _ALX.filtro;
+  return d.alunos.filter(function(a){
+    if(!ignorarChip){
+      if(f === 'aviso'){ if(!a.avisos.length) return false; }
+      else if(f !== 'todos' && a.situacao !== f) return false;
+    }
+    if(termo && _alxTexto(a).indexOf(termo) < 0) return false;
+    return true;
+  });
+}
+
+function _alxTurmaPrincipal(a){
+  var ativas = (a.turmas || []).filter(function(t){ return t.ativo; });
+  return ativas[0] || (a.turmas || [])[0] || null;
+}
+
+function _alxOrdenar(lista){
+  var o = _ALX.ordem, dir = _ALX.desc ? -1 : 1;
+  var chave = function(a){
+    var t = _alxTurmaPrincipal(a);
+    if(o === 'turma') return t ? ('00000' + t.turma).slice(-6) : 'zzzzzz';
+    if(o === 'prof') return t ? _semAcentoJs(t.professor) : 'zzz';
+    if(o === 'dias') return t ? _semAcentoJs(t.dias + ' ' + t.horario) : 'zzz';
+    if(o === 'ct') return a.contrato && a.contrato.fimIso ? a.contrato.fimIso : '9999';
+    if(o === 'valor') return a.contrato && a.contrato.mensalidade ? ('0000000' + Math.round(a.contrato.mensalidade * 100)).slice(-9) : '000000000';
+    return _semAcentoJs(a.nome);
+  };
+  return lista.slice().sort(function(a, b){
+    var x = chave(a), y = chave(b);
+    if(x === y) return _semAcentoJs(a.nome) < _semAcentoJs(b.nome) ? -1 : 1;
+    return (x < y ? -1 : 1) * dir;
+  });
+}
+
+function desenharListaAlunos(){
+  var d = _ALX.dados;
+  var tab = document.getElementById('alxTabela');
+  if(!d || !tab) return;
+  var c = d.contagem || {};
+  var nAviso = d.alunos.filter(function(a){ return a.avisos.length; }).length;
+  var conta = { ativo: c.ativo || 0, afastado: c.afastado || 0, semTurma: c.semTurma || 0,
+    inativo: c.inativo || 0, aviso: nAviso, todos: d.alunos.length };
+
+  document.getElementById('alxFiltros').innerHTML = _ALX_FILTROS.map(function(f){
+    if(f.k !== 'ativo' && f.k !== 'todos' && !conta[f.k]) return '';
+    return '<button class="alx-chip' + (_ALX.filtro === f.k ? ' on' : '') + '" data-f="' + f.k + '">'
+      + f.rot + '<b>' + conta[f.k] + '</b></button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('#alxFiltros .alx-chip'), function(b){
+    b.onclick = function(){ _ALX.filtro = this.dataset.f; desenharListaAlunos(); };
+  });
+
+  document.getElementById('alxResumo').innerHTML = '<b>' + conta.ativo + ' aluno(s) ativo(s)</b>, contando pessoas: '
+    + 'quem está em duas turmas ou com o nome repetido aparece uma vez só'
+    + (d.vagasOcupadas && d.vagasOcupadas !== conta.ativo ? ' (são ' + d.vagasOcupadas + ' lugares ocupados nas turmas)' : '')
+    + '. Clique no aluno para ver a ficha completa.';
+
+  var lista = _alxOrdenar(_alxFiltrados(false));
+  var comValor = !!d.mostraValor;
+  var cls = 'alx-linha' + (comValor ? ' comvalor' : '');
+  var seta = function(k){ return _ALX.ordem === k ? (_ALX.desc ? ' ↓' : ' ↑') : ''; };
+  var h = '<div class="alx-tab"><div class="' + cls + ' cab">'
+    + '<span data-ord="nome">Aluno' + seta('nome') + '</span>'
+    + '<span data-ord="turma">Turma' + seta('turma') + '</span>'
+    + '<span data-ord="dias">Dias e horário' + seta('dias') + '</span>'
+    + '<span data-ord="prof">Professor' + seta('prof') + '</span>'
+    + '<span data-ord="ct">Contrato' + seta('ct') + '</span>'
+    + '<span>Telefone</span>'
+    + (comValor ? '<span data-ord="valor">Mensalidade' + seta('valor') + '</span>' : '')
+    + '</div>';
+
+  if(!lista.length){
+    var fora = _alxFiltrados(true).length;
+    h += '<div class="alx-vazio">Ninguém nesta lista'
+      + (fora ? '. Tem ' + fora + ' resultado(s) em outro filtro: toque em <b>Todos</b>.' : (document.getElementById('alBusca').value.trim() ? ' com esse nome. Toque em Buscar para procurar também nos contratos.' : '.'))
+      + '</div>';
+  }
+  _ALX.visiveis = lista;
+  h += lista.map(function(a, i){
+    var t = _alxTurmaPrincipal(a);
+    var outras = (a.turmas || []).filter(function(x){ return x !== t && x.ativo; });
+    var sit = a.situacao === 'afastado' ? '<span class="fa-tag av" style="margin-left:6px;">afastado' + (a.afastadoAte ? ' até ' + _escH(a.afastadoAte) : '') + '</span>'
+            : a.situacao === 'inativo' ? '<span class="fa-tag no" style="margin-left:6px;">saiu</span>'
+            : a.situacao === 'semTurma' ? '<span class="fa-tag av" style="margin-left:6px;">sem turma</span>' : '';
+    var ct = a.contrato;
+    var ctTxt = ct ? ('<span class="alx-ct ' + ct.estado + '">nº ' + _escH(ct.numero)
+        + (ct.fim ? ' · até ' + _escH(ct.fim) : '')
+        + (ct.estado === 'vencendo' ? ' · ' + ct.dias + ' dia(s)' : ct.estado === 'vencido' ? ' · vencido' : ct.estado === 'baixa' ? ' · baixa' : '')
+        + '</span>') : '<span class="alx-muted">sem contrato</span>';
+    var nomeTurma = (a.nomesNaTurma || []).filter(function(n){ return n !== a.nome; });
+    return '<div class="' + cls + '" data-i="' + i + '" title="Abrir a ficha de ' + _escH(a.nome) + '">'
+      + '<span class="alx-c-nome"><span class="alx-nome">' + _escH(a.nome) + '</span>' + sit
+      + (nomeTurma.length ? '<span class="alx-sub">na turma: ' + _escH(nomeTurma.join(', ')) + '</span>' : '')
+      + (a.avisos.length ? '<span style="display:block;">' + a.avisos.map(function(v){ return '<span class="alx-aviso">' + _escH(v) + '</span>'; }).join('') + '</span>' : '')
+      + '</span>'
+      + '<span>' + (t ? '<span class="alx-rot">Turma </span>' + _escH(t.turma) + (outras.length ? ' +' + outras.length : '') : '<span class="alx-muted">—</span>') + '</span>'
+      + '<span>' + (t ? _escH([t.dias, t.horario].filter(Boolean).join(' ')) : '') + '</span>'
+      + '<span class="alx-c-prof">' + (t ? _escH(t.professor) : '') + '</span>'
+      + '<span class="alx-c-ct">' + ctTxt + '</span>'
+      + '<span class="alx-c-tel">' + (a.telefone ? _escH(a.telefone) : '<span class="alx-muted">' + (a.temFicha ? 'sem telefone' : 'sem ficha') + '</span>') + '</span>'
+      + (comValor ? '<span>' + (ct && ct.mensalidade ? 'R$ ' + _brl(ct.mensalidade) : '<span class="alx-muted">—</span>') + '</span>' : '')
+      + '</div>';
+  }).join('') + '</div>';
+  tab.innerHTML = h;
+
+  Array.prototype.forEach.call(tab.querySelectorAll('.alx-linha.cab span[data-ord]'), function(sp){
+    sp.onclick = function(){
+      var k = this.dataset.ord;
+      if(_ALX.ordem === k) _ALX.desc = !_ALX.desc; else { _ALX.ordem = k; _ALX.desc = false; }
+      desenharListaAlunos();
+    };
+  });
+  Array.prototype.forEach.call(tab.querySelectorAll('.alx-linha[data-i]'), function(row){
+    row.onclick = function(){ var a = _ALX.visiveis[Number(this.dataset.i)]; if(a) _alAbrirFicha(a.nome); };
+  });
+}
+
+/** Buscar/Enter: um resultado so na lista abre direto; nada na lista procura no servidor. */
+function alxBuscar(){
+  var termo = document.getElementById('alBusca').value.trim();
+  if(termo.length < 2){ mostrarToast('Digite ao menos 2 letras'); return; }
+  if(!_ALX.dados){ buscarFicha(); return; }
+  var noFiltro = _alxFiltrados(false), todos = _alxFiltrados(true);
+  if(noFiltro.length === 1){ _alAbrirFicha(noFiltro[0].nome); return; }
+  if(!noFiltro.length && todos.length === 1){ _alAbrirFicha(todos[0].nome); return; }
+  if(!todos.length){ buscarFicha(); return; }   // nao esta na lista: procura nos contratos
+  if(!noFiltro.length){ _ALX.filtro = 'todos'; }
+  desenharListaAlunos();
+}
+
+/** Troca a lista pela ficha, guardando o passo para o Voltar. */
+function _alMostrarDetalhe(){
+  var lista = document.getElementById('listaAlunosBox');
+  var det = document.getElementById('consultaAluno');
+  if(!lista || !det) return;
+  if(!lista.classList.contains('hidden')){
+    _navGuardar();
+    lista.classList.add('hidden');
+  }
+  det.classList.remove('hidden');
+  $recepcaoSub.textContent = 'Ficha do aluno';
+  document.getElementById('btnSairRecepcao').textContent = 'Voltar';
+  try{ window.scrollTo(0, 0); }catch(e){}
+}
+
+function _alAbrirFicha(nome){
+  var p = document.getElementById('painelAluno');
+  if(p && p.classList.contains('hidden')){
+    _navGuardar();
+    abrirPainelRecep('painelAluno', 'Alunos');
+    document.getElementById('listaAlunosBox').classList.add('hidden');
+  }
+  buscarFicha(String(nome || ''));
+}
+
+function alxVoltarParaLista(){
+  var ult = _NAV_HIST[_NAV_HIST.length - 1];
+  if(ult && ult.abertos.indexOf('listaAlunosBox') >= 0 && ult.abertos.indexOf('painelAluno') >= 0){
+    navVoltar();
+  }else{
+    document.getElementById('consultaAluno').classList.add('hidden');
+    document.getElementById('listaAlunosBox').classList.remove('hidden');
+    $recepcaoSub.textContent = 'Alunos';
+  }
+  if(!_ALX.dados) carregarListaAlunos(); else desenharListaAlunos();
 }
 
 </script>
