@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- 5.26.0: versao deste HTML. Unico lugar para mudar ao publicar. -->
-<meta name="app-versao" content="5.35.0">
+<meta name="app-versao" content="5.38.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Presença · Espresso English</title>
 <link rel="manifest" href="manifest.json">
@@ -1211,6 +1211,22 @@
 .esc-nome{display:block;font-size:15px;font-weight:600;color:#2f3a34;margin-bottom:5px;}
 .esc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#8a8a82;}
 .fa-tag.av{ background:#FDF3D4; color:#8a6d1a; }
+  /* ===== 5.36.0: busca de cards ===== */
+  .bc-caixa{ position:relative; margin:0 0 14px; grid-column:1 / -1; }
+  .bc-campo{ width:100%; box-sizing:border-box; min-height:46px; padding:0 14px 0 40px; border-radius:12px;
+    border:1px solid #dcdbd5; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235A7568' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 13px center;
+    font:inherit; font-size:15px; color:#2b2b28; }
+  .bc-campo:focus{ outline:2px solid var(--verde-escuro); outline-offset:1px; }
+  .bc-res{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#fff; border:1px solid #e3e2dc;
+    border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.12); z-index:30; overflow:hidden; }
+  .bc-res.hidden{ display:none; }
+  .bc-item{ display:block; width:100%; text-align:left; background:none; border:0; border-top:1px solid #f0efea;
+    padding:11px 14px; font-family:inherit; cursor:pointer; }
+  .bc-item:first-child{ border-top:0; }
+  .bc-item:hover, .bc-item:focus{ background:#f5f4f0; }
+  .bc-item b{ display:block; font-size:14.5px; color:#2b2b28; }
+  .bc-item span{ display:block; font-size:12px; color:#8a8a84; margin-top:2px; }
+  .bc-vazio{ padding:14px; font-size:13px; color:#8a8a84; }
   /* ===== 5.35.0: lista completa de alunos ===== */
   .alx-filtros{ display:flex; flex-wrap:wrap; gap:6px; padding:0 20px 10px; }
   .alx-chip{ border:1px solid #d9d8d2; background:#fff; color:var(--verde-escuro); border-radius:999px;
@@ -4590,7 +4606,7 @@ const APP_VERSAO = (function(){
     var m = document.querySelector('meta[name="app-versao"]');
     if(m && m.content) return m.content;
   }catch(e){}
-  return '5.35.0';
+  return '5.38.0';
 })();
 document.addEventListener('DOMContentLoaded', ()=>{
   const cr = document.getElementById('loginCredito');
@@ -7200,6 +7216,7 @@ document.getElementById('btnSairSenha').addEventListener('click', _voltarAoMenu)
 
 document.getElementById('cardNovidades').addEventListener('click', async function(){
   $telaMenu.classList.add('hidden');
+  $telaRecepcao.classList.add('hidden');   // 5.36.0
   document.getElementById('telaHistorico').classList.remove('hidden');
   var box = document.getElementById('histResultado');
   box.innerHTML = '<p style="color:#9a9a94;font-size:13px;">Carregando...</p>';
@@ -7230,6 +7247,7 @@ document.getElementById('cardNovidades').addEventListener('click', async functio
 
 document.getElementById('cardSenha').addEventListener('click', function(){
   $telaMenu.classList.add('hidden');
+  $telaRecepcao.classList.add('hidden');   // 5.36.0: o card tambem mora na Recepcao para quem so usa ela
   document.getElementById('telaSenha').classList.remove('hidden');
   document.getElementById('senhaSub').textContent = professorLogado || '';
   ['senhaAtual','senhaNova','senhaNova2'].forEach(function(id){
@@ -7244,6 +7262,142 @@ document.getElementById('cardSenha').addEventListener('click', function(){
 });
 
 
+
+
+/* ==========================================================================
+ * 5.36.0 - MINHA CONTA SEMPRE AO ALCANCE
+ * "Trocar minha senha" e "Novidades" moravam so no menu principal. Quem entra
+ * direto na Recepcao (e quem perdeu o card numa reorganizacao) nunca via.
+ * Agora, depois de qualquer arrumacao, os dois vao para uma tela que a pessoa
+ * enxerga.
+ * ========================================================================== */
+function _temMenuPrincipal(){
+  return !!(typeof PERM !== 'undefined' && PERM && (PERM.presenca || PERM.notas || PERM.dashboard));
+}
+function _garantirMinhaConta(){
+  if(typeof PERM === 'undefined' || !PERM) return;
+  var alcance = [];
+  if(_temMenuPrincipal()) alcance.push('menuCards');
+  if(PERM.recepcao) alcance.push('recepCards');
+  if(!alcance.length) alcance.push('menuCards');
+  ['cardSenha', 'cardNovidades'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    if(alcance.some(function(g){ return el.closest('#' + g); })) return;   // ja esta onde a pessoa ve
+    var grade = document.getElementById(alcance[0]);
+    if(!grade) return;
+    var titulo = _tituloDaSecao(grade, 'Minha conta');
+    var ref = titulo.nextElementSibling;
+    while(ref && !ref.classList.contains('sec-titulo')) ref = ref.nextElementSibling;
+    grade.insertBefore(el, ref);
+    el.classList.remove('hidden');
+  });
+}
+
+/* ==========================================================================
+ * 5.36.0 - BUSCA DE CARDS NA TELA INICIAL
+ * Procura em todos os cards que a pessoa pode usar (os escondidos por
+ * permissao ficam de fora) e abre direto, mesmo os que moram na Recepcao.
+ * ========================================================================== */
+var _BUSCA_SINONIMOS = {
+  cardSenha: 'senha password trocar senha acesso login',
+  cardNovidades: 'novidades versao atualizacao historico',
+  recepCardReposicoes: 'reposicao repor remarcar remarcacao aula perdida',
+  recepCardAluno: 'alunos lista aluno ficha telefone contato',
+  recepCardFicha: 'cadastro contato telefone email nascimento rg endereco',
+  recepCardBaixa: 'baixa cancelar cancelamento contrato rescisao',
+  recepCardAfastamento: 'afastamento trancar trancamento pausa',
+  recepCardContratos: 'contrato matricula novo aluno',
+  recepCardRenovacoes: 'renovacao renovar vencendo vencimento',
+  recepCardExAlunos: 'ex-alunos saiu historico voltar',
+  recepCardTurmas: 'turma turmas horario vaga',
+  recepCardNiver: 'aniversario aniversariantes',
+  recepCardMensalidade: 'recibo mensalidade pagamento',
+  recepCardRecibo: 'recibo matricula material',
+  cardPresenca: 'presenca chamada lancar aula',
+  cardFinanceiro: 'financeiro pagamento professores',
+  cardFechamento: 'fechamento folha pagamento'
+};
+
+function _semAcBusca(t){ return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+function _cardsBuscaveis(){
+  var grades = [];
+  if(_temMenuPrincipal() || !(PERM && PERM.recepcao)) grades.push('menuCards');
+  if(PERM && PERM.recepcao) grades.push('recepCards');
+  var out = [];
+  grades.forEach(function(g){
+    var grade = document.getElementById(g);
+    if(!grade) return;
+    Array.prototype.forEach.call(grade.querySelectorAll('.menu-card[id]'), function(el){
+      if(el.classList.contains('hidden') || el.disabled) return;
+      var tit = el.querySelector('.menu-card-titulo'), sub = el.querySelector('.menu-card-sub');
+      var sec = '', p = el.previousElementSibling;
+      while(p){ if(p.classList.contains('sec-titulo')){ sec = p.textContent.trim(); break; } p = p.previousElementSibling; }
+      out.push({ el: el, id: el.id, grade: g, titulo: tit ? tit.textContent.trim() : el.id,
+        sub: sub ? sub.textContent.trim() : '', secao: sec,
+        texto: _semAcBusca([tit && tit.textContent, sub && sub.textContent, el.getAttribute('data-dica'), _BUSCA_SINONIMOS[el.id], sec].join(' ')) });
+    });
+  });
+  return out;
+}
+
+function _montarBuscaCards(){
+  ['menuCards', 'recepCards'].forEach(function(g){
+    var grade = document.getElementById(g);
+    if(!grade || grade.querySelector('.bc-caixa')) return;
+    var cx = document.createElement('div');
+    cx.className = 'bc-caixa';
+    cx.innerHTML = '<input type="search" class="bc-campo" placeholder="Procurar um card (ex.: senha, baixa, reposição)" autocomplete="off" aria-label="Procurar um card">'
+      + '<div class="bc-res hidden"></div>';
+    grade.insertBefore(cx, grade.firstChild);
+    var campo = cx.querySelector('.bc-campo'), res = cx.querySelector('.bc-res');
+    var achados = [];
+    var desenhar = function(){
+      var t = _semAcBusca(campo.value.trim());
+      if(t.length < 2){ res.classList.add('hidden'); res.innerHTML = ''; achados = []; return; }
+      var palavras = t.split(/\s+/);
+      achados = _cardsBuscaveis().filter(function(c){ return palavras.every(function(w){ return c.texto.indexOf(w) !== -1; }); })
+        .sort(function(a, b){
+          var at = _semAcBusca(a.titulo).indexOf(t) !== -1 ? 0 : 1, bt = _semAcBusca(b.titulo).indexOf(t) !== -1 ? 0 : 1;
+          return at - bt;
+        }).slice(0, 8);
+      res.classList.remove('hidden');
+      res.innerHTML = achados.length ? achados.map(function(c, i){
+        return '<button type="button" class="bc-item" data-i="' + i + '"><b>' + _escH(c.titulo) + '</b>'
+          + '<span>' + _escH([c.grade === 'recepCards' ? 'Recepção' : 'Menu', c.secao].filter(Boolean).join(' · ')) + (c.sub ? ' · ' + _escH(c.sub) : '') + '</span></button>';
+      }).join('') : '<div class="bc-vazio">Nenhum card com esse nome.</div>';
+      Array.prototype.forEach.call(res.querySelectorAll('.bc-item'), function(b){
+        b.onclick = function(){ _abrirCardBuscado(achados[Number(this.dataset.i)], campo, res); };
+      });
+    };
+    campo.addEventListener('input', desenhar);
+    campo.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && achados.length){ e.preventDefault(); _abrirCardBuscado(achados[0], campo, res); }
+      if(e.key === 'Escape'){ campo.value = ''; desenhar(); }
+    });
+  });
+}
+
+function _abrirCardBuscado(c, campo, res){
+  if(!c) return;
+  campo.value = ''; res.classList.add('hidden'); res.innerHTML = '';
+  var telaR = document.getElementById('telaRecepcao');
+  if(c.grade === 'recepCards' && telaR && telaR.classList.contains('hidden')){
+    // mora na Recepcao: abre a Recepcao antes, guardando o menu para o Voltar
+    _navGuardar();
+    _PAINEL_VEIO_DO_MENU = false;
+    $telaMenu.classList.add('hidden');
+    abrirRecepcao();
+    var n = _NAV_HIST.length;
+    c.el.click();
+    // o clique no card guardou a tela de cards da Recepcao, que a pessoa nem viu:
+    // tira esse passo, para o Voltar levar direto de volta ao menu
+    if(_NAV_HIST.length > n) _NAV_HIST.splice(n, 1);
+    return;
+  }
+  c.el.click();
+}
 
 /* ===== 3.2.0: MEDIDOR DE FORCA DA SENHA ===== */
 
@@ -12474,6 +12628,8 @@ function aplicarPermissoes(){
   // 5.9.0: aplicarRevelacoes nao esconde mais nada. Mostrar e esconder e
   // trabalho daqui, so desta lista. La ficou apenas carregar dado.
   aplicarRevelacoes(window._BOOT || null);
+  try{ _garantirMinhaConta(); }catch(e){}   // 5.36.0
+  try{ _montarBuscaCards(); }catch(e){}     // 5.36.0
   setTimeout(function(){ _ajustarTitulosDeSecao(); }, 0);
 }
 
@@ -13083,6 +13239,7 @@ function aplicarLayout(layout){
     grade.insertBefore(el, ref);
   });
 
+  try{ _garantirMinhaConta(); }catch(e){}   // 5.36.0: o organizador nao pode deixar alguem sem trocar a senha
   // titulo sem cartao visivel some
   _ajustarTitulosDeSecao();
 }
@@ -15454,25 +15611,33 @@ function confirmarDadosRenovacao(campos, nomeAluno){
     fundo.className = 'ap-fundo';
     fundo.innerHTML = '<div class="ap-cx">'
       + '<div class="ap-topo"><b>Conferir os dados de ' + nomeAluno + '</b>'
-      + '<span>Isto veio do contrato anterior. Marque o que mudou, que eu limpo o campo '
-      + 'para você digitar o novo. Valores e datas você ajusta direto no formulário.</span></div>'
+      + '<span>Estes dados <b>já vão preenchidos</b> no contrato novo. Só marque <b>o que mudou</b>: '
+      + 'o campo marcado fica em branco para você digitar o dado novo. Se nada mudou, é só tocar em Usar estes dados.</span></div>'
       + '<div class="ap-lista">' + itens.map(function(c, i){
           return '<label class="ap-item"><input type="checkbox" data-k="' + c[0] + '">'
-            + '<span><b>' + c[1] + '</b><i>' + String(campos[c[0]]).slice(0,70) + '</i></span></label>';
+            + '<span><b>' + c[1] + ' <small style="font-weight:600;color:#a5402e;">(marque se mudou)</small></b><i>' + String(campos[c[0]]).slice(0,70) + '</i></span></label>';
         }).join('') + '</div>'
       + '<div class="ap-rod">'
       + '<button class="ren-btn sec" id="rnCancelar">Cancelar</button>'
       + '<div style="flex:1;"></div>'
-      + '<button class="sai-btn vai" style="flex:none;padding:11px 18px;" id="rnOk">Continuar</button>'
+      + '<button class="sai-btn vai" style="flex:none;padding:11px 18px;" id="rnOk">Usar estes dados</button>'
       + '</div></div>';
     document.body.appendChild(fundo);
 
     document.getElementById('rnCancelar').onclick = function(){ fundo.remove(); resolve(null); };
-    document.getElementById('rnOk').onclick = function(){
+    document.getElementById('rnOk').onclick = async function(){
       var mudaram = [];
       Array.prototype.forEach.call(fundo.querySelectorAll('.ap-item input'), function(c){
         if(c.checked) mudaram.push(c.dataset.k);
       });
+      // 5.38.0: marcar tudo apagava tudo, e parecia que a renovacao vinha em branco
+      if(mudaram.length && mudaram.length === itens.length){
+        var q = await apEscolha('Apagar todos os dados?',
+          'Você marcou todos os itens como alterados. Assim o contrato novo começa com esses campos em branco.',
+          [{ rotulo:'Não, usar os dados como estão', sub:'Recomendado se nada mudou' }, { rotulo:'Sim, quero digitar tudo de novo' }]);
+        if(q === null) return;
+        if(q === 0) mudaram = [];
+      }
       fundo.remove();
       resolve(mudaram);
     };
@@ -15548,8 +15713,12 @@ async function renovarContrato(iRen){
       + (r.temFicha
           ? '<b>' + preenchidos + ' campos preenchidos</b> a partir da ficha do aluno.'
           : '<b>Aluno sem ficha de cadastro.</b> Preenchi o que deu pelo contrato anterior, confira o resto.')
+      + (r.fichaCriada ? '<br><b>Este aluno não tinha ficha no Cadastro</b> (contrato de antes do app). Criei agora com turma, horário e valores; '
+          + 'endereço, RG e nascimento estavam só no PDF antigo e precisam ser digitados uma vez. Na próxima renovação já vêm prontos.' : '')
+      + (r.cortesiaAnterior ? '<br>O contrato anterior tinha ' + r.cortesiaAnterior + ' mês(es) de cortesia: a renovação volta para o prazo normal.' : '')
       + '<br>Período sugerido: ' + r.sugestao.inicio + ' a ' + r.sugestao.fim
-      + ' (' + r.sugestao.meses + ' meses). Confira as datas e o valor antes de gerar.</div>';
+      + ' (' + r.sugestao.meses + ' meses). Confira as datas e o valor antes de gerar.</div>'
+      + _htmlCompensacao(r.compensacao, r.sugestao);   // 5.37.0
 
     mostrarToast(preenchidos + ' campos preenchidos');
   }catch(e){
@@ -16506,6 +16675,7 @@ const CAMPOS_18 = [
   ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
   ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
+  ['MESES_CORTESIA','Meses de cortesia (promoção, sem cobrança)','text'],
   ['NUM_PARCELAS','Parcelas do pagamento (vazio = 1 por mês)','text'],
   ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
   ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
@@ -16539,6 +16709,7 @@ const CAMPOS_MENOR = [
   ['DESCONTO','Desconto por pagamento em dia (R$)','money'],
   ['VALOR_MATRICULA','Valor da matrícula','money'],
   ['PRAZO_MESES','Prazo total (meses)','text'],
+  ['MESES_CORTESIA','Meses de cortesia (promoção, sem cobrança)','text'],
   ['NUM_PARCELAS','Parcelas do pagamento (vazio = 1 por mês)','text'],
   ['INICIO_CONTRATO','Início do contrato (aulas) - ex: 03/2026','text'],
   ['FIM_CONTRATO','Fim do contrato - ex: 02/2027','text'],
@@ -16704,22 +16875,26 @@ async function abrirFormContrato(tipo){
     const desconto = parse($vDesconto.value);
     const matricula = parse($vMatricula.value);
     const meses = Number(String($vPrazo.value).replace(/\D/g,'')) || 0;
+    const $vCort = document.getElementById('ctt_MESES_CORTESIA');   // 5.38.0
+    const cortesia = Math.max(0, Math.min(Number(String(($vCort && $vCort.value) || '').replace(/\D/g,'')) || 0, Math.max(0, meses - 1)));
+    const pagos = meses - cortesia;
     const final = Math.max(0, tabela - desconto);
-    const total = (final * meses) + matricula;
+    const total = (final * pagos) + matricula;
     const fmt = n => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     document.getElementById('vfTabela').textContent = fmt(tabela);
     document.getElementById('vfDesconto').textContent = '- ' + fmt(desconto);
     document.getElementById('vfFinal').textContent = fmt(final);
     document.getElementById('vfTotal').textContent = fmt(total);
     // 4.6.0: o parcelamento pode ser diferente do prazo do curso
-    var parcelas = Number(String(($vParcelas && $vParcelas.value) || '').replace(/\D/g,'')) || meses;
-    var memo = `${fmt(final)} x ${meses} mês(es) + ${fmt(matricula)} de matrícula`;
-    if(parcelas && parcelas !== meses && total > 0){
+    var parcelas = Number(String(($vParcelas && $vParcelas.value) || '').replace(/\D/g,'')) || pagos;
+    var memo = `${fmt(final)} x ${pagos} mensalidade(s) + ${fmt(matricula)} de matrícula`;
+    if(cortesia) memo += `<br><b>${meses} meses de aula, sendo ${cortesia} de cortesia (sem cobrança)</b>`;
+    if(parcelas && parcelas !== pagos && total > 0){
       memo += `<br><b>Pagamento em ${parcelas}x de ${fmt(total / parcelas)}</b>`;
     }
     document.getElementById('vfTotalMemo').innerHTML = memo;
   };
-  [$vTabela, $vDesconto, $vMatricula, $vPrazo, $vParcelas].forEach(el=>{
+  [$vTabela, $vDesconto, $vMatricula, $vPrazo, $vParcelas, document.getElementById('ctt_MESES_CORTESIA')].forEach(el=>{
     if(el) el.addEventListener('input', atualizarPainelValor);
   });
 
@@ -16760,7 +16935,7 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
   campos.forEach(c=>{
     const v = document.getElementById('ctt_' + c[0]).value.trim();
     dados[c[0]] = v;
-    if(!v) faltando.push(c[1]);
+    if(!v && c[0] !== 'MESES_CORTESIA') faltando.push(c[1]);   // 5.38.0: cortesia vazia e o normal
   });
 
   // calcula o valor final da mensalidade (tabela - desconto) e o total do contrato
@@ -16768,8 +16943,12 @@ document.getElementById('btnGerarContrato').addEventListener('click', async ()=>
   const desconto = parseMoney(dados.DESCONTO);
   const matricula = parseMoney(dados.VALOR_MATRICULA);
   const meses = Number(String(dados.PRAZO_MESES).replace(/\D/g,'')) || 0;
+  // 5.38.0: mes de cortesia conta no prazo, nao no valor
+  const cortesia = Math.max(0, Math.min(Number(String(dados.MESES_CORTESIA || '').replace(/\D/g,'')) || 0, Math.max(0, meses - 1)));
+  dados.MESES_CORTESIA = cortesia ? String(cortesia) : '';
+  const mesesPagos = meses - cortesia;
   const valorFinal = Math.max(0, tabela - desconto);
-  const valorTotal = (valorFinal * meses) + matricula;
+  const valorTotal = (valorFinal * mesesPagos) + matricula;
   dados.VALOR_TABELA = fmtMoney(tabela);
   dados.DESCONTO = fmtMoney(desconto);
   dados.VALOR_MATRICULA = fmtMoney(matricula);
@@ -17845,8 +18024,12 @@ async function carregarReposicoes(){
     var r = await chamarAPI({ acao:'listarReposicoes', filtro: _REP.filtro });
     if(!r || !r.sucesso){ box.innerHTML = '<div class="assess-aviso">' + _escH((r && r.erro) || 'Erro') + '</div>'; return; }
     _REP.lista = r.reposicoes;
+    _REP.marcadasR = r.marcadasR || [];   // 5.36.0
+    _REP.afastamentos = r.afastamentos || [];   // 5.37.0
+    _REP.semestre = r.semestre || '';
     var s = r.resumo;
     document.getElementById('repResumo').innerHTML = '<div class="ren-resumo">'
+      + '<div class="' + (s.marcadasR ? 'alerta' : '') + '"><span class="n">' + (s.marcadasR || 0) + '</span><span class="r">R sem reposição</span></div>'
       + '<div class="' + (s.pedidos ? 'alerta' : '') + '"><span class="n">' + s.pedidos + '</span><span class="r">sem data</span></div>'
       + '<div><span class="n">' + s.agendadas + '</span><span class="r">agendadas</span></div>'
       + '<div><span class="n">' + s.hoje + '</span><span class="r">hoje</span></div>'
@@ -17861,7 +18044,12 @@ function desenharReposicoes(){
   var box = document.getElementById('repResultado');
   var termo = _chaveNome(document.getElementById('repBusca').value);
   var lista = _REP.lista.filter(function(x){ return !termo || _chaveNome(x.aluno).indexOf(termo) !== -1; });
-  if(!lista.length){ box.innerHTML = '<div class="assess-aviso">Nenhuma reposição ' + (_REP.filtro === 'abertas' ? 'em aberto.' : 'nesse filtro.') + '</div>'; return; }
+  var htmlR = _htmlMarcadasR(termo) + _htmlAfastadosRep(termo);   // 5.36.0 / 5.37.0
+  if(!lista.length){
+    box.innerHTML = htmlR + '<div class="assess-aviso">Nenhuma reposição ' + (_REP.filtro === 'abertas' ? 'agendada ou pedida.' : 'nesse filtro.') + '</div>';
+    _ligarMarcadasR(box);
+    return;
+  }
   var cor = { 'Pedido':'av', 'Agendada':'ok', 'Feita':'ok', 'Faltou':'no', 'Cancelada':'no' };
   box.innerHTML = '<div style="padding:0 20px;">' + lista.map(function(x, i){
     var etiqueta = x.atrasada ? '<span class="fa-tag no">passou da data</span>'
@@ -17887,8 +18075,10 @@ function desenharReposicoes(){
           + '<button class="ren-btn sec" data-repcancel="' + i + '">Cancelar</button></div>' : '')
       + '</div>';
   }).join('') + '</div>';
+  if(htmlR) box.innerHTML = htmlR + (_REP.filtro === 'abertas' ? '<div class="sec-titulo" style="margin:6px 20px 8px;">Pedidas e agendadas</div>' : '') + box.innerHTML;
+  _ligarMarcadasR(box);
   var pega = function(attr, fn){ box.querySelectorAll('[' + attr + ']').forEach(function(b){ b.onclick = function(){ fn(lista[Number(b.getAttribute(attr))]); }; }); };
-  pega('data-repedit', formReposicao);
+  pega('data-repedit', function(x){ formReposicao(x); });
   pega('data-repveio', function(x){ _marcarRep(x, 'P'); });
   pega('data-repfaltou', function(x){ _marcarRep(x, 'F'); });
   pega('data-repcancel', async function(x){
@@ -17909,7 +18099,7 @@ async function _marcarRep(x, st){
 }
 
 /** Formulario novo/editar. x = reposicao existente ou null. */
-async function formReposicao(x){
+async function formReposicao(x, pre){   // 5.36.0: pre = {aluno, turmaOrigem, aulaPerdida} vindo da lista de R
   mostrarToast('Abrindo...');
   var op = await _opcoesRep();
   if(!op){ mostrarToast('Não consegui carregar alunos e turmas'); return; }
@@ -17988,6 +18178,14 @@ async function formReposicao(x){
       });
     };
   }
+  // 5.36.0: veio da lista "marcadas com R": aluno, turma e data ja preenchidos
+  if(!x && pre){
+    var iPre = op.alunos.findIndex(function(a){ return _chaveNome(a.aluno) === _chaveNome(pre.aluno) && String(a.turmaId) === String(pre.turmaOrigem); });
+    if(iPre >= 0) $('rpAluno').value = String(iPre);
+    else $('rpMsg').innerHTML = '<div class="msg-aviso" style="margin-top:10px;">Não achei ' + _escH(pre.aluno) + ' na turma ' + _escH(pre.turmaOrigem) + ' hoje. Escolha o aluno na lista.</div>';
+    $('rpPerdida').value = pre.aulaPerdida || '';
+    $('rpCanal').value = 'Professor avisou';
+  }
   trocarTipo();
   $('rpCancelar').onclick = function(){ fundo.remove(); };
   var enviar = async function(confirmarLimite){
@@ -18014,6 +18212,109 @@ async function formReposicao(x){
     carregarReposicoes();
   };
   $('rpSalvar').onclick = function(){ enviar(false); };
+}
+
+
+/* ==========================================================================
+ * 5.36.0 - ALUNOS MARCADOS COM R NA PRESENCA, AINDA SEM REPOSICAO
+ * ========================================================================== */
+function _htmlMarcadasR(termo){
+  if(_REP.filtro !== 'abertas') return '';
+  var todas = (_REP.marcadasR || []);
+  var lista = todas.filter(function(x){ return !termo || _chaveNome(x.aluno).indexOf(termo) !== -1; });
+  _REP.marcadasVis = lista;
+  if(!todas.length) return '<div class="msg-aviso" style="margin:0 20px 12px;">Nenhum aluno marcado com R esperando reposição.</div>';
+  if(!lista.length) return '';
+  var porProf = {};
+  lista.forEach(function(x, i){ (porProf[x.professor || 'Sem professor'] = porProf[x.professor || 'Sem professor'] || []).push(i); });
+  var h = '<div style="padding:0 20px;">'
+    + '<div class="sec-titulo" style="margin:4px 0 4px;">Marcados com R, esperando reposição (' + lista.length + ')</div>'
+    + '<div class="fa-sub" style="margin:0 0 10px;">O professor marcou R na presença e ainda não existe reposição registrada. '
+    + (_REP.semestre ? 'Conta o ' + _escH(_REP.semestre) + '. ' : '') + 'Agende, ou tire da lista se já foi resolvido.</div>';
+  Object.keys(porProf).forEach(function(prof){
+    var idx = porProf[prof];
+    var nAlunos = {}; idx.forEach(function(i){ nAlunos[_chaveNome(lista[i].aluno)] = 1; });
+    h += '<div class="fa-bloco" style="padding-bottom:6px;">'
+      + '<div class="doc-topo"><span class="fa-nome" style="font-size:15px;">' + _escH(prof) + '</span>'
+      + '<span class="fa-tag av">' + idx.length + ' aula(s) · ' + Object.keys(nAlunos).length + ' aluno(s)</span></div>';
+    idx.forEach(function(i){
+      var x = lista[i];
+      h += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(127,127,127,.15);">'
+        + '<div style="flex:1;min-width:180px;font-size:13.5px;"><b>' + _escH(x.aluno) + '</b>'
+        + '<span class="fa-sub" style="display:block;margin:0;">Turma ' + _escH(x.turmaId) + (x.nivel ? ' · ' + _escH(x.nivel) : '') + ' · perdeu a aula de ' + _brIso(x.aulaPerdida) + '</span></div>'
+        + '<button class="ren-btn" data-rmagendar="' + i + '">Agendar</button>'
+        + '<button class="ren-btn sec" data-rmfeita="' + i + '">Já repôs</button>'
+        + '<button class="ren-btn sec" data-rmnao="' + i + '">Não vai repor</button>'
+        + '</div>';
+    });
+    h += '</div>';
+  });
+  return h + '</div>';
+}
+
+function _ligarMarcadasR(box){
+  var vis = _REP.marcadasVis || [];
+  var pega = function(attr, fn){ box.querySelectorAll('[' + attr + ']').forEach(function(b){ b.onclick = function(){ fn(vis[Number(b.getAttribute(attr))], b); }; }); };
+  pega('data-rmagendar', function(x){ if(x) formReposicao(null, { aluno: x.aluno, turmaOrigem: x.turmaId, aulaPerdida: x.aulaPerdida }); });
+  var resolver = async function(x, b, como){
+    if(!x) return;
+    var obs = await apTexto(como === 'Feita' ? 'Já repôs?' : 'Não vai repor?',
+      _escH(x.aluno) + ' · aula de ' + _brIso(x.aulaPerdida) + '. Quer anotar algo? (opcional)', '',
+      como === 'Feita' ? 'Ex.: repôs na turma 62 dia 12/09' : 'Ex.: aluno abriu mão da reposição');
+    if(obs === null) return;
+    b.disabled = true; b.textContent = 'Salvando...';
+    var r = await chamarAPI({ acao:'resolverRemarcada', aluno: x.aluno, turmaOrigem: x.turmaId, aulaPerdida: x.aulaPerdida, como: como, observacao: obs });
+    mostrarToast(r && r.sucesso ? 'Tirado da lista' : ((r && r.erro) || 'Erro'));
+    carregarReposicoes();
+  };
+  pega('data-rmfeita', function(x, b){ resolver(x, b, 'Feita'); });
+  pega('data-rmnao', function(x, b){ resolver(x, b, 'Cancelada'); });
+}
+
+
+/* ==========================================================================
+ * 5.37.0 - AFASTAMENTO NO CARD E COMPENSACAO NA RENOVACAO
+ * ========================================================================== */
+function _htmlAfastadosRep(termo){
+  if(_REP.filtro !== 'abertas') return '';
+  var lista = (_REP.afastamentos || []).filter(function(a){ return !termo || _chaveNome(a.aluno).indexOf(termo) !== -1; });
+  if(!lista.length) return '';
+  return '<div style="padding:0 20px;">'
+    + '<div class="sec-titulo" style="margin:10px 0 4px;">Afastamentos do semestre (' + lista.length + ')</div>'
+    + '<div class="fa-sub" style="margin:0 0 10px;">Aulas perdidas no afastamento não precisam ser agendadas: o adendo já estendeu o contrato para compensar.</div>'
+    + lista.map(function(a){
+        return '<div class="fa-bloco">'
+          + '<div class="doc-topo"><span class="fa-nome" style="font-size:15px;">' + _escH(a.aluno) + '</span>'
+          + (a.emAndamento ? '<span class="fa-tag av">afastado agora</span>' : '<span class="fa-tag ok">voltou</span>') + '</div>'
+          + '<div class="fa-sub">Adendo nº ' + _escH(a.adendo) + ' · contrato ' + _escH(a.contrato)
+          + (a.turmas && a.turmas.length ? ' · turma ' + _escH(a.turmas.join(', ')) : '') + (a.motivo ? ' · ' + _escH(a.motivo) : '') + '</div>'
+          + '<div style="font-size:13px;margin-top:8px;">'
+          + '<b>' + _brIso(a.inicio) + ' a ' + _brIso(a.fim) + '</b>'
+          + (a.aulasPerdidas !== null && a.aulasPerdidas !== undefined ? ' · <b>' + a.aulasPerdidas + ' aula(s)</b> perdida(s)' : ' · sem turma ativa para contar as aulas')
+          + (a.fimContrato ? ' · contrato vai até ' + _brIso(a.fimContrato) : '') + '</div>'
+          + '</div>';
+      }).join('') + '</div>';
+}
+
+function _htmlCompensacao(c, sug){
+  if(!c) return '';
+  var partes = [];
+  if(c.afastamentos && c.afastamentos.length){
+    partes.push('Afastamento: o adendo ' + c.afastamentos.map(function(a){ return 'nº ' + _escH(a.adendo); }).join(', ')
+      + ' já levou o fim do contrato para <b>' + _escH(c.fimContrato) + '</b>.');
+  }
+  if(c.pendentes && c.pendentes.length){
+    partes.push('<b>' + c.pendentes.length + ' remarcação(ões) ainda não reposta(s)</b> ('
+      + c.pendentes.map(function(p){ return _escH(p.aulaPerdida); }).join(', ') + ').'
+      + (c.aulasDevidas && c.aulasDevidas.length
+          ? ' Viram aulas devidas depois do fim do contrato: ' + c.aulasDevidas.map(_escH).join(', ')
+            + '. Por isso o contrato novo começa em <b>' + _escH(sug.inicio) + '</b>.'
+          : ''));
+  }
+  if(c.aviso) partes.push(_escH(c.aviso));
+  if(!partes.length) return '';
+  return '<div class="msg-aviso" style="margin-top:8px;"><b>Como calculei o início</b><br>' + partes.join('<br>')
+    + '<br><span style="font-size:12px;opacity:.8">Se alguma dessas aulas já foi reposta, marque "Já repôs" no card Reposição de aulas e renove de novo.</span></div>';
 }
 
 /* ---------- na lista de presenca ---------- */
